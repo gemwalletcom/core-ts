@@ -1,0 +1,21 @@
+{
+  "name": "swap-providers",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@ston-fi/api": "0.21.0",
+    "@ston-fi/sdk": "2.3.0",
+    "@ton/ton": "15.2.1",
+    "express": "4.21.2"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.1",
+    "@types/node": "22.13.14",
+    "ts-node-dev": "2.0.0",
+    "typescript": "5.8.2"
+  }
+}
