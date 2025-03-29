@@ -23,7 +23,7 @@ app.get('/v1/:providerId/quote', async (req, res) => {
         from_address: req.query.from_address as string,
         from_token: req.query.from_token as string,
         to_token: req.query.to_token as string,
-        input_value: req.query.input_value as string,
+        from_value: req.query.from_value as string,
         referral_address: req.query.referral_address as string,
         referral_bps: parseInt(req.query.referral_bps as string),
         slippage_bps: parseInt(req.query.slippage_bps as string),

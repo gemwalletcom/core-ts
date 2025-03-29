@@ -3,7 +3,7 @@ export interface QuoteRequest {
     from_address: string,
     from_token: string;
     to_token: string;
-    input_value: string;
+    from_value: string;
     referral_address: string;
     referral_bps: number;
     slippage_bps: number;

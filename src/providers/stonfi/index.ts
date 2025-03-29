@@ -22,7 +22,7 @@ export class StonfiProvider implements Protocol {
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
         const swapDirectSimulation = await client.simulateSwap({ 
             offerAddress: quoteRequest.from_token, 
-            offerUnits: quoteRequest.input_value, 
+            offerUnits: quoteRequest.from_value, 
             askAddress: quoteRequest.to_token, 
             referralAddress: quoteRequest.referral_address, 
             referralFeeBps: quoteRequest.referral_bps.toString(), 
@@ -43,9 +43,9 @@ export class StonfiProvider implements Protocol {
             const params = await dexRouter.getSwapTonToJettonTxParams({
                 userWalletAddress: quote.quote.from_address,
                 proxyTon,
-                offerAmount: quote.quote.input_value,
+                offerAmount: quote.quote.from_value,
                 askJettonAddress: quote.quote.to_token,
-                minAskAmount: quote.quote.input_value,
+                minAskAmount: quote.quote.from_value,
                 referralAddress: quote.quote.referral_address,
                 referralValue: quote.quote.referral_bps,
             });
@@ -59,8 +59,8 @@ export class StonfiProvider implements Protocol {
                 userWalletAddress: quote.quote.from_address,
                 proxyTon,
                 offerJettonAddress: quote.quote.from_token,
-                offerAmount: quote.quote.input_value,
-                minAskAmount: quote.quote.input_value,
+                offerAmount: quote.quote.from_value,
+                minAskAmount: quote.quote.from_value,
                 referralAddress: quote.quote.referral_address,
                 referralValue: quote.quote.referral_bps,
             });
@@ -73,9 +73,9 @@ export class StonfiProvider implements Protocol {
             const params = await dexRouter.getSwapJettonToJettonTxParams({
                 userWalletAddress: quote.quote.from_address,
                 offerJettonAddress: quote.quote.from_token,
-                offerAmount: quote.quote.input_value,
+                offerAmount: quote.quote.from_value,
                 askJettonAddress: quote.quote.to_token,
-                minAskAmount: quote.quote.input_value,
+                minAskAmount: quote.quote.from_value,
                 referralAddress: quote.quote.referral_address,
                 referralValue: quote.quote.referral_bps, 
             });
