@@ -10,9 +10,8 @@ const TON_JETTON_ADDRESS = "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c";
 
 const dexRouter = new TonClient({
     endpoint: "https://toncenter.com/api/v2/jsonRPC"
-}).open(DEX.v2_2.Router.create(
-        "EQCx0HDJ_DxLxDSQyfsEqHI8Rs65nygvdmeD9Ra7rY15OWN8")
-);
+})
+.open(DEX.v2_2.Router.create("EQCx0HDJ_DxLxDSQyfsEqHI8Rs65nygvdmeD9Ra7rY15OWN8"));
 
 const proxyTon = pTON.v2_1.create(
     "EQBnGWMCf3-FZZq1W4IWcWiGAc3PHuZ0_H-7sad2oY00o83S"
@@ -46,10 +45,12 @@ export class StonfiProvider implements Protocol {
                 proxyTon,
                 offerAmount: quote.quote.from_value,
                 askJettonAddress: quote.quote.to_token,
-                minAskAmount: quote.output_min_value,
+                minAskAmount: 1, //quote.output_min_value,
                 referralAddress: quote.quote.referral_address,
                 referralValue: quote.quote.referral_bps,
+                deadline: Math.floor(Date.now() / 1000) + 60 * 1000,
             });
+
             return {
                 to: params.to.toString(), 
                 value: params.value.toString(), 
