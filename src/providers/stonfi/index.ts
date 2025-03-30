@@ -46,8 +46,8 @@ export class StonfiProvider implements Protocol {
                 offerAmount: quote.quote.from_value,
                 askJettonAddress: quote.quote.to_token,
                 minAskAmount: 1, //quote.output_min_value,
-                referralAddress: quote.quote.referral_address,
-                referralValue: quote.quote.referral_bps,
+                //referralAddress: quote.quote.referral_address,
+                //referralValue: quote.quote.referral_bps,
                 deadline: Math.floor(Date.now() / 1000) + 60 * 1000,
             });
 
@@ -62,9 +62,9 @@ export class StonfiProvider implements Protocol {
                 proxyTon,
                 offerJettonAddress: quote.quote.from_token,
                 offerAmount: quote.quote.from_value,
-                minAskAmount: quote.output_min_value,
-                referralAddress: quote.quote.referral_address,
-                referralValue: quote.quote.referral_bps,
+                minAskAmount: 1, //quote.output_min_value,
+                //referralAddress: quote.quote.referral_address,
+                //referralValue: quote.quote.referral_bps,
             });
             return {
                 to: params.to.toString(), 
@@ -77,9 +77,9 @@ export class StonfiProvider implements Protocol {
                 offerJettonAddress: quote.quote.from_token,
                 offerAmount: quote.quote.from_value,
                 askJettonAddress: quote.quote.to_token,
-                minAskAmount: quote.output_min_value,
-                referralAddress: quote.quote.referral_address,
-                referralValue: quote.quote.referral_bps, 
+                minAskAmount: 1, //quote.output_min_value,
+                //referralAddress: quote.quote.referral_address,
+                //referralValue: quote.quote.referral_bps, 
             });
             return {
                 to: params.to.toString(), 
