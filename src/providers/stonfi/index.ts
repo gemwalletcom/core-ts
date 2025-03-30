@@ -24,8 +24,8 @@ export class StonfiProvider implements Protocol {
             offerAddress: quoteRequest.from_token, 
             offerUnits: quoteRequest.from_value, 
             askAddress: quoteRequest.to_token, 
-            referralAddress: quoteRequest.referral_address, 
-            referralFeeBps: quoteRequest.referral_bps.toString(), 
+            //referralAddress: quoteRequest.referral_address, 
+            //referralFeeBps: quoteRequest.referral_bps.toString(), 
             slippageTolerance: (quoteRequest.slippage_bps / 10000).toString(),
         });
 
@@ -47,8 +47,8 @@ export class StonfiProvider implements Protocol {
                 offerAmount: quote.quote.from_value,
                 askJettonAddress: quote.quote.to_token,
                 minAskAmount: quote.output_min_value,
-                referralAddress: quote.quote.referral_address,
-                referralValue: quote.quote.referral_bps,
+                //referralAddress: quote.quote.referral_address,
+                //referralValue: quote.quote.referral_bps,
             });
             return {
                 to: params.to.toString(), 
@@ -62,8 +62,8 @@ export class StonfiProvider implements Protocol {
                 offerJettonAddress: quote.quote.from_token,
                 offerAmount: quote.quote.from_value,
                 minAskAmount: quote.quote.from_value,
-                referralAddress: quote.quote.referral_address,
-                referralValue: quote.quote.referral_bps,
+                //referralAddress: quote.quote.referral_address,
+                //referralValue: quote.quote.referral_bps,
             });
             return {
                 to: params.to.toString(), 
@@ -77,8 +77,8 @@ export class StonfiProvider implements Protocol {
                 offerAmount: quote.quote.from_value,
                 askJettonAddress: quote.quote.to_token,
                 minAskAmount: quote.quote.from_value,
-                referralAddress: quote.quote.referral_address,
-                referralValue: quote.quote.referral_bps, 
+                //referralAddress: quote.quote.referral_address,
+                //referralValue: quote.quote.referral_bps, 
             });
             return {
                 to: params.to.toString(), 
