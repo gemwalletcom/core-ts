@@ -34,6 +34,7 @@ export class StonfiProvider implements Protocol {
         return {
             quote: quoteRequest,
             output_value: swapDirectSimulation.askUnits,
+            output_min_value: swapDirectSimulation.minAskUnits,
         }
     }
 
@@ -45,7 +46,7 @@ export class StonfiProvider implements Protocol {
                 proxyTon,
                 offerAmount: quote.quote.from_value,
                 askJettonAddress: quote.quote.to_token,
-                minAskAmount: quote.quote.from_value,
+                minAskAmount: quote.output_min_value,
                 referralAddress: quote.quote.referral_address,
                 referralValue: quote.quote.referral_bps,
             });

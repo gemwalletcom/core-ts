@@ -1,6 +1,6 @@
 
 export interface QuoteRequest {
-    from_address: string,
+    from_address: string;
     from_token: string;
     to_token: string;
     from_value: string;
@@ -10,8 +10,9 @@ export interface QuoteRequest {
 }
 
 export interface Quote {
-    quote: QuoteRequest,
+    quote: QuoteRequest;
     output_value: string;
+    output_min_value: string;
 }
 
 export interface QuoteDataRequest {
