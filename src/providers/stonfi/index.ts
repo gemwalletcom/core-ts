@@ -46,7 +46,8 @@ export class StonfiProvider implements Protocol {
                 proxyTon,
                 offerAmount: quote.quote.from_value,
                 askJettonAddress: quote.quote.to_token,
-                minAskAmount: quote.output_min_value,
+                minAskAmount: 1, //quote.output_min_value,
+                queryId: 12345,
                 //referralAddress: quote.quote.referral_address,
                 //referralValue: quote.quote.referral_bps,
             });
