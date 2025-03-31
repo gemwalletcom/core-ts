@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { QuoteDataRequest, Quote, QuoteRequest} from "./types";
+import { QuoteDataRequest, Quote, QuoteRequest, Asset } from "./types";
 import { StonfiProvider } from "./providers/stonfi";
 import { Protocol } from "./providers/protocol";
 
@@ -19,19 +19,18 @@ app.get('/v1/:providerId/quote', async (req, res) => {
         res.status(404).json({ error: `Provider ${req.params.providerId} not found` });
     }
 
-    let request: QuoteRequest =  {
-        from_address: req.query.from_address as string,
-        from_token: req.query.from_token as string,
-        to_token: req.query.to_token as string,
-        from_value: req.query.from_value as string,
-        referral_address: req.query.referral_address as string,
-        referral_bps: parseInt(req.query.referral_bps as string),
-        slippage_bps: parseInt(req.query.slippage_bps as string),
-    };
-
-    console.log("request: ", req.query);
-
     try {
+        let request: QuoteRequest = {
+            from_address: req.query.from_address as string,
+            from_asset: Asset.fromString(req.query.from_asset as string),
+            to_asset: Asset.fromString(req.query.to_asset as string),
+            from_value: req.query.from_value as string,
+            referral_address: req.query.referral_address as string,
+            referral_bps: parseInt(req.query.referral_bps as string),
+            slippage_bps: parseInt(req.query.slippage_bps as string),
+        };
+
+        console.log("request: ", req.query);
         const quote = await provider.get_quote(request);
         res.json(quote);
     } catch (error) {

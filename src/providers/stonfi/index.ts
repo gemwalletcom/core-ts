@@ -19,12 +19,11 @@ const proxyTon = pTON.v2_1.create(
 
 export class StonfiProvider implements Protocol {
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
+        console.log("quoteRequest", quoteRequest);
         const swapDirectSimulation = await client.simulateSwap({ 
-            offerAddress: quoteRequest.from_token, 
+            offerAddress: quoteRequest.from_asset.isNative() ? TON_JETTON_ADDRESS : quoteRequest.from_asset.tokenId, 
             offerUnits: quoteRequest.from_value, 
-            askAddress: quoteRequest.to_token, 
-            //referralAddress: quoteRequest.referral_address, 
-            //referralFeeBps: quoteRequest.referral_bps.toString(), 
+            askAddress: quoteRequest.to_asset.isNative() ? TON_JETTON_ADDRESS : quoteRequest.to_asset.tokenId, 
             slippageTolerance: (quoteRequest.slippage_bps / 10000).toString(),
         });
 
@@ -39,15 +38,13 @@ export class StonfiProvider implements Protocol {
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
         // from ton to jetton
-        if (quote.quote.from_token == TON_JETTON_ADDRESS) {
+        if (quote.quote.from_asset.isNative()) {
             const params = await dexRouter.getSwapTonToJettonTxParams({
                 userWalletAddress: quote.quote.from_address,
                 proxyTon,
                 offerAmount: quote.quote.from_value,
-                askJettonAddress: quote.quote.to_token,
-                minAskAmount: 1, //quote.output_min_value,
-                //referralAddress: quote.quote.referral_address,
-                //referralValue: quote.quote.referral_bps,
+                askJettonAddress: quote.quote.to_asset.tokenId,
+                minAskAmount: quote.output_min_value,
                 deadline: Math.floor(Date.now() / 1000) + 60 * 1000,
             });
 
@@ -56,30 +53,26 @@ export class StonfiProvider implements Protocol {
                 value: params.value.toString(), 
                 data: params.body.toBoc().toString('base64') 
             }; 
-        } else if (quote.quote.to_token == TON_JETTON_ADDRESS) {
+        } else if (quote.quote.to_asset.isNative()) {
             const params = await dexRouter.getSwapJettonToTonTxParams({
                 userWalletAddress: quote.quote.from_address,
                 proxyTon,
-                offerJettonAddress: quote.quote.from_token,
+                offerJettonAddress: quote.quote.from_asset.tokenId,
                 offerAmount: quote.quote.from_value,
-                minAskAmount: 1, //quote.output_min_value,
-                //referralAddress: quote.quote.referral_address,
-                //referralValue: quote.quote.referral_bps,
+                minAskAmount: quote.output_min_value,
             });
             return {
                 to: params.to.toString(), 
                 value: params.value.toString(), 
                 data: params.body.toBoc().toString('base64') 
             }; 
-        } else if (quote.quote.to_token !== TON_JETTON_ADDRESS) {
+        } else {
             const params = await dexRouter.getSwapJettonToJettonTxParams({
                 userWalletAddress: quote.quote.from_address,
-                offerJettonAddress: quote.quote.from_token,
+                offerJettonAddress: quote.quote.from_asset.tokenId,
                 offerAmount: quote.quote.from_value,
-                askJettonAddress: quote.quote.to_token,
-                minAskAmount: 1, //quote.output_min_value,
-                //referralAddress: quote.quote.referral_address,
-                //referralValue: quote.quote.referral_bps, 
+                askJettonAddress: quote.quote.to_asset.tokenId,
+                minAskAmount: quote.output_min_value,
             });
             return {
                 to: params.to.toString(), 
