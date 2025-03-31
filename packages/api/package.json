@@ -2,13 +2,12 @@
   "name": "@swap-providers/api",
   "version": "0.0.0",
   "scripts": {
-    "prebuild": "npm run build --workspace=@swap-providers/types && npm run build --workspace=@swap-providers/swapper",
     "dev": "nodemon",
     "start": "nodemon src/app.ts"
   },
   "dependencies": {
-    "@swap-providers/types": "0.0.0",
-    "@swap-providers/swapper": "0.0.0",
+    "@swap-providers/types": "workspace:*",
+    "@swap-providers/swapper": "workspace:*",
     "express": "4.21.2"
   }
 }

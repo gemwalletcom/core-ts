@@ -6,7 +6,7 @@
     "build": "tsc --build"
   },
   "dependencies": {
-    "@swap-providers/types": "0.0.0",
+    "@swap-providers/types": "workspace:*",
     "@ston-fi/api": "0.21.0",
     "@ston-fi/sdk": "2.3.0",
     "@ton/ton": "15.2.1"

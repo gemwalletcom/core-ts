@@ -1,0 +1,14 @@
+{
+  "watch": [
+    "../**/*.ts"
+  ],
+  "ignore": [
+    "../**/*.test.ts",
+    "../node_modules/**/*"
+  ],
+  "exec": "ts-node -r tsconfig-paths/register -P tsconfig.json src/app.ts",
+  "ext": "ts",
+  "verbose": false,
+  "quiet": true,
+  "restartable": "rs"
+}
