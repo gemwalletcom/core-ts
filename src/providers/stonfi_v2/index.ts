@@ -1,16 +1,12 @@
 import { TonClient, toNano } from "@ton/ton";
 import { DEX, pTON } from "@ston-fi/sdk";
 import { StonApiClient } from '@ston-fi/api';
-import { QuoteRequest, Quote, QuoteData, Chain, Asset } from "../../types";
+import { QuoteRequest, Quote, QuoteData, Chain, Asset } from "../../types/types";
 import { Protocol } from "../protocol";
 
 const client = new StonApiClient();
 
 const TON_JETTON_ADDRESS = "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c";
-
-const proxyTon = pTON.v2_1.create(
-    "EQBnGWMCf3-FZZq1W4IWcWiGAc3PHuZ0_H-7sad2oY00o83S"
-);
 
 function getTokenAddress(asset: Asset): string {
     return asset.isNative() ? TON_JETTON_ADDRESS : asset.tokenId;
@@ -45,20 +41,25 @@ export class StonfiProvider implements Protocol {
         const fromTokenAdddress = getTokenAddress(fromAsset)
         const toTokenAddress = getTokenAddress(toAsset)
 
+        let routers = await client.getRouters({dexV2: true});
         let pools = await client.getPoolsByAssetPair({
             asset0Address: fromTokenAdddress, 
             asset1Address: toTokenAddress
         });
-        const [pool] = pools || [];
-        if (!pool) throw new Error("No liquidity pools found for token pair");
-        
-        console.log("pool", pool);
+        const pool = pools.find(pool =>
+            routers.some(router => router.address === pool.routerAddress && router.majorVersion === 2)
+        );
+        const proxyTon = pTON.v2_1.create(
+            "EQBnGWMCf3-FZZq1W4IWcWiGAc3PHuZ0_H-7sad2oY00o83S"
+        );
+        if (!pool) {
+            throw new Error("No valid pools found with a matching router of major version 2.");
+        }
 
         const dexRouter = new TonClient({
             endpoint: "https://toncenter.com/api/v2/jsonRPC"
         }).open(DEX.v2_2.Router.create(pool.routerAddress));
 
-        // from ton to jetton
         if (fromAsset.isNative()) {
             const params = await dexRouter.getSwapTonToJettonTxParams({
                 userWalletAddress: quote.quote.from_address,

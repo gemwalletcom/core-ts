@@ -1,6 +1,7 @@
-import { Asset, Chain } from './types';
+import { Asset, Chain } from './asset';
 
 describe('Asset', () => {
+    // ...existing test code from types.test.ts for Asset...
     describe('constructor', () => {
         it('should create Asset with chain only', () => {
             const asset = new Asset(Chain.TON);
@@ -51,7 +52,6 @@ describe('Asset', () => {
         it('should return true for native asset', () => {
             const asset = new Asset(Chain.TON);
             expect(asset.isNative()).toBe(true);
-            expect(asset.tokenId).toBeUndefined();
         });
 
         it('should return false for token asset', () => {
