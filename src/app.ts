@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 const providers: Record<string, Protocol> = {
-    stonfi_v2: new StonfiProvider(process.env.TON_URL || "https://toncenter.com/api/v2/jsonRPC"),
+    stonfi_v2: new StonfiProvider(process.env.TON_URL || "https://toncenter.com"),
 };
 
 app.get('/:providerId/quote', async (req, res) => {

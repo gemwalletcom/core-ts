@@ -71,7 +71,7 @@ export class StonfiProvider implements Protocol {
                 throw new Error("Router version not supported");
             }
         })();
-        const routerClient = new TonClient({endpoint: this.endpoint}).open(dexRouterInstance);
+        const routerClient = new TonClient({endpoint: this.endpoint + "/api/v2/jsonRPC"}).open(dexRouterInstance);
         const proxyTon = pTON.v2_1.create(
             "EQBnGWMCf3-FZZq1W4IWcWiGAc3PHuZ0_H-7sad2oY00o83S"
         );
