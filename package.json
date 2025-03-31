@@ -1,25 +1,22 @@
 {
-  "name": "swap-providers",
+  "name": "swap-providers-monorepo",
   "version": "0.0.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
-    "build": "tsc",
-    "test": "jest"
-  },
-  "dependencies": {
-    "@ston-fi/api": "0.21.0",
-    "@ston-fi/sdk": "2.3.0",
-    "@ton/ton": "15.2.1",
-    "express": "4.21.2"
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "dev": "nodemon"
   },
   "devDependencies": {
-    "@types/express": "5.0.1",
     "@types/jest": "29.5.14",
     "@types/node": "22.13.14",
     "jest": "29.7.0",
+    "nodemon": "3.1.0",
     "ts-jest": "29.3.1",
-    "ts-node-dev": "2.0.0",
+    "ts-node": "10.9.2",
     "typescript": "5.8.2"
   }
 }

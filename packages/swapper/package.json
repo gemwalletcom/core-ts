@@ -1,0 +1,14 @@
+{
+  "name": "@swap-providers/swapper",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "@swap-providers/types": "0.0.0",
+    "@ston-fi/api": "0.21.0",
+    "@ston-fi/sdk": "2.3.0",
+    "@ton/ton": "15.2.1"
+  }
+}

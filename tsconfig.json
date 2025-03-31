@@ -1,36 +1,14 @@
 {
-    "compilerOptions": {
-      /* Visit https://aka.ms/tsconfig.json to read more about this file */
-
-      /* Projects */
-      // "incremental": true,                              /* Enable incremental compilation */
-      // "composite": true,                                /* Enable constraints that allow a TypeScript project to be used with project references. */
-      // "tsBuildInfoFile": "./",                          /* Specify the folder for .tsbuildinfo incremental compilation files. */
-      // "disableSourceOfProjectReferenceRedirect": true,  /* Disable preferring source files instead of declaration files when referencing composite projects */
-      // "disableSolutionSearching": true,                 /* Opt a project out of multi-project reference checking when editing. */
-      // "disableReferencedProjectLoad": true,             /* Reduce the number of projects loaded automatically by TypeScript. */
-
-      /* Language and Environment */
-      "target": "es2016",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
-      // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
-      // ......................................................................
-      // "useDefineForClassFields": true,                  /* Emit ECMAScript-standard-compliant class fields. */
-
-      /* Modules */
-      "module": "commonjs",                                /* Specify what module code is generated. */
-      // "rootDir": "./",                                  /* Specify the root folder within your source files. */
-      // ......................................................................................
-      // "sourceMap": true,                                /* Create source map files for emitted JavaScript files. */
-      // "outFile": "./",                                  /* Specify a file that bundles all outputs into one JavaScript file. If `declaration` is true, also designates a file that bundles all .d.ts output. */
-      "outDir": "./build",                                   /* Specify an output folder for all emitted files. */
-      // "removeComments": true,                           /* Disable emitting comments. */
-      // "noEmit": true,                                   /* Disable emitting files from a compilation. */
-     // ......................................................................
-      // ............................................................................
-      "esModuleInterop": true,                             /* Enables interoperability between CommonJS and ES Modules. */
-
-      /* Completeness */
-      // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
-      "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@swap-providers/*": ["packages/*/src"]
     }
-  }
+  },
+  "references": [
+    { "path": "./packages/types" },
+    { "path": "./packages/swapper" },
+    { "path": "./packages/api" }
+  ]
+}

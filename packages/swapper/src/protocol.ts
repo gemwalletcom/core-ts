@@ -1,4 +1,4 @@
-import { QuoteRequest, Quote, QuoteData } from "../types/types";
+import { QuoteRequest, Quote, QuoteData } from "@swap-providers/types";
 
 export interface Protocol {
     get_quote(quote: QuoteRequest): Promise<Quote>;

@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
-import { QuoteDataRequest, Quote, QuoteRequest, Asset } from "./types/types";
-import { StonfiProvider } from "./providers/stonfi";
-import { Protocol } from "./providers/protocol";
+import { QuoteDataRequest, Quote, QuoteRequest, Asset } from "@swap-providers/types";
+import { StonfiProvider } from "@swap-providers/swapper";
+import { Protocol } from "@swap-providers/swapper";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,7 +34,11 @@ app.get('/:providerId/quote', async (req, res) => {
         const quote = await provider.get_quote(request);
         res.json(quote);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        if (error instanceof Error) {
+            res.status(500).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: 'Unknown error occurred' });
+        }
     }
 });
 
@@ -53,11 +57,14 @@ app.post('/:providerId/quote_data', async (req, res) => {
         const quote = await provider.get_quote_data(quote_request);
         res.json(quote);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        if (error instanceof Error) {
+            res.status(500).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: 'Unknown error occurred' });
+        }
     }
 });
 
 app.listen(PORT, () => {
     console.log(`App is running on port ${PORT}!`);
 });
-

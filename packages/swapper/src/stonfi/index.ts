@@ -1,7 +1,7 @@
-import { TonClient, toNano } from "@ton/ton";
+import { TonClient } from "@ton/ton";
 import { DEX, pTON } from "@ston-fi/sdk";
 import { StonApiClient } from '@ston-fi/api';
-import { QuoteRequest, Quote, QuoteData, Chain, Asset } from "../../types/types";
+import { QuoteRequest, Quote, QuoteData, Asset } from "@swap-providers/types";
 import { Protocol } from "../protocol";
 
 const client = new StonApiClient();
@@ -9,7 +9,7 @@ const client = new StonApiClient();
 const TON_JETTON_ADDRESS = "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c";
 
 function getTokenAddress(asset: Asset): string {
-    return asset.isNative() ? TON_JETTON_ADDRESS : asset.tokenId;
+    return asset.isNative() ? TON_JETTON_ADDRESS : asset.tokenId ?? '';
 }
 
 export class StonfiProvider implements Protocol {
@@ -76,7 +76,7 @@ export class StonfiProvider implements Protocol {
             "EQBnGWMCf3-FZZq1W4IWcWiGAc3PHuZ0_H-7sad2oY00o83S"
         );
         
-        if (parseFloat(pool.lpTotalSupplyUsd) < 1000) {
+        if (pool.lpTotalSupplyUsd && parseFloat(pool.lpTotalSupplyUsd) < 1000) {
             throw new Error("Pool liquidity is too low.");
         }
 
@@ -91,6 +91,10 @@ export class StonfiProvider implements Protocol {
                 referralAddress: quote.quote.referral_address,
                 referralValue: quote.quote.referral_bps,
             });
+
+            if (!params.body) {
+                throw new Error('Transaction body is required');
+            }
 
             return {
                 to: params.to.toString(), 
@@ -108,6 +112,10 @@ export class StonfiProvider implements Protocol {
                 referralValue: quote.quote.referral_bps,
             });
 
+            if (!params.body) {
+                throw new Error('Transaction body is required');
+            }
+
             return {
                 to: params.to.toString(), 
                 value: params.value.toString(), 
@@ -123,6 +131,10 @@ export class StonfiProvider implements Protocol {
                 referralAddress: quote.quote.referral_address,
                 referralValue: quote.quote.referral_bps,
             });
+
+            if (!params.body) {
+                throw new Error('Transaction body is required');
+            }
 
             return {
                 to: params.to.toString(), 

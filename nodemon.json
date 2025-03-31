@@ -1,0 +1,12 @@
+{
+  "watch": [
+    "packages/api/src/**/*.ts"
+  ],
+  "ignore": [
+    "packages/*/src/**/*.test.ts",
+    "node_modules"
+  ],
+  "exec": "ts-node -P packages/api/tsconfig.json packages/api/src/app.ts",
+  "ext": "ts",
+  "verbose": true
+}

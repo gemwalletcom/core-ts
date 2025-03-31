@@ -1,9 +1,9 @@
-export { Asset, Chain } from './asset';
+import { Asset } from './asset';
 
 export interface QuoteRequest {
     from_address: string;
-    from_asset: string;
-    to_asset: string;
+    from_asset: Asset;
+    to_asset: Asset;
     from_value: string;
     referral_address: string;
     referral_bps: number;
@@ -21,7 +21,7 @@ export interface QuoteDataRequest {
 }
 
 export interface QuoteData {
-    to: string,
-    value: string,
+    to: string;
+    value: string;
     data: string;
 }
