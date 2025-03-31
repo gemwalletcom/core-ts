@@ -12,7 +12,7 @@ const providers: Record<string, Protocol> = {
     stonfi: new StonfiProvider(),
 };
 
-app.get('/v1/:providerId/quote', async (req, res) => {
+app.get('/:providerId/quote', async (req, res) => {
     const provider = providers[req.params.providerId];
     
     if (!provider) {
@@ -38,7 +38,7 @@ app.get('/v1/:providerId/quote', async (req, res) => {
     }
 });
 
-app.post('/v1/:providerId/quote_data', async (req, res) => {
+app.post('/:providerId/quote_data', async (req, res) => {
     const provider = providers[req.params.providerId];
     console.log(req.query);
     
