@@ -1,7 +1,7 @@
 export interface QuoteRequest {
     from_address: string;
-    from_asset: Asset;
-    to_asset: Asset;
+    from_asset: string;
+    to_asset: string;
     from_value: string;
     referral_address: string;
     referral_bps: number;
