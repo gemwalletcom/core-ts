@@ -13,6 +13,12 @@ function getTokenAddress(asset: Asset): string {
 }
 
 export class StonfiProvider implements Protocol {
+    private endpoint: string;
+
+    constructor(endpoint: string) {
+        this.endpoint = endpoint;
+    }
+
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
         const fromAsset = Asset.fromString(quoteRequest.from_asset.toString())
         const toAsset = Asset.fromString(quoteRequest.to_asset.toString())
@@ -24,6 +30,7 @@ export class StonfiProvider implements Protocol {
             slippageTolerance: (quoteRequest.slippage_bps / 10000).toString(),
             referralAddress: quoteRequest.referral_address,
             referralFeeBps: quoteRequest.referral_bps.toString(),
+            dexVersion: [2],
         });
 
         console.log("swapDirectSimulation", swapDirectSimulation);
@@ -40,28 +47,41 @@ export class StonfiProvider implements Protocol {
         const toAsset = Asset.fromString(quote.quote.to_asset.toString())
         const fromTokenAdddress = getTokenAddress(fromAsset)
         const toTokenAddress = getTokenAddress(toAsset)
-
-        let routers = await client.getRouters({dexV2: true});
+        let routers = await client.getRouters();
         let pools = await client.getPoolsByAssetPair({
             asset0Address: fromTokenAdddress, 
             asset1Address: toTokenAddress
         });
-        const pool = pools.find(pool =>
-            routers.some(router => router.address === pool.routerAddress && router.majorVersion === 2)
-        );
+        const pool = pools[0];
+        if (!pool) {
+            throw new Error("No valid pools");
+        }
+        const router = routers.find(r => r.address === pool.routerAddress);
+        if (!router) {
+            throw new Error("No matching router found");
+        }
+        // only support v2
+        const dexRouterInstance = (() => {
+            switch (true) {
+            case router.majorVersion === 2 && router.minorVersion === 1:
+                return DEX.v2_1.Router.create(router.address);
+            case router.majorVersion === 2 && router.minorVersion === 2:
+                return DEX.v2_2.Router.create(router.address);
+            default:
+                throw new Error("Router version not supported");
+            }
+        })();
+        const routerClient = new TonClient({endpoint: this.endpoint}).open(dexRouterInstance);
         const proxyTon = pTON.v2_1.create(
             "EQBnGWMCf3-FZZq1W4IWcWiGAc3PHuZ0_H-7sad2oY00o83S"
         );
-        if (!pool) {
-            throw new Error("No valid pools found with a matching router of major version 2.");
+        
+        if (parseFloat(pool.lpTotalSupplyUsd) < 1000) {
+            throw new Error("Pool liquidity is too low.");
         }
 
-        const dexRouter = new TonClient({
-            endpoint: "https://toncenter.com/api/v2/jsonRPC"
-        }).open(DEX.v2_2.Router.create(pool.routerAddress));
-
         if (fromAsset.isNative()) {
-            const params = await dexRouter.getSwapTonToJettonTxParams({
+            const params = await routerClient.getSwapTonToJettonTxParams({
                 userWalletAddress: quote.quote.from_address,
                 proxyTon,
                 offerAmount: quote.quote.from_value,
@@ -78,7 +98,7 @@ export class StonfiProvider implements Protocol {
                 data: params.body.toBoc().toString('base64') 
             }; 
         } else if (toAsset.isNative()) {
-            const params = await dexRouter.getSwapJettonToTonTxParams({
+            const params = await routerClient.getSwapJettonToTonTxParams({
                 userWalletAddress: quote.quote.from_address,
                 proxyTon,
                 offerJettonAddress: fromTokenAdddress,
@@ -94,7 +114,7 @@ export class StonfiProvider implements Protocol {
                 data: params.body.toBoc().toString('base64') 
             }; 
         } else {
-            const params = await dexRouter.getSwapJettonToJettonTxParams({
+            const params = await routerClient.getSwapJettonToJettonTxParams({
                 userWalletAddress: quote.quote.from_address,
                 offerJettonAddress: fromTokenAdddress,
                 offerAmount: quote.quote.from_value,

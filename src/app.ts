@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { QuoteDataRequest, Quote, QuoteRequest, Asset } from "./types/types";
-import { StonfiProvider } from "./providers/stonfi_v2";
+import { StonfiProvider } from "./providers/stonfi";
 import { Protocol } from "./providers/protocol";
 
 const app = express();
@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 const providers: Record<string, Protocol> = {
-    stonfi_v2: new StonfiProvider(),
+    stonfi_v2: new StonfiProvider(process.env.TON_URL || "https://toncenter.com/api/v2/jsonRPC"),
 };
 
 app.get('/:providerId/quote', async (req, res) => {
