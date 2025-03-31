@@ -26,6 +26,8 @@ export class StonfiProvider implements Protocol {
             offerUnits: quoteRequest.from_value, 
             askAddress: getTokenAddress(toAsset), 
             slippageTolerance: (quoteRequest.slippage_bps / 10000).toString(),
+            referralAddress: quoteRequest.referral_address,
+            referralFeeBps: quoteRequest.referral_bps.toString(),
         });
 
         console.log("swapDirectSimulation", swapDirectSimulation);
@@ -65,6 +67,8 @@ export class StonfiProvider implements Protocol {
                 askJettonAddress: toTokenAddress,
                 minAskAmount: quote.output_min_value,
                 deadline: Math.floor(Date.now() / 1000) + 60 * 1000,
+                referralAddress: quote.quote.referral_address,
+                referralValue: quote.quote.referral_bps,
             });
 
             return {
@@ -79,6 +83,8 @@ export class StonfiProvider implements Protocol {
                 offerJettonAddress: fromTokenAdddress,
                 offerAmount: quote.quote.from_value,
                 minAskAmount: quote.output_min_value,
+                referralAddress: quote.quote.referral_address,
+                referralValue: quote.quote.referral_bps,
             });
 
             return {
@@ -93,6 +99,8 @@ export class StonfiProvider implements Protocol {
                 offerAmount: quote.quote.from_value,
                 askJettonAddress: toTokenAddress,
                 minAskAmount: quote.output_min_value,
+                referralAddress: quote.quote.referral_address,
+                referralValue: quote.quote.referral_bps,
             });
 
             return {
