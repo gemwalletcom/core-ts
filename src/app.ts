@@ -22,8 +22,8 @@ app.get('/v1/:providerId/quote', async (req, res) => {
     try {
         let request: QuoteRequest = {
             from_address: req.query.from_address as string,
-            from_asset: Asset.fromString(req.query.from_asset as string),
-            to_asset: Asset.fromString(req.query.to_asset as string),
+            from_asset: req.query.from_asset as string,
+            to_asset: req.query.to_asset as string,
             from_value: req.query.from_value as string,
             referral_address: req.query.referral_address as string,
             referral_bps: parseInt(req.query.referral_bps as string),
