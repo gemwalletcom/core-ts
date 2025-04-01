@@ -14,16 +14,16 @@
   "dependencies": {
     "@gemwallet/types": "workspace:*",
     "@mayanfinance/swap-sdk": "10.4.0",
-    "@solana/web3.js": "^1.98.0",
+    "@solana/web3.js": "1.98.0",
     "@ston-fi/api": "0.21.0",
     "@ston-fi/sdk": "2.3.0",
     "@ton/ton": "15.2.1"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.3.1",
-    "typescript": "^5.3.3"
+    "@types/jest": "29.5.14",
+    "jest": "29.7.0",
+    "ts-jest": "29.3.1",
+    "typescript": "5.3.3"
   },
   "files": [
     "dist"
