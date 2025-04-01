@@ -26,9 +26,7 @@ COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY . .
 
 # Build packages in correct order with explicit path to node_modules
-RUN cd packages/types && pnpm run build && \
-    cd ../swapper && pnpm run build && \
-    cd ../../apps/api && pnpm run build
+RUN pnpm run build
 
 FROM base AS runner
 WORKDIR /app
