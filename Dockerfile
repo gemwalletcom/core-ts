@@ -1,5 +1,3 @@
-# apps/api/Dockerfile
-
 FROM node:18-alpine AS base
 WORKDIR /app
 RUN npm install -g pnpm

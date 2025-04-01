@@ -1,31 +1,19 @@
 {
     "compilerOptions": {
-      // Target ECMAScript version for the compiled JavaScript.
       "target": "ES2016",
-      // Module system for the output code. CommonJS is standard for Node.js.
       "module": "CommonJS",
-      // Output directory for compiled files.
       "outDir": "./dist",
-      // Root directory of source files.
       "rootDir": "./src",
-      // Enable all strict type-checking options.
       "strict": true,
-      // Allows default imports from modules with no default export.
       "esModuleInterop": true,
-      // Skip type checking of declaration files (.d.ts) from dependencies.
       "skipLibCheck": true,
-      // Enforce consistent casing in file names.
       "forceConsistentCasingInFileNames": true,
-      // Generate corresponding .d.ts files alongside .js files. Crucial for shared libs.
       "declaration": true,
-      // Generate source maps for .d.ts files. Helps IDEs navigate to original TS source.
       "declarationMap": true,
       "sourceMap": true,
       "composite": true,
     },
-    // Specifies which files TypeScript should include in the compilation process.
     "include": ["src/**/*"], // Include all files within the src directory.
-    // Specifies files or patterns to exclude from compilation.
     "exclude": ["node_modules", "dist"] // Exclude dependencies and the output directory.
   }
   
