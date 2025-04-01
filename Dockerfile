@@ -13,7 +13,7 @@ COPY packages/swapper/package.json packages/swapper/
 COPY apps/api/package.json apps/api/
 
 # Install all dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 FROM base AS builder
 WORKDIR /app
