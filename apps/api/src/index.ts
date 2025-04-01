@@ -9,7 +9,7 @@ app.use(express.json());
 
 const providers: Record<string, Protocol> = {
     stonfi_v2: new StonfiProvider(process.env.TON_URL || "https://toncenter.com"),
-    mayan: new MayanProvider(process.env.MAYAN_URL || "https://rpc.ankr.com/solana"),
+    mayan: new MayanProvider(process.env.MAYAN_URL || "https://solana-rpc.publicnode.com"),
 };
 
 app.get('/:providerId/quote', async (req, res) => {
@@ -30,11 +30,11 @@ app.get('/:providerId/quote', async (req, res) => {
             referral_bps: parseInt(req.query.referral_bps as string),
             slippage_bps: parseInt(req.query.slippage_bps as string),
         };
-
-        console.log("request: ", req.query);
+        
         const quote = await provider.get_quote(request);
         res.json(quote);
     } catch (error) {
+        console.log("request: ", req.query);
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
         } else {
@@ -52,9 +52,8 @@ app.post('/:providerId/quote_data', async (req, res) => {
     }
     const quote_request = req.body as Quote;
 
-    console.log("quote_request", quote_request);
-
     try {
+        console.log("quote_request", quote_request);
         const quote = await provider.get_quote_data(quote_request);
         res.json(quote);
     } catch (error) {

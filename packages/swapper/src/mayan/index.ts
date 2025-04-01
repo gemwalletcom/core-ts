@@ -48,7 +48,11 @@ export class MayanProvider implements Protocol {
             "swift": true,
             "fastMctp": false,
         }
+
+        const timestamp = Date.now();
         const quotes = await fetchQuote(params, options);
+        const latency = Date.now() - timestamp;
+        console.log("Mayan quote latency: ", latency);
 
         if (!quotes || quotes.length === 0) {
             throw new Error("No quotes available");
