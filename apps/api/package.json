@@ -16,7 +16,7 @@
   "dependencies": {
     "@gemwallet/swapper": "workspace:*",
     "@gemwallet/types": "workspace:*",
-    "express": "4.20.0"
+    "express": "5.1.0"
   },
   "devDependencies": {
     "@types/express": "4.17.21",
