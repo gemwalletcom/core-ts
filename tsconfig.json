@@ -1,14 +1,11 @@
 {
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@swap-providers/*": ["packages/*/src"]
-    }
-  },
-  "references": [
-    { "path": "./packages/types" },
-    { "path": "./packages/swapper" },
-    { "path": "./packages/api" }
-  ]
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
 }

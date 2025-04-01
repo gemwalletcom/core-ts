@@ -1,12 +1,19 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "rootDir": "./src",
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "../../build/types",
-    "tsBuildInfoFile": "../../build/types/tsconfig.tsbuildinfo"
-  },
-  "include": ["src"]
-}
+    "compilerOptions": {
+      "target": "ES2016",
+      "module": "CommonJS",
+      "outDir": "./dist",
+      "rootDir": "./src",
+      "strict": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "declaration": true,
+      "declarationMap": true,
+      "sourceMap": true,
+      "composite": true,
+    },
+    "include": ["src/**/*"], // Include all files within the src directory.
+    "exclude": ["node_modules", "dist"] // Exclude dependencies and the output directory.
+  }
+  

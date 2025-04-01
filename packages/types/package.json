@@ -1,8 +1,24 @@
 {
-  "name": "@swap-providers/types",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@gemwallet/types",
+  "version": "1.0.0",
+  "description": "Shared TypeScript types for the monorepo",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc --build"
-  }
+    "build": "tsc",
+    "dev": "tsc -w --preserveWatchOutput",
+    "test": "jest --passWithNoTests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "29.5.14",
+    "jest": "29.7.0",
+    "ts-jest": "29.3.1",
+    "typescript": "5.3.3"
+  },
+  "files": [
+    "dist"
+  ]
 }

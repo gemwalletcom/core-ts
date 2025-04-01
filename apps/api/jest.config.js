@@ -7,6 +7,7 @@ module.exports = {
       'ts-jest',
       {
         useESM: true,
+        tsconfig: 'tsconfig.json'
       },
     ],
   },
@@ -15,9 +16,4 @@ module.exports = {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
-  projects: [
-    '<rootDir>/packages/*',
-    '<rootDir>/apps/*'
-  ],
-  verbose: true
 };
