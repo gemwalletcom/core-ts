@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "nodemon",
-    "start": "nodemon src/app.ts"
+    "build": "tsc --build"
   },
   "dependencies": {
-    "@swap-providers/types": "workspace:*",
-    "@swap-providers/swapper": "workspace:*",
+    "@swap-providers/types": "0.0.0",
+    "@swap-providers/swapper": "0.0.0",
     "express": "4.21.2"
   }
 }

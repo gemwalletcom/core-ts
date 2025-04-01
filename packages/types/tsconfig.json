@@ -8,6 +8,5 @@
     "outDir": "../../build/types",
     "tsBuildInfoFile": "../../build/types/tsconfig.tsbuildinfo"
   },
-  "include": ["src"],
-  "references": []
+  "include": ["src"]
 }
