@@ -14,10 +14,5 @@ module.exports = {
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
-  projects: [
-    '<rootDir>/packages/*',
-    '<rootDir>/apps/*'
-  ],
-  verbose: true
+  testPathIgnorePatterns: ['/node_modules/', '/dist/']
 };
