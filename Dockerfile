@@ -1,23 +1,49 @@
-FROM node:23
+# apps/api/Dockerfile
 
-# Set the working directory
-WORKDIR /usr/src/app
+FROM node:18-alpine AS base
+WORKDIR /app
+RUN npm install -g pnpm
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+FROM base AS deps
+WORKDIR /app
 
-# Install dependencies
-RUN npm install
+COPY package.json pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
+COPY packages/types/package.json packages/types/
+COPY packages/swapper/package.json packages/swapper/
+COPY apps/api/package.json apps/api/
+RUN pnpm install --frozen-lockfile
 
-# Copy the rest of the application code
+FROM base AS builder
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build the TypeScript code
-RUN npm run build
+# Build packages in correct order
+RUN pnpm --filter "@gemwallet/types" run build && \
+    pnpm --filter "@gemwallet/swapper" run build && \
+    pnpm --filter "@gemwallet/api" run build
 
-# Expose the port the app runs on
-EXPOSE 3000
+FROM base AS runner
+WORKDIR /app
 
-# Command to run the application
-#CMD ["node", "build/app.js"]
-CMD ["npm", "run", "dev"]
+ENV NODE_ENV=production
+ENV PORT=3000
+EXPOSE ${PORT}
+
+# Copy only the necessary files
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+COPY --from=builder /app/packages/types/dist ./packages/types/dist
+COPY --from=builder /app/packages/types/package.json ./packages/types/package.json
+COPY --from=builder /app/packages/swapper/dist ./packages/swapper/dist
+COPY --from=builder /app/packages/swapper/package.json ./packages/swapper/package.json
+
+# Install production dependencies only
+RUN pnpm install --prod
+
+CMD ["node", "apps/api/dist/index.js"]

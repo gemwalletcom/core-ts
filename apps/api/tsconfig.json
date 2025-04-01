@@ -8,15 +8,17 @@
       "esModuleInterop": true,
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true,
-      "declaration": true,
-      "declarationMap": true,
+      "resolveJsonModule": true,
       "sourceMap": true,
-      "composite": true, // Required for project references
+      "declaration": true,
+      "declarationMap": true
     },
     "include": ["src/**/*"],
     "exclude": ["node_modules", "dist"],
     "references": [
-      { "path": "../types" } // Path relative to this tsconfig.json
+      { "path": "../../packages/swapper" },
+      { "path": "../../packages/types" }
     ]
   }
+  
   

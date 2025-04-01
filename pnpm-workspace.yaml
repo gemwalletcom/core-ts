@@ -1,0 +1,9 @@
+# pnpm-workspace.yaml
+# Defines the locations of the packages within the monorepo.
+# pnpm will look for package.json files in these directories.
+packages:
+  # Include all packages under the 'packages' directory
+  - 'packages/*'
+  # Include all applications under the 'apps' directory
+  - 'apps/*'
+

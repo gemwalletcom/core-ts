@@ -1,4 +1,61 @@
-node_modules
-build
-dist
-tsconfig.tsbuildinfo
+# .gitignore (place in the root of your monorepo)
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.pid
+*.seed
+*.pid.lock
+
+# Node dependencies and package manager artifacts
+node_modules/
+.pnpm-store/
+pnpm-lock.yaml # Usually committed, but can be ignored in some workflows
+
+# Build output
+dist/
+dist-ssr/
+*.tsbuildinfo
+coverage/
+.npm/
+
+# Compiled TypeScript files (if target is same as source)
+# *.js
+# *.js.map
+# *.d.ts
+# *.d.ts.map
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Optional packages
+**/node_modules/
+**/dist/
+**/coverage/
+**/.turbo/
+
+# Debug files
+dump.rdb
+heapdump*.heapsnapshot
+

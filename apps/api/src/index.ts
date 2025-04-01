@@ -1,7 +1,6 @@
 import express, { Request, Response } from "express";
-import { QuoteDataRequest, Quote, QuoteRequest, Asset } from "@swap-providers/types";
-import { StonfiProvider } from "@swap-providers/swapper";
-import { Protocol } from "@swap-providers/swapper";
+import { QuoteDataRequest, Quote, QuoteRequest, Asset } from "@gemwallet/types";
+import { StonfiProvider, Protocol, MayanProvider } from "@gemwallet/swapper";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,11 +9,12 @@ app.use(express.json());
 
 const providers: Record<string, Protocol> = {
     stonfi_v2: new StonfiProvider(process.env.TON_URL || "https://toncenter.com"),
+    mayan: new MayanProvider(process.env.MAYAN_URL || "https://rpc.ankr.com/solana"),
 };
 
 app.get('/:providerId/quote', async (req, res) => {
     const provider = providers[req.params.providerId];
-    
+
     if (!provider) {
         res.status(404).json({ error: `Provider ${req.params.providerId} not found` });
     }
@@ -23,6 +23,7 @@ app.get('/:providerId/quote', async (req, res) => {
         let request: QuoteRequest = {
             from_address: req.query.from_address as string,
             from_asset: req.query.from_asset as string,
+            to_address: req.query.to_address as string,
             to_asset: req.query.to_asset as string,
             from_value: req.query.from_value as string,
             referral_address: req.query.referral_address as string,
@@ -45,7 +46,7 @@ app.get('/:providerId/quote', async (req, res) => {
 app.post('/:providerId/quote_data', async (req, res) => {
     const provider = providers[req.params.providerId];
     console.log(req.query);
-    
+
     if (!provider) {
         res.status(404).json({ error: `Provider ${req.params.providerId} not found` });
     }

@@ -1,7 +1,7 @@
 import { TonClient } from "@ton/ton";
 import { DEX, pTON } from "@ston-fi/sdk";
 import { StonApiClient } from '@ston-fi/api';
-import { QuoteRequest, Quote, QuoteData, Asset } from "@swap-providers/types";
+import { QuoteRequest, Quote, QuoteData, Asset } from "@gemwallet/types";
 import { Protocol } from "../protocol";
 
 const client = new StonApiClient();
@@ -23,10 +23,10 @@ export class StonfiProvider implements Protocol {
         const fromAsset = Asset.fromString(quoteRequest.from_asset.toString())
         const toAsset = Asset.fromString(quoteRequest.to_asset.toString())
 
-        const swapDirectSimulation = await client.simulateSwap({ 
+        const swapDirectSimulation = await client.simulateSwap({
             offerAddress: getTokenAddress(fromAsset),
-            offerUnits: quoteRequest.from_value, 
-            askAddress: getTokenAddress(toAsset), 
+            offerUnits: quoteRequest.from_value,
+            askAddress: getTokenAddress(toAsset),
             slippageTolerance: (quoteRequest.slippage_bps / 10000).toString(),
             referralAddress: quoteRequest.referral_address,
             referralFeeBps: quoteRequest.referral_bps.toString(),
@@ -39,6 +39,7 @@ export class StonfiProvider implements Protocol {
             quote: quoteRequest,
             output_value: swapDirectSimulation.askUnits,
             output_min_value: swapDirectSimulation.minAskUnits,
+            route_data: {}
         }
     }
 
@@ -49,7 +50,7 @@ export class StonfiProvider implements Protocol {
         const toTokenAddress = getTokenAddress(toAsset)
         let routers = await client.getRouters();
         let pools = await client.getPoolsByAssetPair({
-            asset0Address: fromTokenAdddress, 
+            asset0Address: fromTokenAdddress,
             asset1Address: toTokenAddress
         });
         const pool = pools[0];
@@ -63,19 +64,19 @@ export class StonfiProvider implements Protocol {
         // only support v2
         const dexRouterInstance = (() => {
             switch (true) {
-            case router.majorVersion === 2 && router.minorVersion === 1:
-                return DEX.v2_1.Router.create(router.address);
-            case router.majorVersion === 2 && router.minorVersion === 2:
-                return DEX.v2_2.Router.create(router.address);
-            default:
-                throw new Error("Router version not supported");
+                case router.majorVersion === 2 && router.minorVersion === 1:
+                    return DEX.v2_1.Router.create(router.address);
+                case router.majorVersion === 2 && router.minorVersion === 2:
+                    return DEX.v2_2.Router.create(router.address);
+                default:
+                    throw new Error("Router version not supported");
             }
         })();
-        const routerClient = new TonClient({endpoint: this.endpoint + "/api/v2/jsonRPC"}).open(dexRouterInstance);
+        const routerClient = new TonClient({ endpoint: this.endpoint + "/api/v2/jsonRPC" }).open(dexRouterInstance);
         const proxyTon = pTON.v2_1.create(
             "EQBnGWMCf3-FZZq1W4IWcWiGAc3PHuZ0_H-7sad2oY00o83S"
         );
-        
+
         if (pool.lpTotalSupplyUsd && parseFloat(pool.lpTotalSupplyUsd) < 1000) {
             throw new Error("Pool liquidity is too low.");
         }
@@ -97,10 +98,10 @@ export class StonfiProvider implements Protocol {
             }
 
             return {
-                to: params.to.toString(), 
-                value: params.value.toString(), 
-                data: params.body.toBoc().toString('base64') 
-            }; 
+                to: params.to.toString(),
+                value: params.value.toString(),
+                data: params.body.toBoc().toString('base64')
+            };
         } else if (toAsset.isNative()) {
             const params = await routerClient.getSwapJettonToTonTxParams({
                 userWalletAddress: quote.quote.from_address,
@@ -117,10 +118,10 @@ export class StonfiProvider implements Protocol {
             }
 
             return {
-                to: params.to.toString(), 
-                value: params.value.toString(), 
-                data: params.body.toBoc().toString('base64') 
-            }; 
+                to: params.to.toString(),
+                value: params.value.toString(),
+                data: params.body.toBoc().toString('base64')
+            };
         } else {
             const params = await routerClient.getSwapJettonToJettonTxParams({
                 userWalletAddress: quote.quote.from_address,
@@ -137,10 +138,10 @@ export class StonfiProvider implements Protocol {
             }
 
             return {
-                to: params.to.toString(), 
-                value: params.value.toString(), 
-                data: params.body.toBoc().toString('base64') 
-            }; 
+                to: params.to.toString(),
+                value: params.value.toString(),
+                data: params.body.toBoc().toString('base64')
+            };
         }
     }
 }
