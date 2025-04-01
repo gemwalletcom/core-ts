@@ -5,23 +5,30 @@ RUN npm install -g pnpm
 FROM base AS deps
 WORKDIR /app
 
+# Copy all package.json files first
 COPY package.json pnpm-lock.yaml ./
 COPY pnpm-workspace.yaml ./
 COPY packages/types/package.json packages/types/
 COPY packages/swapper/package.json packages/swapper/
 COPY apps/api/package.json apps/api/
+
+# Install all dependencies
 RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
 WORKDIR /app
 
+# Copy dependencies and source code
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/types/node_modules ./packages/types/node_modules
+COPY --from=deps /app/packages/swapper/node_modules ./packages/swapper/node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY . .
 
-# Build packages in correct order
-RUN pnpm --filter "@gemwallet/types" run build && \
-    pnpm --filter "@gemwallet/swapper" run build && \
-    pnpm --filter "@gemwallet/api" run build
+# Build packages in correct order with explicit path to node_modules
+RUN cd packages/types && pnpm run build && \
+    cd ../swapper && pnpm run build && \
+    cd ../../apps/api && pnpm run build
 
 FROM base AS runner
 WORKDIR /app
