@@ -9,7 +9,7 @@ app.use(express.json());
 
 const providers: Record<string, Protocol> = {
     stonfi_v2: new StonfiProvider(process.env.TON_URL || "https://toncenter.com"),
-    mayan: new MayanProvider(process.env.MAYAN_URL || "https://solana-rpc.publicnode.com"),
+    mayan: new MayanProvider(process.env.SOLANA_URL || "https://solana-rpc.publicnode.com"),
 };
 
 app.get('/:providerId/quote', async (req, res) => {
