@@ -32,6 +32,12 @@ export class MayanProvider implements Protocol {
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
         const fromAsset = Asset.fromString(quoteRequest.from_asset.toString());
         const toAsset = Asset.fromString(quoteRequest.to_asset.toString());
+        var referrerBps = quoteRequest.referral_bps;
+
+        // FIXME "fee rate ref is not zero"
+        if (fromAsset.chain === Chain.Solana) {
+            referrerBps = 0;
+        }
 
         const params: QuoteParams = {
             fromToken: this.mapAssetToTokenId(fromAsset),
@@ -41,7 +47,7 @@ export class MayanProvider implements Protocol {
             toChain: this.mapChainToName(toAsset.chain),
             slippageBps: "auto",
             referrer: quoteRequest.referral_address,
-            referrerBps: quoteRequest.referral_bps
+            referrerBps,
         }
 
         // explicitly set which types of quotes we want to fetch
