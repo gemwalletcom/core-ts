@@ -1,7 +1,7 @@
 import { TonClient } from "@ton/ton";
 import { DEX, pTON } from "@ston-fi/sdk";
 import { StonApiClient } from '@ston-fi/api';
-import { QuoteRequest, Quote, QuoteData, Asset } from "@gemwallet/types";
+import { QuoteRequest, Quote, QuoteData, Asset, Chain } from "@gemwallet/types";
 import { Protocol } from "../protocol";
 
 const client = new StonApiClient();
@@ -22,6 +22,10 @@ export class StonfiProvider implements Protocol {
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
         const fromAsset = Asset.fromString(quoteRequest.from_asset.toString())
         const toAsset = Asset.fromString(quoteRequest.to_asset.toString())
+
+        if (fromAsset.chain != Chain.Ton) {
+            throw new Error("Only TON is supported");
+        }
 
         const swapDirectSimulation = await client.simulateSwap({
             offerAddress: getTokenAddress(fromAsset),
