@@ -1,20 +1,10 @@
-export enum Chain {
-    TON = 'ton',
-    SOLANA = 'solana',
-    ETHEREUM = 'ethereum',
-    AVALANCHE = 'avalanche',
-    POLYGON = 'polygon',
-    BASE = 'base',
-    ARBITRUM = 'arbitrum',
-    OPTIMISM = 'optimism',
-    SMARTCHAIN = 'smartchain',
-}
+import { Chain } from './primitives';
 
 export class Asset {
     constructor(
         public chain: Chain,
         public tokenId?: string
-    ) {}
+    ) { }
 
     static fromString(asset: string): Asset {
         const [chain, ...rest] = asset.split('_');
