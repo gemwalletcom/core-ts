@@ -30,7 +30,7 @@ app.get('/:providerId/quote', async (req, res) => {
             referral_bps: parseInt(req.query.referral_bps as string),
             slippage_bps: parseInt(req.query.slippage_bps as string),
         };
-        
+
         const quote = await provider.get_quote(request);
         res.json(quote);
     } catch (error) {
@@ -53,10 +53,11 @@ app.post('/:providerId/quote_data', async (req, res) => {
     const quote_request = req.body as Quote;
 
     try {
-        console.log("quote_request", quote_request);
+
         const quote = await provider.get_quote_data(quote_request);
         res.json(quote);
     } catch (error) {
+        console.log("quote_request", quote_request);
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
         } else {
