@@ -3,6 +3,7 @@ import { QuoteRequest, Quote, QuoteData, Asset, Chain } from "@gemwallet/types";
 import { Protocol } from "../protocol";
 import { buildEvmQuoteData } from "./evm";
 import { buildSolanaQuoteData } from "./solana";
+import { parseDecimals } from "../bigint";
 
 export class MayanProvider implements Protocol {
     private rpcEndpoint: string;
@@ -66,10 +67,13 @@ export class MayanProvider implements Protocol {
 
         const quote = quotes[0];
 
+        const output_value = parseDecimals(quote.expectedAmountOut, quote.toToken.decimals);
+        const output_min_value = parseDecimals(quote.minAmountOut, quote.toToken.decimals);
+
         return {
             quote: quoteRequest,
-            output_value: quote.expectedAmountOut.toString(),
-            output_min_value: quote.minAmountOut.toString(),
+            output_value: output_value.toString(),
+            output_min_value: output_min_value.toString(),
             route_data: quote
         };
     }
