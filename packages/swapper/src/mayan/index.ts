@@ -50,10 +50,10 @@ export class MayanProvider implements Protocol {
 
         // explicitly set which types of quotes we want to fetch
         const options: QuoteOptions = {
-            "wormhole": false,
+            "wormhole": true,
             "swift": true,
             "gasless": false,
-            "mctp": false,
+            "mctp": true,
             "shuttle": false,
             "fastMctp": true,
             "onlyDirect": false,
