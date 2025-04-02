@@ -2,7 +2,6 @@ import { Asset } from './asset';
 import { Chain } from './primitives';
 
 describe('Asset', () => {
-    // ...existing test code from types.test.ts for Asset...
     describe('constructor', () => {
         it('should create Asset with chain only', () => {
             const asset = new Asset(Chain.Ton);

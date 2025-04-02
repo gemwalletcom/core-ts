@@ -1,6 +1,5 @@
-import { QuoteRequest } from "@gemwallet/types";
+import { QuoteRequest, QuoteData } from "@gemwallet/types";
 import { Quote as MayanQuote, ReferrerAddresses, createSwapFromSolanaInstructions } from "@mayanfinance/swap-sdk";
-import { QuoteData } from "@gemwallet/types";
 import { Connection, MessageV0, PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 
 export async function buildSolanaQuoteData(request: QuoteRequest, routeData: MayanQuote, rpcEndpoint: string): Promise<QuoteData> {

@@ -1,7 +1,5 @@
-import { QuoteRequest } from "@gemwallet/types";
-import { Quote as MayanQuote } from "@mayanfinance/swap-sdk";
-import { getSwapFromEvmTxPayload } from "@mayanfinance/swap-sdk";
-import { QuoteData } from "@gemwallet/types";
+import { QuoteRequest, QuoteData } from "@gemwallet/types";
+import { Quote as MayanQuote, getSwapFromEvmTxPayload } from "@mayanfinance/swap-sdk";
 
 export function buildEvmQuoteData(request: QuoteRequest, routeData: MayanQuote): QuoteData {
     const signerChainId = routeData.fromToken.chainId;
