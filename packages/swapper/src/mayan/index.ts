@@ -13,11 +13,7 @@ export class MayanProvider implements Protocol {
 
     mapAssetToTokenId(asset: Asset): string {
         if (asset.isNative()) {
-            if (asset.chain === Chain.Solana) {
-                return "So11111111111111111111111111111111111111112";
-            } else {
-                return "0x0000000000000000000000000000000000000000";
-            }
+            return "0x0000000000000000000000000000000000000000";
         }
         return asset.tokenId!;
     }
