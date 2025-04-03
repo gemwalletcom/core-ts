@@ -29,32 +29,36 @@ export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQ
         suiClient
     );
 
-    const [coins, suiTx, gasPrice] = await Promise.all([coinsReq, suiTxReq, priceReq]);
-    const coinRefs = coins.data.map(coin => {
-        return {
-            objectId: coin.coinObjectId,
-            version: coin.version,
-            digest: coin.digest,
+    try {
+        const [coins, suiTx, gasPrice] = await Promise.all([coinsReq, suiTxReq, priceReq]);
+        const coinRefs = coins.data.map(coin => {
+            return {
+                objectId: coin.coinObjectId,
+                version: coin.version,
+                digest: coin.digest,
+            }
+        });
+        const inspectResult = await suiClient.devInspectTransactionBlock({
+            transactionBlock: suiTx,
+            sender: request.from_address,
+        });
+
+        if (inspectResult.error) {
+            throw new Error(`Failed to estimate gas budget: ${inspectResult.error}`);
         }
-    });
-    const inspectResult = await suiClient.devInspectTransactionBlock({
-        transactionBlock: suiTx,
-        sender: request.from_address,
-    });
 
-    if (inspectResult.error) {
-        throw new Error(`Failed to estimate gas budget: ${inspectResult.error}`);
+        suiTx.setSender(request.from_address);
+        suiTx.setGasPrice(gasPrice);
+        suiTx.setGasBudget(getGasBudget(inspectResult));
+        suiTx.setGasPayment(coinRefs);
+        const data = await suiTx.build({ client: suiClient });
+
+        return {
+            to: "",
+            value: "0",
+            data: Buffer.from(data).toString("base64"),
+        };
+    } catch (error) {
+        throw new Error(`Failed to build Sui transaction: ${error}`);
     }
-
-    suiTx.setSender(request.from_address);
-    suiTx.setGasPrice(gasPrice);
-    suiTx.setGasBudget(getGasBudget(inspectResult));
-    suiTx.setGasPayment(coinRefs);
-    const data = await suiTx.build({ client: suiClient });
-
-    return {
-        to: "",
-        value: "0",
-        data: Buffer.from(data).toString("base64"),
-    };
 }
