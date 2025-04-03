@@ -3,16 +3,23 @@ import { QuoteRequest, Quote, QuoteData, Asset, Chain } from "@gemwallet/types";
 import { Protocol } from "../protocol";
 import { buildEvmQuoteData } from "./evm";
 import { buildSolanaQuoteData } from "./solana";
+import { buildSuiQuoteData } from "./sui";
 import { parseDecimals } from "../bigint";
 
 export class MayanProvider implements Protocol {
-    private rpcEndpoint: string;
-    constructor(rpcEndpoint: string) {
-        this.rpcEndpoint = rpcEndpoint;
+    private solanaRpc: string;
+    private suiRpc: string;
+
+    constructor(solanaRpc: string, suiRpc: string) {
+        this.solanaRpc = solanaRpc;
+        this.suiRpc = suiRpc;
     }
 
     mapAssetToTokenId(asset: Asset): string {
         if (asset.isNative()) {
+            if (asset.chain === Chain.Sui) {
+                return "0x2::sui::SUI";
+            }
             return "0x0000000000000000000000000000000000000000";
         }
         return asset.tokenId!;
@@ -79,7 +86,9 @@ export class MayanProvider implements Protocol {
         const fromAsset = Asset.fromString(quote.quote.from_asset.toString());
 
         if (fromAsset.chain === Chain.Solana) {
-            return buildSolanaQuoteData(quote.quote, quote.route_data as MayanQuote, this.rpcEndpoint);
+            return buildSolanaQuoteData(quote.quote, quote.route_data as MayanQuote, this.solanaRpc);
+        } else if (fromAsset.chain === Chain.Sui) {
+            return buildSuiQuoteData(quote.quote, quote.route_data as MayanQuote, this.suiRpc);
         } else {
             return buildEvmQuoteData(quote.quote, quote.route_data as MayanQuote);
         }
