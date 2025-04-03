@@ -1,10 +1,11 @@
 import { QuoteRequest, QuoteData } from "@gemwallet/types";
 import { Quote as MayanQuote, ReferrerAddresses, createSwapFromSolanaInstructions } from "@mayanfinance/swap-sdk";
 import { Connection, MessageV0, PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
+import { getReferrerAddresses } from "./referrer";
 
 export async function buildSolanaQuoteData(request: QuoteRequest, routeData: MayanQuote, rpcEndpoint: string): Promise<QuoteData> {
     const connection = new Connection(rpcEndpoint);
-    const referrerAddresses = { solana: request.referral_address };
+    const referrerAddresses = getReferrerAddresses();
     const { serializedTrx } = await prepareSolanaSwapTransaction(
         routeData,
         request.from_address,

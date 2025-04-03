@@ -1,5 +1,3 @@
-import { Asset } from './asset';
-
 export interface QuoteRequest {
     from_address: string;
     from_asset: string;
@@ -9,6 +7,13 @@ export interface QuoteRequest {
     referral_address: string;
     referral_bps: number;
     slippage_bps: number;
+}
+
+export interface ReferralAddress {
+    evm?: string;
+    solana?: string;
+    sui?: string;
+    ton?: string;
 }
 
 export interface Quote {
