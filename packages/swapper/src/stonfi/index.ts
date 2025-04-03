@@ -7,6 +7,8 @@ import { Protocol } from "../protocol";
 const client = new StonApiClient();
 
 const TON_JETTON_ADDRESS = "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c";
+const PTON_VERSION_1 = "EQCM3B12QK1e4yZSf8GtBRT0aLMNyEsBc_DhVfRRtOEffLez";
+const PTON_VERSION_2_1 = "EQBnGWMCf3-FZZq1W4IWcWiGAc3PHuZ0_H-7sad2oY00o83S";
 
 function getTokenAddress(asset: Asset): string {
     return asset.isNative() ? TON_JETTON_ADDRESS : asset.tokenId ?? '';
@@ -34,7 +36,6 @@ export class StonfiProvider implements Protocol {
             slippageTolerance: (quoteRequest.slippage_bps / 10000).toString(),
             referralAddress: quoteRequest.referral_address,
             referralFeeBps: quoteRequest.referral_bps.toString(),
-            dexVersion: [2],
         });
 
         console.log("swapDirectSimulation", swapDirectSimulation);
@@ -65,9 +66,12 @@ export class StonfiProvider implements Protocol {
         if (!router) {
             throw new Error("No matching router found");
         }
+
         // only support v2
         const dexRouterInstance = (() => {
             switch (true) {
+                case router.majorVersion === 1:
+                    return DEX.v1.Router.create(router.address);
                 case router.majorVersion === 2 && router.minorVersion === 1:
                     return DEX.v2_1.Router.create(router.address);
                 case router.majorVersion === 2 && router.minorVersion === 2:
@@ -76,10 +80,17 @@ export class StonfiProvider implements Protocol {
                     throw new Error("Router version not supported");
             }
         })();
+        const proxyTon = (() => {
+            switch (true) {
+                case router.majorVersion === 1:
+                    return pTON.v1.create(PTON_VERSION_1);
+                case router.majorVersion === 2:
+                    return pTON.v2_1.create(PTON_VERSION_2_1);
+                default:
+                    throw new Error("Pton version not supported");
+            }
+        })();
         const routerClient = new TonClient({ endpoint: this.endpoint + "/api/v2/jsonRPC" }).open(dexRouterInstance);
-        const proxyTon = pTON.v2_1.create(
-            "EQBnGWMCf3-FZZq1W4IWcWiGAc3PHuZ0_H-7sad2oY00o83S"
-        );
 
         if (pool.lpTotalSupplyUsd && parseFloat(pool.lpTotalSupplyUsd) < 1000) {
             throw new Error("Pool liquidity is too low.");
