@@ -8,7 +8,7 @@ export function buildEvmQuoteData(request: QuoteRequest, routeData: MayanQuote):
     const swapData = getSwapFromEvmTxPayload(routeData, request.from_address, request.to_address, referralAddresses, request.from_address, signerChainId, null, null);
     const value = BigInt(swapData.value || 0);
 
-    if (swapData.to === undefined || swapData.data === null) {
+    if (swapData.to === null || swapData.data === null) {
         throw new Error("Invalid Mayan swap data");
     }
 
