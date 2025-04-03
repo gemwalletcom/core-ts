@@ -1,19 +1,26 @@
 import { fetchQuote, ChainName, QuoteParams, QuoteOptions, Quote as MayanQuote } from "@mayanfinance/swap-sdk";
 import { QuoteRequest, Quote, QuoteData, Asset, Chain } from "@gemwallet/types";
 import { Protocol } from "../protocol";
-import { buildEvmQuoteData } from "./evm";
+import { buildEvmQuoteData, EMPTY_ADDRESS } from "./evm";
 import { buildSolanaQuoteData } from "./solana";
-import { parseDecimals } from "../bigint";
+import { buildSuiQuoteData, SUI_COIN_TYPE } from "./sui";
+import { BigIntMath } from "../bigint_math";
 
 export class MayanProvider implements Protocol {
-    private rpcEndpoint: string;
-    constructor(rpcEndpoint: string) {
-        this.rpcEndpoint = rpcEndpoint;
+    private solanaRpc: string;
+    private suiRpc: string;
+
+    constructor(solanaRpc: string, suiRpc: string) {
+        this.solanaRpc = solanaRpc;
+        this.suiRpc = suiRpc;
     }
 
     mapAssetToTokenId(asset: Asset): string {
         if (asset.isNative()) {
-            return "0x0000000000000000000000000000000000000000";
+            if (asset.chain === Chain.Sui) {
+                return SUI_COIN_TYPE;
+            }
+            return EMPTY_ADDRESS;
         }
         return asset.tokenId!;
     }
@@ -64,8 +71,8 @@ export class MayanProvider implements Protocol {
 
         const quote = quotes[0];
 
-        const output_value = parseDecimals(quote.expectedAmountOut, quote.toToken.decimals);
-        const output_min_value = parseDecimals(quote.minAmountOut, quote.toToken.decimals);
+        const output_value = BigIntMath.parseDecimals(quote.expectedAmountOut, quote.toToken.decimals);
+        const output_min_value = BigIntMath.parseDecimals(quote.minAmountOut, quote.toToken.decimals);
 
         return {
             quote: quoteRequest,
@@ -79,7 +86,9 @@ export class MayanProvider implements Protocol {
         const fromAsset = Asset.fromString(quote.quote.from_asset.toString());
 
         if (fromAsset.chain === Chain.Solana) {
-            return buildSolanaQuoteData(quote.quote, quote.route_data as MayanQuote, this.rpcEndpoint);
+            return buildSolanaQuoteData(quote.quote, quote.route_data as MayanQuote, this.solanaRpc);
+        } else if (fromAsset.chain === Chain.Sui) {
+            return buildSuiQuoteData(quote.quote, quote.route_data as MayanQuote, this.suiRpc);
         } else {
             return buildEvmQuoteData(quote.quote, quote.route_data as MayanQuote);
         }

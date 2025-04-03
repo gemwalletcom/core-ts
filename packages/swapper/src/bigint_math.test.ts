@@ -1,4 +1,4 @@
-import { parseDecimals } from "./bigint";
+import { BigIntMath } from "./bigint_math";
 
 describe('BigInt parseDecimals tests', () => {
     const testCases = [
@@ -40,7 +40,7 @@ describe('BigInt parseDecimals tests', () => {
     ];
 
     it.each(testCases)('parses $input with $decimals decimals to $expected', ({ input, decimals, expected }) => {
-        const result = parseDecimals(input, decimals);
+        const result = BigIntMath.parseDecimals(input, decimals);
         expect(result.toString()).toEqual(expected);
     });
 });
