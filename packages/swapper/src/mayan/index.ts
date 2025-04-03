@@ -4,7 +4,7 @@ import { Protocol } from "../protocol";
 import { buildEvmQuoteData } from "./evm";
 import { buildSolanaQuoteData } from "./solana";
 import { buildSuiQuoteData } from "./sui";
-import { parseDecimals } from "../bigint";
+import { BigIntMath } from "../bigint_math";
 
 export class MayanProvider implements Protocol {
     private solanaRpc: string;
@@ -71,8 +71,8 @@ export class MayanProvider implements Protocol {
 
         const quote = quotes[0];
 
-        const output_value = parseDecimals(quote.expectedAmountOut, quote.toToken.decimals);
-        const output_min_value = parseDecimals(quote.minAmountOut, quote.toToken.decimals);
+        const output_value = BigIntMath.parseDecimals(quote.expectedAmountOut, quote.toToken.decimals);
+        const output_min_value = BigIntMath.parseDecimals(quote.minAmountOut, quote.toToken.decimals);
 
         return {
             quote: quoteRequest,
