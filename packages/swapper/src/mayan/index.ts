@@ -34,11 +34,6 @@ export class MayanProvider implements Protocol {
         const toAsset = Asset.fromString(quoteRequest.to_asset.toString());
         var referrerBps = quoteRequest.referral_bps;
 
-        // FIXME "fee rate ref is not zero"
-        if (fromAsset.chain === Chain.Solana) {
-            referrerBps = 0;
-        }
-
         const params: QuoteParams = {
             fromToken: this.mapAssetToTokenId(fromAsset),
             toToken: this.mapAssetToTokenId(toAsset),

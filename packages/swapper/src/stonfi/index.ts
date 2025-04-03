@@ -23,7 +23,7 @@ export class StonfiProvider implements Protocol {
         const fromAsset = Asset.fromString(quoteRequest.from_asset.toString())
         const toAsset = Asset.fromString(quoteRequest.to_asset.toString())
 
-        if (fromAsset.chain != Chain.Ton) {
+        if (fromAsset.chain != Chain.Ton || toAsset.chain != Chain.Ton) {
             throw new Error("Only TON is supported");
         }
 
