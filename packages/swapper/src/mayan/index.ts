@@ -1,9 +1,9 @@
 import { fetchQuote, ChainName, QuoteParams, QuoteOptions, Quote as MayanQuote } from "@mayanfinance/swap-sdk";
 import { QuoteRequest, Quote, QuoteData, Asset, Chain } from "@gemwallet/types";
 import { Protocol } from "../protocol";
-import { buildEvmQuoteData } from "./evm";
+import { buildEvmQuoteData, EMPTY_ADDRESS } from "./evm";
 import { buildSolanaQuoteData } from "./solana";
-import { buildSuiQuoteData } from "./sui";
+import { buildSuiQuoteData, SUI_COIN_TYPE } from "./sui";
 import { BigIntMath } from "../bigint_math";
 
 export class MayanProvider implements Protocol {
@@ -18,9 +18,9 @@ export class MayanProvider implements Protocol {
     mapAssetToTokenId(asset: Asset): string {
         if (asset.isNative()) {
             if (asset.chain === Chain.Sui) {
-                return "0x2::sui::SUI";
+                return SUI_COIN_TYPE;
             }
-            return "0x0000000000000000000000000000000000000000";
+            return EMPTY_ADDRESS;
         }
         return asset.tokenId!;
     }

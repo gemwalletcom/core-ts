@@ -21,7 +21,7 @@ export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQ
 
     const priceReq = suiClient.getReferenceGasPrice();
     const coinsReq = suiClient.getCoins({ owner: request.from_address, coinType: SUI_COIN_TYPE, limit: 100 });
-    const suiTxeReq = createSwapFromSuiMoveCalls(
+    const suiTxReq = createSwapFromSuiMoveCalls(
         routeData,
         request.from_address,
         request.to_address,
@@ -29,7 +29,7 @@ export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQ
         suiClient
     );
 
-    const [coins, suiTx, gasPrice] = await Promise.all([coinsReq, suiTxeReq, priceReq]);
+    const [coins, suiTx, gasPrice] = await Promise.all([coinsReq, suiTxReq, priceReq]);
     const coinRefs = coins.data.map(coin => {
         return {
             objectId: coin.coinObjectId,
@@ -41,6 +41,10 @@ export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQ
         transactionBlock: suiTx,
         sender: request.from_address,
     });
+
+    if (inspectResult.error) {
+        throw new Error(`Failed to estimate gas budget: ${inspectResult.error}`);
+    }
 
     suiTx.setSender(request.from_address);
     suiTx.setGasPrice(gasPrice);
