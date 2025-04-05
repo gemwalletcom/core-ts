@@ -5,6 +5,6 @@ build:
 start:
     pnpm run start:api
 dev:
-    pnpm run dev:api
+    pnpm dev
 test:
     pnpm run test
