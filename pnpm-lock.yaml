@@ -61,8 +61,8 @@ importers:
         specifier: workspace:*
         version: link:../types
       '@mayanfinance/swap-sdk':
-        specifier: 10.4.0
-        version: 10.4.0(bufferutil@4.0.9)(typescript@5.3.3)(utf-8-validate@5.0.10)
+        specifier: 10.5.0
+        version: 10.5.0(bufferutil@4.0.9)(typescript@5.3.3)(utf-8-validate@5.0.10)
       '@mysten/sui':
         specifier: 1.26.0
         version: 1.26.0(typescript@5.3.3)
@@ -419,8 +419,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@mayanfinance/swap-sdk@10.4.0':
-    resolution: {integrity: sha512-OA3IGWS5WnkqgV4YCfR2TCv/zi1gj/tTTxoerXyxFdcdGyF2aeMM4p+5zfsh0Rvh+i+J30scOM2hPG7nIC/ucA==}
+  '@mayanfinance/swap-sdk@10.5.0':
+    resolution: {integrity: sha512-rIIPmOrJLwOtNibk3Bl4LVLtCOWzBi6alTcXCbvyonjKIs89kOk1U1Mz/PCyZw835nB6B8wCbkiBdeLDn2Lamg==}
 
   '@mysten/bcs@1.5.0':
     resolution: {integrity: sha512-v39dm5oNfKYMAf2CVI+L0OaJiG9RVXsjqPM4BwTKcHNCZOvr35IIewGtXtWXsI67SQU2TRq8lhQzeibdiC/CNg==}
@@ -2615,7 +2615,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@mayanfinance/swap-sdk@10.4.0(bufferutil@4.0.9)(typescript@5.3.3)(utf-8-validate@5.0.10)':
+  '@mayanfinance/swap-sdk@10.5.0(bufferutil@4.0.9)(typescript@5.3.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@mysten/sui': 1.26.0(typescript@5.3.3)
       '@solana/buffer-layout': 4.0.1
