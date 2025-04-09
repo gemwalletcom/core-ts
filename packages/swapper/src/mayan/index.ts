@@ -30,7 +30,7 @@ export class MayanProvider implements Protocol {
             case Chain.SmartChain:
                 return "bsc";
             case Chain.AvalancheC:
-                return "avalance" as ChainName;
+                return "avalanche" as ChainName;
             default:
                 return chain as ChainName;
         }
