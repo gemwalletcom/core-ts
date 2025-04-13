@@ -33,12 +33,12 @@ export class SymbiosisProvider implements Protocol {
         const fromAsset = Asset.fromString(quoteRequest.from_asset);
         const toAsset = Asset.fromString(quoteRequest.to_asset);
 
-        // Validate decimals before proceeding
-        if (quoteRequest.from_asset_decimals < 0) {
-            throw new Error(`Invalid from_asset_decimals: ${quoteRequest.from_asset_decimals}`);
+        // Validate decimals before proceeding - check for undefined
+        if (quoteRequest.from_asset_decimals === undefined) {
+            throw new Error(`Missing required from_asset_decimals`);
         }
-        if (quoteRequest.to_asset_decimals < 0) {
-            throw new Error(`Invalid to_asset_decimals: ${quoteRequest.to_asset_decimals}`);
+        if (quoteRequest.to_asset_decimals === undefined) {
+            throw new Error(`Missing required to_asset_decimals`);
         }
 
         const fromChainId = this.mapChainToSymbiosisApiChainId(fromAsset.chain);
