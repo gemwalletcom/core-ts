@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { QuoteDataRequest, Quote, QuoteRequest, Asset } from "@gemwallet/types";
 import { StonfiProvider, Protocol, MayanProvider } from "@gemwallet/swapper";
+import { SymbiosisProvider } from "@gemwallet/swapper/src/symbiosis";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +14,7 @@ const providers: Record<string, Protocol> = {
         process.env.SOLANA_URL || "https://solana-rpc.publicnode.com",
         process.env.SUI_URL || "https://fullnode.mainnet.sui.io"
     ),
+    symbiosis: new SymbiosisProvider(),
 };
 
 app.get('/:providerId/quote', async (req, res) => {
@@ -26,8 +28,10 @@ app.get('/:providerId/quote', async (req, res) => {
         let request: QuoteRequest = {
             from_address: req.query.from_address as string,
             from_asset: req.query.from_asset as string,
+            from_asset_decimals: parseInt(req.query.from_asset_decimals as string) || -1,
             to_address: req.query.to_address as string,
             to_asset: req.query.to_asset as string,
+            to_asset_decimals: parseInt(req.query.to_asset_decimals as string) || -1,
             from_value: req.query.from_value as string,
             referral_address: req.query.referral_address as string,
             referral_bps: parseInt(req.query.referral_bps as string),
