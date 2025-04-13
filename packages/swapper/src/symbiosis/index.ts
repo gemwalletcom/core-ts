@@ -28,8 +28,6 @@ export class SymbiosisProvider implements Protocol {
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
-        console.log("SymbiosisProvider: Preparing quote request:", quoteRequest);
-
         const fromAsset = Asset.fromString(quoteRequest.from_asset);
         const toAsset = Asset.fromString(quoteRequest.to_asset);
 
@@ -80,8 +78,6 @@ export class SymbiosisProvider implements Protocol {
     }
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
-        console.log("SymbiosisProvider get_quote_data called with quote containing route_data:", quote.route_data);
-
         const apiResult = quote.route_data as SymbiosisApiResponse;
         const txData = apiResult?.tx;
 

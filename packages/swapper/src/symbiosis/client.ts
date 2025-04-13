@@ -29,7 +29,6 @@ export class SymbiosisApiClient {
     constructor(private baseUrl: string) { }
 
     async fetchSwapQuote(requestBody: any): Promise<SymbiosisApiResponse> {
-        console.log("SymbiosisApiClient: Sending Request:", JSON.stringify(requestBody));
         // Construct the full URL by combining base URL and path
         const fullUrl = this.baseUrl + SYMBIOSIS_SWAP_PATH;
         try {
@@ -50,7 +49,6 @@ export class SymbiosisApiClient {
             }
 
             const swapResult: SymbiosisApiResponse = await response.json();
-            console.log("SymbiosisApiClient: Received Response:", swapResult);
 
             if (!swapResult || !swapResult.tokenAmountOut?.amount || !swapResult.tokenAmountOutMin?.amount || !swapResult.tx) {
                 console.error("Symbiosis API Client: Response missing required fields", swapResult);
