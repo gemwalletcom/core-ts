@@ -2,6 +2,7 @@ import { Asset, Chain, Quote, QuoteData, QuoteRequest } from "@gemwallet/types";
 
 import { Protocol } from "../protocol";
 import { SymbiosisApiClient, DEFAULT_SYMBIOSIS_BASE_API_URL, SymbiosisApiResponse } from "./client";
+import { buildTronQuoteData, TronChainId } from "./tron";
 
 export class SymbiosisProvider implements Protocol {
     private apiClient: SymbiosisApiClient;
@@ -12,7 +13,7 @@ export class SymbiosisProvider implements Protocol {
 
     private mapChainToSymbiosisApiChainId(chain: Chain): number {
         switch (chain) {
-            case Chain.Tron: return 728126428;
+            case Chain.Tron: return TronChainId;
             default: throw new Error(`Not enabled for chain: ${chain}`);
         }
     }
@@ -79,18 +80,13 @@ export class SymbiosisProvider implements Protocol {
     }
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
-        const apiResult = quote.route_data as SymbiosisApiResponse;
-        const txData = apiResult?.tx;
+        const response = quote.route_data as SymbiosisApiResponse;
 
-        if (!txData || typeof txData.to !== 'string' || typeof txData.data !== 'string') {
-            console.error("Missing or invalid tx data in Symbiosis route_data", apiResult);
-            throw new Error("Missing or invalid transaction data in Symbiosis API response");
+
+        if (response.type !== Chain.Tron) {
+            throw new Error("Symbiosis only supports Tron");
         }
 
-        return {
-            to: txData.to,
-            value: txData.value?.toString() ?? "0",
-            data: JSON.stringify(txData),
-        };
+        return buildTronQuoteData(quote.quote, response.tx);
     }
 }
