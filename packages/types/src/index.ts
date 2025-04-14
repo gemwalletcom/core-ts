@@ -1,3 +1,3 @@
 export * from './asset';
-export * from './quotes';
+export * from './swap_primitives';
 export { Chain, SwapProvider } from './primitives';

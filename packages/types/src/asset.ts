@@ -1,4 +1,4 @@
-import { Chain } from './primitives';
+import { AssetId, Chain } from './primitives';
 
 export class Asset {
     constructor(
@@ -10,6 +10,10 @@ export class Asset {
         const [chain, ...rest] = asset.split('_');
         const tokenId = rest.length ? rest.join('_') : undefined;
         return new Asset(chain as Chain, tokenId);
+    }
+
+    static fromAssetId(assetId: AssetId): Asset {
+        return new Asset(assetId.chain, assetId.token_id);
     }
 
     toString(): string {

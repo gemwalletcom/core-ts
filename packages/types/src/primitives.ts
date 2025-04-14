@@ -60,7 +60,7 @@ export interface Account {
 
 export interface AssetId {
 	chain: Chain;
-	tokenId?: string;
+	token_id?: string;
 }
 
 export enum AssetType {

@@ -29,8 +29,8 @@ export class SymbiosisProvider implements Protocol {
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
         // Use asset IDs from the nested objects
-        const fromAsset = Asset.fromString(quoteRequest.from_asset.id);
-        const toAsset = Asset.fromString(quoteRequest.to_asset.id);
+        const fromAsset = Asset.fromString(quoteRequest.from_asset.asset_id);
+        const toAsset = Asset.fromString(quoteRequest.to_asset.asset_id);
 
         // Validate nested decimals
         if (quoteRequest.from_asset.decimals === 0) {

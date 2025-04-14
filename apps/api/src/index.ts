@@ -43,12 +43,12 @@ app.get('/:providerId/quote', async (req, res) => {
             from_address: req.query.from_address as string,
             to_address: req.query.to_address as string,
             from_asset: {
-                id: req.query.from_asset as string,
+                asset_id: req.query.from_asset as string,
                 decimals: parseInt(req.query.from_asset_decimals as string) || 0,
                 symbol: "",
             },
             to_asset: {
-                id: req.query.to_asset as string,
+                asset_id: req.query.to_asset as string,
                 decimals: parseInt(req.query.to_asset_decimals as string) || 0,
                 symbol: "",
             },
