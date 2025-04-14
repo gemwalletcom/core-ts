@@ -6,7 +6,7 @@ interface SymbiosisTokenAmount {
     decimals: number;
 }
 
-interface SymbiosisTransactionData {
+export interface SymbiosisTransactionData {
     chainId: number;
     data: string;
     to: string;
