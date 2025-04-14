@@ -97,6 +97,9 @@ export class StonfiProvider implements Protocol {
             throw new Error("Pool liquidity is too low.");
         }
 
+        const referralAddress = quote.quote.referral?.address?.ton;
+        const referralValue = quote.quote.referral?.bps;
+
         if (fromAsset.isNative()) {
             const params = await routerClient.getSwapTonToJettonTxParams({
                 userWalletAddress: quote.quote.from_address,
@@ -105,8 +108,8 @@ export class StonfiProvider implements Protocol {
                 askJettonAddress: toTokenAddress,
                 minAskAmount: quote.output_min_value,
                 deadline: Math.floor(Date.now() / 1000) + 60 * 1000,
-                referralAddress: quote.quote.referral?.address?.ton,
-                referralValue: quote.quote.referral?.bps,
+                referralAddress: referralAddress,
+                referralValue: referralValue,
             });
 
             if (!params.body) {
@@ -125,8 +128,8 @@ export class StonfiProvider implements Protocol {
                 offerJettonAddress: fromTokenAdddress,
                 offerAmount: quote.quote.from_value,
                 minAskAmount: quote.output_min_value,
-                referralAddress: quote.quote.referral?.address?.ton,
-                referralValue: quote.quote.referral?.bps,
+                referralAddress: referralAddress,
+                referralValue: referralValue,
             });
 
             if (!params.body) {
@@ -145,8 +148,8 @@ export class StonfiProvider implements Protocol {
                 offerAmount: quote.quote.from_value,
                 askJettonAddress: toTokenAddress,
                 minAskAmount: quote.output_min_value,
-                referralAddress: quote.quote.referral?.address?.ton,
-                referralValue: quote.quote.referral?.bps,
+                referralAddress: referralAddress,
+                referralValue: referralValue,
             });
 
             if (!params.body) {
