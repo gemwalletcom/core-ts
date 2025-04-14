@@ -78,6 +78,7 @@ export class MayanProvider implements Protocol {
             quote: quoteRequest,
             output_value: output_value.toString(),
             output_min_value: output_min_value.toString(),
+            eta_seconds: quote.etaSeconds,
             route_data: quote
         };
     }
