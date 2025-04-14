@@ -5,7 +5,7 @@ import { getReferrerAddresses } from "./referrer";
 
 export async function buildSolanaQuoteData(request: QuoteRequest, routeData: MayanQuote, rpcEndpoint: string): Promise<QuoteData> {
     const connection = new Connection(rpcEndpoint);
-    const referrerAddresses = getReferrerAddresses();
+    const referrerAddresses = getReferrerAddresses(request.referral);
     const { serializedTrx } = await prepareSolanaSwapTransaction(
         routeData,
         request.from_address,

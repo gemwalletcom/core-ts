@@ -16,7 +16,7 @@ function getGasBudget(inspectResult: DevInspectResults) {
 }
 
 export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQuote, suiRpc: string): Promise<QuoteData> {
-    const referrerAddresses = getReferrerAddresses();
+    const referrerAddresses = getReferrerAddresses(request.referral);
     const suiClient = new SuiClient({ url: suiRpc });
 
     const priceReq = suiClient.getReferenceGasPrice();
