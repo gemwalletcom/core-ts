@@ -39,7 +39,7 @@ export class MayanProvider implements Protocol {
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
         const fromAsset = Asset.fromString(quoteRequest.from_asset.toString());
         const toAsset = Asset.fromString(quoteRequest.to_asset.toString());
-        var referrerBps = quoteRequest.referral_bps;
+        var referrerBps = quoteRequest.referral.bps;
 
         const params: QuoteParams = {
             fromToken: this.mapAssetToTokenId(fromAsset),
@@ -48,7 +48,7 @@ export class MayanProvider implements Protocol {
             fromChain: this.mapChainToName(fromAsset.chain),
             toChain: this.mapChainToName(toAsset.chain),
             slippageBps: "auto",
-            referrer: quoteRequest.referral_address,
+            referrer: quoteRequest.referral.address.solana || "",
             referrerBps,
         }
 

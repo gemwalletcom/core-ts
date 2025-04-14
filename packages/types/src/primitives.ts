@@ -679,7 +679,7 @@ export interface Transaction {
 	direction: TransactionDirection;
 	utxoInputs: TransactionInput[];
 	utxoOutputs: TransactionInput[];
-	metadata?: string | null;
+	metadata?: object;
 	createdAt: Date;
 }
 
@@ -702,6 +702,7 @@ export interface TransactionSwapMetadata {
 	fromValue: string;
 	toAsset: AssetId;
 	toValue: string;
+	provider?: string;
 }
 
 export interface TransactionsFetchOption {
@@ -1025,6 +1026,24 @@ export enum StakeChain {
 	Sui = "sui",
 	SmartChain = "smartchain",
 	Tron = "tron",
+}
+
+export enum SwapProvider {
+	UniswapV3 = "uniswapv3",
+	UniswapV4 = "uniswapv4",
+	PancakeSwapV3 = "pancakeswapv3",
+	PancakeSwapAptosV2 = "pancakeswapaptosv2",
+	Thorchain = "thorchain",
+	Orca = "orca",
+	Jupiter = "jupiter",
+	Across = "across",
+	Oku = "oku",
+	Wagmi = "wagmi",
+	Cetus = "cetus",
+	StonFiV2 = "stonfi_v2",
+	Mayan = "mayan",
+	Reservoir = "reservoir",
+	Symbiosis = "symbiosis",
 }
 
 export enum WalletConnectCAIP2 {

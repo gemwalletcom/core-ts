@@ -1,38 +1,46 @@
-export interface QuoteRequest {
-    from_address: string;
-    from_asset: string;
-    from_asset_decimals: number;
-    to_asset: string;
-    to_address: string;
-    to_asset_decimals: number;
-    from_value: string;
-    referral_address: string;
-    referral_bps: number;
-    slippage_bps: number;
+export interface ReferralAddress {
+  evm?: string;
+  solana?: string;
+  sui?: string;
+  ton?: string;
+  tron?: string;
 }
 
-export interface ReferralAddress {
-    evm?: string;
-    solana?: string;
-    sui?: string;
-    ton?: string;
-    tron?: string;
+export type QuoteRequest = {
+  from_address: string;
+  to_address: string;
+  from_asset: {
+    id: string;
+    decimals: number;
+    symbol: string;
+  };
+  to_asset: {
+    id: string;
+    decimals: number;
+    symbol: string;
+  };
+  from_value: string;
+  referral: {
+    address: ReferralAddress;
+    bps: number;
+  };
+  slippage_bps: number;
 }
 
 export interface Quote {
-    quote: QuoteRequest;
-    output_value: string;
-    output_min_value: string;
-    route_data: object;
-    eta_in_seconds?: number;
+  quote: QuoteRequest;
+  output_value: string;
+  output_min_value: string;
+  route_data: object;
+  eta_in_seconds?: number;
 }
 
 export interface QuoteDataRequest {
-    quote: Quote;
+  quote: Quote;
 }
 
 export interface QuoteData {
-    to: string;
-    value: string;
-    data: string;
+  to: string;
+  value: string;
+  data: string;
 }

@@ -28,15 +28,16 @@ export class SymbiosisProvider implements Protocol {
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
-        const fromAsset = Asset.fromString(quoteRequest.from_asset);
-        const toAsset = Asset.fromString(quoteRequest.to_asset);
+        // Use asset IDs from the nested objects
+        const fromAsset = Asset.fromString(quoteRequest.from_asset.id);
+        const toAsset = Asset.fromString(quoteRequest.to_asset.id);
 
-        // Validate decimals before proceeding - check for undefined
-        if (quoteRequest.from_asset_decimals === undefined) {
-            throw new Error(`Missing required from_asset_decimals`);
+        // Validate nested decimals
+        if (quoteRequest.from_asset.decimals === 0) {
+            throw new Error(`Missing required from_asset.decimals`);
         }
-        if (quoteRequest.to_asset_decimals === undefined) {
-            throw new Error(`Missing required to_asset_decimals`);
+        if (quoteRequest.to_asset.decimals === 0) {
+            throw new Error(`Missing required to_asset.decimals`);
         }
 
         const fromChainId = this.mapChainToSymbiosisApiChainId(fromAsset.chain);
@@ -46,18 +47,18 @@ export class SymbiosisProvider implements Protocol {
             tokenAmountIn: {
                 address: this.getApiTokenAddress(fromAsset),
                 chainId: fromChainId,
-                decimals: quoteRequest.from_asset_decimals,
+                decimals: quoteRequest.from_asset.decimals,
                 amount: quoteRequest.from_value,
             },
             tokenOut: {
                 address: this.getApiTokenAddress(toAsset),
                 chainId: toChainId,
-                decimals: quoteRequest.to_asset_decimals,
+                decimals: quoteRequest.to_asset.decimals,
             },
             from: quoteRequest.from_address,
             to: quoteRequest.to_address,
-            slippage: parseInt(quoteRequest.slippage_bps.toString(), 10),
-            partnerAddress: quoteRequest.referral_address || undefined,
+            slippage: quoteRequest.slippage_bps,
+            partnerAddress: quoteRequest.referral.address.evm || undefined,
             refundAddress: quoteRequest.from_address,
         };
 

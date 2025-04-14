@@ -1,5 +1,5 @@
-import express, { Request, Response } from "express";
-import { QuoteDataRequest, Quote, QuoteRequest, Asset } from "@gemwallet/types";
+import express from "express";
+import { Quote, QuoteRequest, ReferralAddress, SwapProvider } from "@gemwallet/types";
 import { StonfiProvider, Protocol, MayanProvider } from "@gemwallet/swapper";
 import { SymbiosisProvider } from "@gemwallet/swapper/src/symbiosis";
 
@@ -18,30 +18,78 @@ const providers: Record<string, Protocol> = {
 };
 
 app.get('/:providerId/quote', async (req, res) => {
-    const provider = providers[req.params.providerId];
+    const providerId = req.params.providerId;
+    const provider = providers[providerId];
 
     if (!provider) {
-        res.status(404).json({ error: `Provider ${req.params.providerId} not found` });
+        res.status(404).json({ error: `Provider ${providerId} not found` });
+        return;
     }
 
     try {
-        let request: QuoteRequest = {
+        // Construct ReferralAddress based on legacy parameter and provider
+        const referralAddress: ReferralAddress = {};
+        const legacyReferralAddr = req.query.referral_address as string | undefined;
+        if (legacyReferralAddr) {
+            if (providerId === SwapProvider.StonFiV2) {
+                referralAddress.ton = legacyReferralAddr;
+            } else if (providerId === SwapProvider.Mayan) {
+                referralAddress.solana = legacyReferralAddr;
+            }
+        }
+
+        // Construct QuoteRequest using legacy query parameters
+        const request: QuoteRequest = {
             from_address: req.query.from_address as string,
-            from_asset: req.query.from_asset as string,
-            from_asset_decimals: parseInt(req.query.from_asset_decimals as string) || -1,
             to_address: req.query.to_address as string,
-            to_asset: req.query.to_asset as string,
-            to_asset_decimals: parseInt(req.query.to_asset_decimals as string) || -1,
+            from_asset: {
+                id: req.query.from_asset as string,
+                decimals: parseInt(req.query.from_asset_decimals as string) || 0,
+                symbol: "",
+            },
+            to_asset: {
+                id: req.query.to_asset as string,
+                decimals: parseInt(req.query.to_asset_decimals as string) || 0,
+                symbol: "",
+            },
             from_value: req.query.from_value as string,
-            referral_address: req.query.referral_address as string,
-            referral_bps: parseInt(req.query.referral_bps as string),
-            slippage_bps: parseInt(req.query.slippage_bps as string),
+            referral: {
+                address: referralAddress,
+                bps: parseInt(req.query.referral_bps as string) || 0,
+            },
+            slippage_bps: parseInt(req.query.slippage_bps as string) || 0,
         };
 
         const quote = await provider.get_quote(request);
         res.json(quote);
     } catch (error) {
-        console.log("request: ", req.query);
+        console.error(`Error fetching quote for provider ${providerId}:`, error);
+        console.log("Request query:", req.query);
+        if (error instanceof Error) {
+            res.status(500).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: 'Unknown error occurred' });
+        }
+    }
+});
+
+app.post('/:providerId/quote', async (req, res) => {
+    const providerId = req.params.providerId;
+    const provider = providers[providerId];
+
+    if (!provider) {
+        res.status(404).json({ error: `Provider ${providerId} not found` });
+        return;
+    }
+
+    try {
+        const request: QuoteRequest = req.body;
+
+        const quote = await provider.get_quote(request);
+        res.json(quote);
+    } catch (error) {
+        console.error("Error fetching quote via POST:", error);
+        console.log("Request body:", req.body);
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
         } else {
@@ -51,11 +99,12 @@ app.get('/:providerId/quote', async (req, res) => {
 });
 
 app.post('/:providerId/quote_data', async (req, res) => {
-    const provider = providers[req.params.providerId];
-    console.log(req.query);
+    const providerId = req.params.providerId;
+    const provider = providers[providerId];
 
     if (!provider) {
-        res.status(404).json({ error: `Provider ${req.params.providerId} not found` });
+        res.status(404).json({ error: `Provider ${providerId} not found` });
+        return;
     }
     const quote_request = req.body as Quote;
 
