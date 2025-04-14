@@ -14,7 +14,7 @@ const providers: Record<string, Protocol> = {
         process.env.SOLANA_URL || "https://solana-rpc.publicnode.com",
         process.env.SUI_URL || "https://fullnode.mainnet.sui.io"
     ),
-    symbiosis: new SymbiosisProvider(),
+    symbiosis: new SymbiosisProvider(process.env.TRON_URL || "https://api.trongrid.io"),
 };
 
 app.get('/:providerId/quote', async (req, res) => {

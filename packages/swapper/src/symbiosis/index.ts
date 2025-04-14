@@ -1,14 +1,19 @@
 import { Asset, Chain, Quote, QuoteData, QuoteRequest } from "@gemwallet/types";
 
 import { Protocol } from "../protocol";
-import { SymbiosisApiClient, DEFAULT_SYMBIOSIS_BASE_API_URL, SymbiosisApiResponse } from "./client";
+import { SymbiosisApiClient, SYMBIOSIS_BASE_URL, SymbiosisApiResponse } from "./client";
 import { buildTronQuoteData, TronChainId } from "./tron";
+import { TronWeb } from "tronweb";
 
 export class SymbiosisProvider implements Protocol {
     private apiClient: SymbiosisApiClient;
+    private tronweb: TronWeb;
 
-    constructor(baseUrl: string = DEFAULT_SYMBIOSIS_BASE_API_URL) {
-        this.apiClient = new SymbiosisApiClient(baseUrl);
+    constructor(tronNode: string) {
+        this.apiClient = new SymbiosisApiClient(SYMBIOSIS_BASE_URL);
+        this.tronweb = new TronWeb(
+            { fullHost: tronNode }
+        );
     }
 
     private mapChainToSymbiosisApiChainId(chain: Chain): number {
@@ -87,6 +92,6 @@ export class SymbiosisProvider implements Protocol {
             throw new Error("Symbiosis only supports Tron");
         }
 
-        return buildTronQuoteData(quote.quote, response.tx);
+        return buildTronQuoteData(this.tronweb, response.tx);
     }
 }

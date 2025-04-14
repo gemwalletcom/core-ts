@@ -43,6 +43,7 @@ export interface QuoteData {
 	to: string;
 	value: string;
 	data: string;
+	limit?: string;
 }
 
 export enum SwapMode {

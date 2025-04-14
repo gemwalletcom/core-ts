@@ -1,36 +1,40 @@
-import { QuoteRequest, QuoteData } from "@gemwallet/types";
+import { QuoteData } from "@gemwallet/types";
 import { SymbiosisTransactionData } from "../symbiosis/client";
-
-interface TronSmartContractCall {
-    contract_address: string,
-    function_selector: string,
-    parameter?: string,
-    fee_limit?: number,
-    call_value?: number,
-    owner_address: string,
-    visible?: boolean
-}
+import { TronWeb } from 'tronweb';
+import { TransactionContract, TriggerSmartContract } from "tronweb/lib/esm/types";
 
 export const TronChainId = 728126428;
 
-export function buildTronQuoteData(request: QuoteRequest, txData: SymbiosisTransactionData): QuoteData {
+export async function buildTronQuoteData(tronWeb: TronWeb, txData: SymbiosisTransactionData): Promise<QuoteData> {
 
     if (!txData.functionSelector || !txData.feeLimit || !txData.value) {
         throw new Error("Invalid transaction data");
     }
 
-    const data: TronSmartContractCall = {
-        contract_address: txData.to,
-        function_selector: txData.functionSelector,
-        parameter: txData.data,
-        fee_limit: txData.feeLimit,
-        call_value: parseInt(txData.value),
-        owner_address: request.from_address,
-    };
+    const triggerResult = await tronWeb.transactionBuilder.triggerSmartContract(
+        txData.to,
+        txData.functionSelector,
+        {
+            rawParameter: txData.data,
+            callValue: parseInt(txData.value),
+            feeLimit: txData.feeLimit,
+        },
+        [],
+        txData.from
+    );
 
+    if (!triggerResult.result.result && !triggerResult.result.message) {
+        throw new Error("triggerSmartContract transaction failed");
+    }
+    const contractCall: TransactionContract<TriggerSmartContract> = triggerResult.transaction.raw_data.contract[0];
+    const data = contractCall.parameter.value.data;
+    if (!data) {
+        throw new Error("Invalid triggerSmartContract transaction data");
+    }
     return {
         to: txData.to,
         value: txData.value,
-        data: JSON.stringify(data),
+        data: "0x" + data,
+        limit: txData.feeLimit.toString(),
     };
 }
