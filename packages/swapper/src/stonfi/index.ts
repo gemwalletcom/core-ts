@@ -22,8 +22,8 @@ export class StonfiProvider implements Protocol {
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
-        const fromAsset = Asset.fromString(quoteRequest.from_asset.toString())
-        const toAsset = Asset.fromString(quoteRequest.to_asset.toString())
+        const fromAsset = Asset.fromString(quoteRequest.from_asset.asset_id)
+        const toAsset = Asset.fromString(quoteRequest.to_asset.asset_id)
 
         if (fromAsset.chain != Chain.Ton || toAsset.chain != Chain.Ton) {
             throw new Error("Only TON is supported");
@@ -34,7 +34,7 @@ export class StonfiProvider implements Protocol {
             offerUnits: quoteRequest.from_value,
             askAddress: getTokenAddress(toAsset),
             slippageTolerance: (quoteRequest.slippage_bps / 10000).toString(),
-            referralAddress: quoteRequest.referral?.address?.ton, 
+            referralAddress: quoteRequest.referral?.address?.ton,
             referralFeeBps: quoteRequest.referral?.bps?.toString(),
         });
 
@@ -50,8 +50,8 @@ export class StonfiProvider implements Protocol {
     }
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
-        const fromAsset = Asset.fromString(quote.quote.from_asset.toString())
-        const toAsset = Asset.fromString(quote.quote.to_asset.toString())
+        const fromAsset = Asset.fromString(quote.quote.from_asset.asset_id)
+        const toAsset = Asset.fromString(quote.quote.to_asset.asset_id)
         const fromTokenAdddress = getTokenAddress(fromAsset)
         const toTokenAddress = getTokenAddress(toAsset)
         let routers = await client.getRouters();

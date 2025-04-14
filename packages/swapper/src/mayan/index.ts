@@ -37,8 +37,8 @@ export class MayanProvider implements Protocol {
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
-        const fromAsset = Asset.fromString(quoteRequest.from_asset.toString());
-        const toAsset = Asset.fromString(quoteRequest.to_asset.toString());
+        const fromAsset = Asset.fromString(quoteRequest.from_asset.asset_id);
+        const toAsset = Asset.fromString(quoteRequest.to_asset.asset_id);
         var referrerBps = quoteRequest.referral.bps;
 
         const params: QuoteParams = {
@@ -84,7 +84,7 @@ export class MayanProvider implements Protocol {
     }
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
-        const fromAsset = Asset.fromString(quote.quote.from_asset.toString());
+        const fromAsset = Asset.fromString(quote.quote.from_asset.asset_id);
 
         if (fromAsset.chain === Chain.Solana) {
             return buildSolanaQuoteData(quote.quote, quote.route_data as MayanQuote, this.solanaRpc);

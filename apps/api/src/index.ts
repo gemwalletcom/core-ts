@@ -63,7 +63,7 @@ app.get('/:providerId/quote', async (req, res) => {
         const quote = await provider.get_quote(request);
         res.json(quote);
     } catch (error) {
-        console.error(`Error fetching quote for provider ${providerId}:`, error);
+        console.log(`Error fetching quote for provider ${providerId}:`, error);
         console.log("Request query:", req.query);
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
@@ -88,7 +88,7 @@ app.post('/:providerId/quote', async (req, res) => {
         const quote = await provider.get_quote(request);
         res.json(quote);
     } catch (error) {
-        console.error("Error fetching quote via POST:", error);
+        console.log("Error fetching quote via POST:", error);
         console.log("Request body:", req.body);
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
