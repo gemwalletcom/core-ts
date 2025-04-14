@@ -44,7 +44,8 @@ export class StonfiProvider implements Protocol {
             quote: quoteRequest,
             output_value: swapDirectSimulation.askUnits,
             output_min_value: swapDirectSimulation.minAskUnits,
-            route_data: {}
+            route_data: {},
+            eta_in_seconds: 3 // https://tonscan.org/blocks
         }
     }
 
