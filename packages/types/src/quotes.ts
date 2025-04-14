@@ -21,7 +21,7 @@ export interface Quote {
     output_value: string;
     output_min_value: string;
     route_data: object;
-    eta_seconds?: number;
+    eta_in_seconds?: number;
 }
 
 export interface QuoteDataRequest {
