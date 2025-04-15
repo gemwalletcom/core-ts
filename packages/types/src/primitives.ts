@@ -49,6 +49,7 @@ export enum Chain {
 	Unichain = "unichain",
 	Hyperliquid = "hyperliquid",
 	Monad = "monad",
+	XDC = "xdc",
 }
 
 export interface Account {
