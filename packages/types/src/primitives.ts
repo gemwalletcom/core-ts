@@ -578,6 +578,50 @@ export interface PushNotificationTransaction {
 	transactionId: string;
 }
 
+export interface QuoteAsset {
+	asset_id: string;
+	symbol: string;
+	decimals: number;
+}
+
+export interface ReferralAddress {
+	evm: string;
+	solana: string;
+	sui: string;
+	ton: string;
+	tron: string;
+}
+
+export interface ReferralInfo {
+	address: ReferralAddress;
+	bps: number;
+}
+
+export interface QuoteRequest {
+	from_address: string;
+	to_address: string;
+	from_asset: QuoteAsset;
+	to_asset: QuoteAsset;
+	from_value: string;
+	referral: ReferralInfo;
+	slippage_bps: number;
+}
+
+export interface Quote {
+	quote: QuoteRequest;
+	output_value: string;
+	output_min_value: string;
+	route_data: object;
+	eta_in_seconds: number;
+}
+
+export interface QuoteData {
+	to: string;
+	value: string;
+	data: string;
+	limit?: string;
+}
+
 export interface ResponseError {
 	error: string;
 }
@@ -1028,6 +1072,11 @@ export enum StakeChain {
 	Tron = "tron",
 }
 
+export enum SwapMode {
+	ExactIn = "ExactIn",
+	ExactOut = "ExactOut",
+}
+
 export enum SwapProvider {
 	UniswapV3 = "uniswapv3",
 	UniswapV4 = "uniswapv4",
@@ -1044,6 +1093,12 @@ export enum SwapProvider {
 	Mayan = "mayan",
 	Reservoir = "reservoir",
 	Symbiosis = "symbiosis",
+}
+
+export enum SwapProviderMode {
+	OnChain = "OnChain",
+	CrossChain = "CrossChain",
+	Bridge = "Bridge",
 }
 
 export enum WalletConnectCAIP2 {

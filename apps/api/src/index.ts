@@ -8,8 +8,11 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
+const stonfiV2Provider = new StonfiProvider(process.env.TON_URL || "https://toncenter.com");
+
 const providers: Record<string, Protocol> = {
-    stonfi_v2: new StonfiProvider(process.env.TON_URL || "https://toncenter.com"),
+    stonfi_v2: stonfiV2Provider,
+    stonfiv2: stonfiV2Provider,
     mayan: new MayanProvider(
         process.env.SOLANA_URL || "https://solana-rpc.publicnode.com",
         process.env.SUI_URL || "https://fullnode.mainnet.sui.io"
@@ -28,13 +31,13 @@ app.get('/:providerId/quote', async (req, res) => {
 
     try {
         // Construct ReferralAddress based on legacy parameter and provider
-        const referralAddress: ReferralAddress = {};
+        let referralAddress: string = '';
         const legacyReferralAddr = req.query.referral_address as string | undefined;
         if (legacyReferralAddr) {
             if (providerId === SwapProvider.StonFiV2) {
-                referralAddress.ton = legacyReferralAddr;
+                referralAddress = legacyReferralAddr;
             } else if (providerId === SwapProvider.Mayan) {
-                referralAddress.solana = legacyReferralAddr;
+                referralAddress = legacyReferralAddr;
             }
         }
 
@@ -54,7 +57,13 @@ app.get('/:providerId/quote', async (req, res) => {
             },
             from_value: req.query.from_value as string,
             referral: {
-                address: referralAddress,
+                address: {
+                    evm: referralAddress,
+                    solana: referralAddress,
+                    sui: referralAddress,
+                    ton: referralAddress,
+                    tron: referralAddress,
+                },
                 bps: parseInt(req.query.referral_bps as string) || 0,
             },
             slippage_bps: parseInt(req.query.slippage_bps as string) || 0,

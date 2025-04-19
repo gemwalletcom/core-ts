@@ -75,7 +75,8 @@ export class SymbiosisProvider implements Protocol {
                 quote: quoteRequest,
                 output_value: swapResult.tokenAmountOut.amount,
                 output_min_value: swapResult.tokenAmountOutMin.amount,
-                route_data: swapResult
+                route_data: swapResult,
+                eta_in_seconds: swapResult.estimatedTime ?? 0
             };
 
         } catch (error) {
