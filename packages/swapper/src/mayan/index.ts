@@ -1,5 +1,5 @@
 import { fetchQuote, ChainName, QuoteParams, QuoteOptions, Quote as MayanQuote, ReferrerAddresses } from "@mayanfinance/swap-sdk";
-import { QuoteRequest, Quote, QuoteData, Asset, Chain } from "@gemwallet/types";
+import { QuoteRequest, Quote, QuoteData, AssetId, Chain } from "@gemwallet/types";
 import { Protocol } from "../protocol";
 import { buildEvmQuoteData, EMPTY_ADDRESS } from "./evm";
 import { buildSolanaQuoteData } from "./solana";
@@ -16,7 +16,7 @@ export class MayanProvider implements Protocol {
         this.suiRpc = suiRpc;
     }
 
-    mapAssetToTokenId(asset: Asset): string {
+    mapAssetToTokenId(asset: AssetId): string {
         if (asset.isNative()) {
             if (asset.chain === Chain.Sui) {
                 return SUI_COIN_TYPE;
@@ -38,8 +38,8 @@ export class MayanProvider implements Protocol {
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
-        const fromAsset = Asset.fromString(quoteRequest.from_asset.id);
-        const toAsset = Asset.fromString(quoteRequest.to_asset.id);
+        const fromAsset = AssetId.fromString(quoteRequest.from_asset.id);
+        const toAsset = AssetId.fromString(quoteRequest.to_asset.id);
         const referrerBps = quoteRequest.referral_bps;
         const referrerAddresses = getReferrerAddresses() as ReferrerAddresses;
 
@@ -86,7 +86,7 @@ export class MayanProvider implements Protocol {
     }
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
-        const fromAsset = Asset.fromString(quote.quote.from_asset.id);
+        const fromAsset = AssetId.fromString(quote.quote.from_asset.id);
 
         if (fromAsset.chain === Chain.Solana) {
             return buildSolanaQuoteData(quote.quote, quote.route_data as MayanQuote, this.solanaRpc);

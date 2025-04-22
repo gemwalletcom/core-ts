@@ -1,7 +1,7 @@
 import { TonClient } from "@ton/ton";
 import { DEX, pTON } from "@ston-fi/sdk";
 import { StonApiClient } from '@ston-fi/api';
-import { QuoteRequest, Quote, QuoteData, Asset, Chain } from "@gemwallet/types";
+import { QuoteRequest, Quote, QuoteData, AssetId, Chain } from "@gemwallet/types";
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "@gemwallet/types/src/referrer";
 
@@ -11,7 +11,7 @@ const TON_JETTON_ADDRESS = "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c";
 const PTON_VERSION_1 = "EQCM3B12QK1e4yZSf8GtBRT0aLMNyEsBc_DhVfRRtOEffLez";
 const PTON_VERSION_2_1 = "EQBnGWMCf3-FZZq1W4IWcWiGAc3PHuZ0_H-7sad2oY00o83S";
 
-function getTokenAddress(asset: Asset): string {
+function getTokenAddress(asset: AssetId): string {
     return asset.isNative() ? TON_JETTON_ADDRESS : asset.tokenId ?? '';
 }
 
@@ -23,9 +23,9 @@ export class StonfiProvider implements Protocol {
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
-        const fromAsset = Asset.fromString(quoteRequest.from_asset.id)
-        const toAsset = Asset.fromString(quoteRequest.to_asset.id)
-        const referralAddresses = getReferrerAddresses();
+        const fromAsset = AssetId.fromString(quoteRequest.from_asset.id)
+        const toAsset = AssetId.fromString(quoteRequest.to_asset.id)
+        const referralAddress = getReferrerAddresses().ton;
 
         if (fromAsset.chain != Chain.Ton || toAsset.chain != Chain.Ton) {
             throw new Error("Only TON is supported");
@@ -36,8 +36,8 @@ export class StonfiProvider implements Protocol {
             offerUnits: quoteRequest.from_value,
             askAddress: getTokenAddress(toAsset),
             slippageTolerance: (quoteRequest.slippage_bps / 10000).toString(),
-            referralAddress: referralAddresses.ton,
-            referralFeeBps: quoteRequest.referral_bps?.toString(),
+            referralAddress: referralAddress,
+            referralFeeBps: quoteRequest.referral_bps.toString(),
         });
 
         console.log("swapDirectSimulation", swapDirectSimulation);
@@ -52,8 +52,8 @@ export class StonfiProvider implements Protocol {
     }
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
-        const fromAsset = Asset.fromString(quote.quote.from_asset.id)
-        const toAsset = Asset.fromString(quote.quote.to_asset.id)
+        const fromAsset = AssetId.fromString(quote.quote.from_asset.id)
+        const toAsset = AssetId.fromString(quote.quote.to_asset.id)
         const fromTokenAdddress = getTokenAddress(fromAsset)
         const toTokenAddress = getTokenAddress(toAsset)
         let routers = await client.getRouters();
@@ -99,7 +99,7 @@ export class StonfiProvider implements Protocol {
             throw new Error("Pool liquidity is too low.");
         }
 
-        const referralAddress = getReferrerAddresses()[Chain.Ton];
+        const referralAddress = getReferrerAddresses().ton;
         const referralValue = quote.quote.referral_bps;
 
         if (fromAsset.isNative()) {
@@ -110,8 +110,8 @@ export class StonfiProvider implements Protocol {
                 askJettonAddress: toTokenAddress,
                 minAskAmount: quote.output_min_value,
                 deadline: Math.floor(Date.now() / 1000) + 60 * 1000,
-                referralAddress: referralAddress,
-                referralValue: referralValue,
+                referralAddress,
+                referralValue,
             });
 
             if (!params.body) {
@@ -130,8 +130,8 @@ export class StonfiProvider implements Protocol {
                 offerJettonAddress: fromTokenAdddress,
                 offerAmount: quote.quote.from_value,
                 minAskAmount: quote.output_min_value,
-                referralAddress: referralAddress,
-                referralValue: referralValue,
+                referralAddress,
+                referralValue,
             });
 
             if (!params.body) {
@@ -150,8 +150,8 @@ export class StonfiProvider implements Protocol {
                 offerAmount: quote.quote.from_value,
                 askJettonAddress: toTokenAddress,
                 minAskAmount: quote.output_min_value,
-                referralAddress: referralAddress,
-                referralValue: referralValue,
+                referralAddress,
+                referralValue,
             });
 
             if (!params.body) {
