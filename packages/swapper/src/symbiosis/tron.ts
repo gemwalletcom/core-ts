@@ -26,7 +26,11 @@ export async function buildTronQuoteData(tronWeb: TronWeb, txData: SymbiosisTran
     if (!triggerResult.result.result && !triggerResult.result.message) {
         throw new Error("triggerSmartContract transaction failed");
     }
-    const contractCall: TransactionContract<TriggerSmartContract> = triggerResult.transaction.raw_data.contract[0];
+    const contracts = triggerResult.transaction.raw_data.contract;
+    if (contracts.length === 0) {
+        throw new Error("Invalid triggerSmartContract transaction data");
+    }
+    const contractCall: TransactionContract<TriggerSmartContract> = contracts[0];
     const data = contractCall.parameter.value.data;
     if (!data) {
         throw new Error("Invalid triggerSmartContract transaction data");
