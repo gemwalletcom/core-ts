@@ -3,6 +3,7 @@ import { DEX, pTON } from "@ston-fi/sdk";
 import { StonApiClient } from '@ston-fi/api';
 import { QuoteRequest, Quote, QuoteData, Asset, Chain } from "@gemwallet/types";
 import { Protocol } from "../protocol";
+import { getReferrerAddresses } from "@gemwallet/types/src/referrer";
 
 const client = new StonApiClient();
 
@@ -22,8 +23,9 @@ export class StonfiProvider implements Protocol {
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
-        const fromAsset = Asset.fromString(quoteRequest.from_asset.asset_id)
-        const toAsset = Asset.fromString(quoteRequest.to_asset.asset_id)
+        const fromAsset = Asset.fromString(quoteRequest.from_asset.id)
+        const toAsset = Asset.fromString(quoteRequest.to_asset.id)
+        const referralAddresses = getReferrerAddresses();
 
         if (fromAsset.chain != Chain.Ton || toAsset.chain != Chain.Ton) {
             throw new Error("Only TON is supported");
@@ -34,8 +36,8 @@ export class StonfiProvider implements Protocol {
             offerUnits: quoteRequest.from_value,
             askAddress: getTokenAddress(toAsset),
             slippageTolerance: (quoteRequest.slippage_bps / 10000).toString(),
-            referralAddress: quoteRequest.referral?.address?.ton,
-            referralFeeBps: quoteRequest.referral?.bps?.toString(),
+            referralAddress: referralAddresses.ton,
+            referralFeeBps: quoteRequest.referral_bps?.toString(),
         });
 
         console.log("swapDirectSimulation", swapDirectSimulation);
@@ -50,8 +52,8 @@ export class StonfiProvider implements Protocol {
     }
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
-        const fromAsset = Asset.fromString(quote.quote.from_asset.asset_id)
-        const toAsset = Asset.fromString(quote.quote.to_asset.asset_id)
+        const fromAsset = Asset.fromString(quote.quote.from_asset.id)
+        const toAsset = Asset.fromString(quote.quote.to_asset.id)
         const fromTokenAdddress = getTokenAddress(fromAsset)
         const toTokenAddress = getTokenAddress(toAsset)
         let routers = await client.getRouters();
@@ -97,8 +99,8 @@ export class StonfiProvider implements Protocol {
             throw new Error("Pool liquidity is too low.");
         }
 
-        const referralAddress = quote.quote.referral?.address?.ton;
-        const referralValue = quote.quote.referral?.bps;
+        const referralAddress = getReferrerAddresses()[Chain.Ton];
+        const referralValue = quote.quote.referral_bps;
 
         if (fromAsset.isNative()) {
             const params = await routerClient.getSwapTonToJettonTxParams({

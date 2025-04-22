@@ -1,10 +1,11 @@
-import { fetchQuote, ChainName, QuoteParams, QuoteOptions, Quote as MayanQuote } from "@mayanfinance/swap-sdk";
+import { fetchQuote, ChainName, QuoteParams, QuoteOptions, Quote as MayanQuote, ReferrerAddresses } from "@mayanfinance/swap-sdk";
 import { QuoteRequest, Quote, QuoteData, Asset, Chain } from "@gemwallet/types";
 import { Protocol } from "../protocol";
 import { buildEvmQuoteData, EMPTY_ADDRESS } from "./evm";
 import { buildSolanaQuoteData } from "./solana";
 import { buildSuiQuoteData, SUI_COIN_TYPE } from "./sui";
 import { BigIntMath } from "../bigint_math";
+import { getReferrerAddresses } from "@gemwallet/types/src/referrer";
 
 export class MayanProvider implements Protocol {
     private solanaRpc: string;
@@ -37,9 +38,10 @@ export class MayanProvider implements Protocol {
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
-        const fromAsset = Asset.fromString(quoteRequest.from_asset.asset_id);
-        const toAsset = Asset.fromString(quoteRequest.to_asset.asset_id);
-        var referrerBps = quoteRequest.referral.bps;
+        const fromAsset = Asset.fromString(quoteRequest.from_asset.id);
+        const toAsset = Asset.fromString(quoteRequest.to_asset.id);
+        const referrerBps = quoteRequest.referral_bps;
+        const referrerAddresses = getReferrerAddresses() as ReferrerAddresses;
 
         const params: QuoteParams = {
             fromToken: this.mapAssetToTokenId(fromAsset),
@@ -48,7 +50,7 @@ export class MayanProvider implements Protocol {
             fromChain: this.mapChainToName(fromAsset.chain),
             toChain: this.mapChainToName(toAsset.chain),
             slippageBps: "auto",
-            referrer: quoteRequest.referral.address.solana || "",
+            referrer: referrerAddresses.solana!,
             referrerBps,
         }
 
@@ -84,7 +86,7 @@ export class MayanProvider implements Protocol {
     }
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
-        const fromAsset = Asset.fromString(quote.quote.from_asset.asset_id);
+        const fromAsset = Asset.fromString(quote.quote.from_asset.id);
 
         if (fromAsset.chain === Chain.Solana) {
             return buildSolanaQuoteData(quote.quote, quote.route_data as MayanQuote, this.solanaRpc);

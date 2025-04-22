@@ -1,12 +1,12 @@
 import { QuoteRequest, QuoteData } from "@gemwallet/types";
-import { Quote as MayanQuote, getSwapFromEvmTxPayload } from "@mayanfinance/swap-sdk";
-import { getReferrerAddresses } from "./referrer";
+import { Quote as MayanQuote, ReferrerAddresses, getSwapFromEvmTxPayload } from "@mayanfinance/swap-sdk";
+import { getReferrerAddresses } from "@gemwallet/types/src/referrer";
 
 export const EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 export function buildEvmQuoteData(request: QuoteRequest, routeData: MayanQuote): QuoteData {
     const signerChainId = routeData.fromToken.chainId;
-    const referralAddresses = getReferrerAddresses(request.referral);
+    const referralAddresses = getReferrerAddresses() as ReferrerAddresses;
     const swapData = getSwapFromEvmTxPayload(routeData, request.from_address, request.to_address, referralAddresses, request.from_address, signerChainId, null, null);
     const value = BigInt(swapData.value || 0);
 

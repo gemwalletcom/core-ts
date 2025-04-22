@@ -4,6 +4,7 @@ import { Protocol } from "../protocol";
 import { SymbiosisApiClient, SYMBIOSIS_BASE_URL, SymbiosisApiResponse } from "./client";
 import { buildTronQuoteData, TronChainId } from "./tron";
 import { TronWeb } from "tronweb";
+import { getReferrerAddresses } from "@gemwallet/types/src/referrer";
 
 export class SymbiosisProvider implements Protocol {
     private apiClient: SymbiosisApiClient;
@@ -35,8 +36,8 @@ export class SymbiosisProvider implements Protocol {
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
         // Use asset IDs from the nested objects
-        const fromAsset = Asset.fromString(quoteRequest.from_asset.asset_id);
-        const toAsset = Asset.fromString(quoteRequest.to_asset.asset_id);
+        const fromAsset = Asset.fromString(quoteRequest.from_asset.id);
+        const toAsset = Asset.fromString(quoteRequest.to_asset.id);
 
         // Validate nested decimals
         if (quoteRequest.from_asset.decimals === 0) {
@@ -48,6 +49,7 @@ export class SymbiosisProvider implements Protocol {
 
         const fromChainId = this.mapChainToSymbiosisApiChainId(fromAsset.chain);
         const toChainId = this.mapChainToSymbiosisApiChainId(toAsset.chain);
+        const referralAddresses = getReferrerAddresses();
 
         const apiRequestBody = {
             tokenAmountIn: {
@@ -64,7 +66,7 @@ export class SymbiosisProvider implements Protocol {
             from: quoteRequest.from_address,
             to: quoteRequest.to_address,
             slippage: quoteRequest.slippage_bps,
-            partnerAddress: quoteRequest.referral.address.evm || undefined,
+            partnerAddress: referralAddresses.tron || undefined,
             refundAddress: quoteRequest.from_address,
         };
 

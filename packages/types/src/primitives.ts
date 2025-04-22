@@ -58,11 +58,6 @@ export interface Account {
 	extendedPublicKey?: string;
 }
 
-export interface AssetId {
-	chain: Chain;
-	token_id?: string;
-}
-
 export enum AssetType {
 	NATIVE = "NATIVE",
 	ERC20 = "ERC20",
@@ -77,7 +72,7 @@ export enum AssetType {
 }
 
 export interface Asset {
-	id: AssetId;
+	id: string;
 	name: string;
 	symbol: string;
 	decimals: number;
@@ -317,7 +312,7 @@ export enum DelegationState {
 }
 
 export interface DelegationBase {
-	assetId: AssetId;
+	assetId: string;
 	state: DelegationState;
 	balance: string;
 	shares: string;
@@ -579,22 +574,9 @@ export interface PushNotificationTransaction {
 }
 
 export interface QuoteAsset {
-	asset_id: string;
+	id: string;
 	symbol: string;
 	decimals: number;
-}
-
-export interface ReferralAddress {
-	evm: string;
-	solana: string;
-	sui: string;
-	ton: string;
-	tron: string;
-}
-
-export interface ReferralInfo {
-	address: ReferralAddress;
-	bps: number;
 }
 
 export interface QuoteRequest {
@@ -603,7 +585,7 @@ export interface QuoteRequest {
 	from_asset: QuoteAsset;
 	to_asset: QuoteAsset;
 	from_value: string;
-	referral: ReferralInfo;
+	referral_bps: number;
 	slippage_bps: number;
 }
 
@@ -708,7 +690,7 @@ export interface TransactionInput {
 export interface Transaction {
 	id: string;
 	hash: string;
-	assetId: AssetId;
+	assetId: string;
 	from: string;
 	to: string;
 	contract?: string;
@@ -717,7 +699,7 @@ export interface Transaction {
 	blockNumber: string;
 	sequence: string;
 	fee: string;
-	feeAssetId: AssetId;
+	feeAssetId: string;
 	value: string;
 	memo?: string;
 	direction: TransactionDirection;
@@ -742,9 +724,9 @@ export interface TransactionNFTTransferMetadata {
 }
 
 export interface TransactionSwapMetadata {
-	fromAsset: AssetId;
+	fromAsset: string;
 	fromValue: string;
-	toAsset: AssetId;
+	toAsset: string;
 	toValue: string;
 	provider?: string;
 }
@@ -1078,10 +1060,10 @@ export enum SwapMode {
 }
 
 export enum SwapProvider {
-	UniswapV3 = "uniswapv3",
-	UniswapV4 = "uniswapv4",
-	PancakeSwapV3 = "pancakeswapv3",
-	PancakeSwapAptosV2 = "pancakeswapaptosv2",
+	UniswapV3 = "uniswap_v3",
+	UniswapV4 = "uniswap_v4",
+	PancakeswapV3 = "pancakeswap_v3",
+	PancakeswapAptosV2 = "pancakeswap_aptos_v2",
 	Thorchain = "thorchain",
 	Orca = "orca",
 	Jupiter = "jupiter",
@@ -1089,7 +1071,7 @@ export enum SwapProvider {
 	Oku = "oku",
 	Wagmi = "wagmi",
 	Cetus = "cetus",
-	StonFiV2 = "stonfi_v2",
+	StonfiV2 = "stonfi_v2",
 	Mayan = "mayan",
 	Reservoir = "reservoir",
 	Symbiosis = "symbiosis",
