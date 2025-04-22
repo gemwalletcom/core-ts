@@ -1,6 +1,6 @@
 import { QuoteData, QuoteRequest } from "@gemwallet/types";
-import { Quote as MayanQuote, createSwapFromSuiMoveCalls } from "@mayanfinance/swap-sdk";
-import { getReferrerAddresses } from "./referrer";
+import { Quote as MayanQuote, ReferrerAddresses, createSwapFromSuiMoveCalls } from "@mayanfinance/swap-sdk";
+import { getReferrerAddresses } from "@gemwallet/types/src/referrer";
 import { DevInspectResults, SuiClient } from "@mysten/sui/client";
 import { BigIntMath } from "../bigint_math";
 
@@ -16,7 +16,7 @@ function getGasBudget(inspectResult: DevInspectResults) {
 }
 
 export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQuote, suiRpc: string): Promise<QuoteData> {
-    const referrerAddresses = getReferrerAddresses();
+    const referrerAddresses = getReferrerAddresses() as ReferrerAddresses;
     const suiClient = new SuiClient({ url: suiRpc });
 
     const priceReq = suiClient.getReferenceGasPrice();

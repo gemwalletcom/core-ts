@@ -1,6 +1,7 @@
-import express, { Request, Response } from "express";
-import { QuoteDataRequest, Quote, QuoteRequest, Asset } from "@gemwallet/types";
+import express from "express";
+import { Quote, QuoteRequest } from "@gemwallet/types";
 import { StonfiProvider, Protocol, MayanProvider } from "@gemwallet/swapper";
+import { SymbiosisProvider } from "@gemwallet/swapper/src/symbiosis";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,31 +14,26 @@ const providers: Record<string, Protocol> = {
         process.env.SOLANA_URL || "https://solana-rpc.publicnode.com",
         process.env.SUI_URL || "https://fullnode.mainnet.sui.io"
     ),
+    symbiosis: new SymbiosisProvider(process.env.TRON_URL || "https://api.trongrid.io"),
 };
 
-app.get('/:providerId/quote', async (req, res) => {
-    const provider = providers[req.params.providerId];
+app.post('/:providerId/quote', async (req, res) => {
+    const providerId = req.params.providerId;
+    const provider = providers[providerId];
 
     if (!provider) {
-        res.status(404).json({ error: `Provider ${req.params.providerId} not found` });
+        res.status(404).json({ error: `Provider ${providerId} not found` });
+        return;
     }
 
     try {
-        let request: QuoteRequest = {
-            from_address: req.query.from_address as string,
-            from_asset: req.query.from_asset as string,
-            to_address: req.query.to_address as string,
-            to_asset: req.query.to_asset as string,
-            from_value: req.query.from_value as string,
-            referral_address: req.query.referral_address as string,
-            referral_bps: parseInt(req.query.referral_bps as string),
-            slippage_bps: parseInt(req.query.slippage_bps as string),
-        };
+        const request: QuoteRequest = req.body;
 
         const quote = await provider.get_quote(request);
         res.json(quote);
     } catch (error) {
-        console.log("request: ", req.query);
+        console.log("Error fetching quote via POST:", error);
+        console.log("Request body:", req.body);
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
         } else {
@@ -47,11 +43,12 @@ app.get('/:providerId/quote', async (req, res) => {
 });
 
 app.post('/:providerId/quote_data', async (req, res) => {
-    const provider = providers[req.params.providerId];
-    console.log(req.query);
+    const providerId = req.params.providerId;
+    const provider = providers[providerId];
 
     if (!provider) {
-        res.status(404).json({ error: `Provider ${req.params.providerId} not found` });
+        res.status(404).json({ error: `Provider ${providerId} not found` });
+        return;
     }
     const quote_request = req.body as Quote;
 

@@ -8,3 +8,12 @@ dev:
     pnpm dev
 test:
     pnpm run test
+
+generate:
+    #!/bin/bash
+    # check if core folder exists
+    if [ ! -d "../core" ]; then
+        echo "core folder not found"
+        exit 1
+    fi
+    typeshare --lang=typescript --output-file=packages/types/src/primitives.ts --config-file=../core/typeshare.toml ../core/crates/primitives 1>/dev/null 2>&1

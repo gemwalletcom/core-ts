@@ -1,15 +1,15 @@
 import { Chain } from './primitives';
 
-export class Asset {
+export class AssetId {
     constructor(
         public chain: Chain,
         public tokenId?: string
     ) { }
 
-    static fromString(asset: string): Asset {
+    static fromString(asset: string): AssetId {
         const [chain, ...rest] = asset.split('_');
         const tokenId = rest.length ? rest.join('_') : undefined;
-        return new Asset(chain as Chain, tokenId);
+        return new AssetId(chain as Chain, tokenId);
     }
 
     toString(): string {

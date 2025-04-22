@@ -58,11 +58,6 @@ export interface Account {
 	extendedPublicKey?: string;
 }
 
-export interface AssetId {
-	chain: Chain;
-	tokenId?: string;
-}
-
 export enum AssetType {
 	NATIVE = "NATIVE",
 	ERC20 = "ERC20",
@@ -77,7 +72,7 @@ export enum AssetType {
 }
 
 export interface Asset {
-	id: AssetId;
+	id: string;
 	name: string;
 	symbol: string;
 	decimals: number;
@@ -317,7 +312,7 @@ export enum DelegationState {
 }
 
 export interface DelegationBase {
-	assetId: AssetId;
+	assetId: string;
 	state: DelegationState;
 	balance: string;
 	shares: string;
@@ -578,6 +573,37 @@ export interface PushNotificationTransaction {
 	transactionId: string;
 }
 
+export interface QuoteAsset {
+	id: string;
+	symbol: string;
+	decimals: number;
+}
+
+export interface QuoteRequest {
+	from_address: string;
+	to_address: string;
+	from_asset: QuoteAsset;
+	to_asset: QuoteAsset;
+	from_value: string;
+	referral_bps: number;
+	slippage_bps: number;
+}
+
+export interface Quote {
+	quote: QuoteRequest;
+	output_value: string;
+	output_min_value: string;
+	route_data: object;
+	eta_in_seconds: number;
+}
+
+export interface QuoteData {
+	to: string;
+	value: string;
+	data: string;
+	limit?: string;
+}
+
 export interface ResponseError {
 	error: string;
 }
@@ -664,7 +690,7 @@ export interface TransactionInput {
 export interface Transaction {
 	id: string;
 	hash: string;
-	assetId: AssetId;
+	assetId: string;
 	from: string;
 	to: string;
 	contract?: string;
@@ -673,13 +699,13 @@ export interface Transaction {
 	blockNumber: string;
 	sequence: string;
 	fee: string;
-	feeAssetId: AssetId;
+	feeAssetId: string;
 	value: string;
 	memo?: string;
 	direction: TransactionDirection;
 	utxoInputs: TransactionInput[];
 	utxoOutputs: TransactionInput[];
-	metadata?: string | null;
+	metadata?: object;
 	createdAt: Date;
 }
 
@@ -698,10 +724,11 @@ export interface TransactionNFTTransferMetadata {
 }
 
 export interface TransactionSwapMetadata {
-	fromAsset: AssetId;
+	fromAsset: string;
 	fromValue: string;
-	toAsset: AssetId;
+	toAsset: string;
 	toValue: string;
+	provider?: string;
 }
 
 export interface TransactionsFetchOption {
@@ -1025,6 +1052,35 @@ export enum StakeChain {
 	Sui = "sui",
 	SmartChain = "smartchain",
 	Tron = "tron",
+}
+
+export enum SwapMode {
+	ExactIn = "ExactIn",
+	ExactOut = "ExactOut",
+}
+
+export enum SwapProvider {
+	UniswapV3 = "uniswap_v3",
+	UniswapV4 = "uniswap_v4",
+	PancakeswapV3 = "pancakeswap_v3",
+	PancakeswapAptosV2 = "pancakeswap_aptos_v2",
+	Thorchain = "thorchain",
+	Orca = "orca",
+	Jupiter = "jupiter",
+	Across = "across",
+	Oku = "oku",
+	Wagmi = "wagmi",
+	Cetus = "cetus",
+	StonfiV2 = "stonfi_v2",
+	Mayan = "mayan",
+	Reservoir = "reservoir",
+	Symbiosis = "symbiosis",
+}
+
+export enum SwapProviderMode {
+	OnChain = "OnChain",
+	CrossChain = "CrossChain",
+	Bridge = "Bridge",
 }
 
 export enum WalletConnectCAIP2 {

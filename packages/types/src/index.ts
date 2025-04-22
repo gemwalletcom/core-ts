@@ -1,3 +1,2 @@
 export * from './asset';
-export * from './quotes';
-export { Chain } from './primitives';
+export { Chain, SwapProvider, QuoteAsset, QuoteRequest, Quote, QuoteData, } from './primitives';
