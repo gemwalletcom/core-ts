@@ -23,10 +23,10 @@ coverage/
 .npm/
 
 # Compiled TypeScript files (if target is same as source)
-# *.js
-# *.js.map
-# *.d.ts
-# *.d.ts.map
+*.js
+*.js.map
+*.d.ts
+*.d.ts.map
 
 # Editor directories and files
 .idea/
