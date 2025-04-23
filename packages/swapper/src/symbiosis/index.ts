@@ -1,10 +1,10 @@
 import { AssetId, Chain, Quote, QuoteData, QuoteRequest } from "@gemwallet/types";
+import { getReferrerAddresses } from "../referrer";
 
 import { Protocol } from "../protocol";
 import { SymbiosisApiClient, SYMBIOSIS_BASE_URL, SymbiosisApiResponse } from "./client";
 import { buildTronQuoteData, TronChainId } from "./tron";
 import { TronWeb } from "tronweb";
-import { getReferrerAddresses } from "@gemwallet/types/src/referrer";
 
 export class SymbiosisProvider implements Protocol {
     private apiClient: SymbiosisApiClient;

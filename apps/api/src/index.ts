@@ -1,7 +1,6 @@
 import express from "express";
 import { Quote, QuoteRequest } from "@gemwallet/types";
-import { StonfiProvider, Protocol, MayanProvider } from "@gemwallet/swapper";
-import { SymbiosisProvider } from "@gemwallet/swapper/src/symbiosis";
+import { StonfiProvider, Protocol, MayanProvider, SymbiosisProvider } from "@gemwallet/swapper";
 
 const app = express();
 const PORT = process.env.PORT || 3000;

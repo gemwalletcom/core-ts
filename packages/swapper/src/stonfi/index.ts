@@ -3,7 +3,7 @@ import { DEX, pTON } from "@ston-fi/sdk";
 import { StonApiClient } from '@ston-fi/api';
 import { QuoteRequest, Quote, QuoteData, AssetId, Chain } from "@gemwallet/types";
 import { Protocol } from "../protocol";
-import { getReferrerAddresses } from "@gemwallet/types/src/referrer";
+import { getReferrerAddresses } from "../referrer";
 
 const client = new StonApiClient();
 

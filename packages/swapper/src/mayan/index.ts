@@ -5,7 +5,7 @@ import { buildEvmQuoteData, EMPTY_ADDRESS } from "./evm";
 import { buildSolanaQuoteData } from "./solana";
 import { buildSuiQuoteData, SUI_COIN_TYPE } from "./sui";
 import { BigIntMath } from "../bigint_math";
-import { getReferrerAddresses } from "@gemwallet/types/src/referrer";
+import { getReferrerAddresses } from "../referrer";
 
 export class MayanProvider implements Protocol {
     private solanaRpc: string;

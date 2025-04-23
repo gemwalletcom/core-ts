@@ -1,8 +1,8 @@
 import { QuoteData, QuoteRequest } from "@gemwallet/types";
 import { Quote as MayanQuote, ReferrerAddresses, createSwapFromSuiMoveCalls } from "@mayanfinance/swap-sdk";
-import { getReferrerAddresses } from "@gemwallet/types/src/referrer";
 import { DevInspectResults, SuiClient } from "@mysten/sui/client";
 import { BigIntMath } from "../bigint_math";
+import { getReferrerAddresses } from "../referrer";
 
 export const SUI_COIN_TYPE = "0x2::sui::SUI";
 
