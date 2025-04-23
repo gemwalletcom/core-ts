@@ -9,6 +9,13 @@ dev:
 test:
     pnpm run test
 
+docker-build:
+    docker build -t core-ts:test .
+
+docker-run:
+    docker rm -f test-container || true
+    docker run -d --rm --name test-container -p 3000:3000 core-ts:test
+
 generate:
     #!/bin/bash
     # check if core folder exists
