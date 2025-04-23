@@ -1,4 +1,6 @@
-# pnpm-workspace.yaml
 packages:
-  - 'packages/*'
-  - 'apps/*'
+  - packages/*
+  - apps/*
+
+dangerouslyAllowAllBuilds:
+  - bigint-buffer # Required to build native dependencies for bigint-buffer
