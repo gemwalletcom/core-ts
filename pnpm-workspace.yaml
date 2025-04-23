@@ -1,4 +1,6 @@
-# pnpm-workspace.yaml
 packages:
-  - 'packages/*'
-  - 'apps/*'
+  - packages/*
+  - apps/*
+
+dangerouslyAllowAllBuilds:
+  - bigint-buffer
