@@ -3,4 +3,4 @@ packages:
   - apps/*
 
 dangerouslyAllowAllBuilds:
-  - bigint-buffer
+  - bigint-buffer # Required to build native dependencies for bigint-buffer

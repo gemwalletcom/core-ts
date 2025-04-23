@@ -4,9 +4,8 @@ FROM node:22-slim AS builder
 # Install pnpm
 RUN npm install -g pnpm
 
-# Install build tools, rebuild native deps, and remove build tools (Debian-based)
-RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
-    && rm -rf /var/lib/apt/lists/*
+# Install build tools
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -25,7 +24,7 @@ COPY . .
 RUN pnpm run build
 
 # Deploy the target app ('api') to /prod_build
-RUN pnpm --filter ./apps/api deploy --prod --legacy /prod_build
+RUN pnpm --filter ./apps/api deploy --prod /prod_build
 
 # Stage 2: Production environment
 FROM node:22-slim AS runner
