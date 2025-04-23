@@ -1,52 +1,49 @@
-FROM node:22-alpine AS base
-WORKDIR /app
+# Stage 1: Build the application
+FROM node:22-slim AS builder
+
+# Install pnpm
 RUN npm install -g pnpm
 
-FROM base AS deps
 WORKDIR /app
 
-# Copy all package.json files first
-COPY package.json pnpm-lock.yaml ./
-COPY pnpm-workspace.yaml ./
-COPY packages/types/package.json packages/types/
-COPY packages/swapper/package.json packages/swapper/
-COPY apps/api/package.json apps/api/
+# Copy package manager files and workspace package.json files first
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json ./apps/api/
+COPY packages/types/package.json ./packages/types/
+COPY packages/swapper/package.json ./packages/swapper/
 
-# Install all dependencies
+# Install all dependencies (including devDependencies needed for build)
 RUN pnpm install
 
-FROM base AS builder
-WORKDIR /app
-
-# Copy dependencies and source code
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/types/node_modules ./packages/types/node_modules
-COPY --from=deps /app/packages/swapper/node_modules ./packages/swapper/node_modules
-COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+# Copy the rest of the source code
 COPY . .
 
-# Build packages in correct order with explicit path to node_modules
+# Build the application
 RUN pnpm run build
 
-FROM base AS runner
+# Deploy the target app ('api') to /prod_build
+RUN pnpm --filter ./apps/api deploy --prod --legacy /prod_build
+
+# Stage 2: Production environment
+FROM node:22-slim AS runner
+
 WORKDIR /app
+
+# Install pnpm in runner stage as well
+RUN npm install -g pnpm
 
 ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE ${PORT}
 
-# Copy only the necessary files
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
-COPY --from=builder /app/packages/types/dist ./packages/types/dist
-COPY --from=builder /app/packages/types/package.json ./packages/types/package.json
-COPY --from=builder /app/packages/swapper/dist ./packages/swapper/dist
-COPY --from=builder /app/packages/swapper/package.json ./packages/swapper/package.json
+# Copy the deployed application from the builder stage
+COPY --from=builder /prod_build .
 
-# Install production dependencies only
-RUN pnpm install --prod
+# Install build tools, rebuild native deps, and remove build tools (Debian-based)
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
+    && pnpm rebuild \
+    && apt-get purge -y --auto-remove python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
 
-CMD ["node", "apps/api/dist/index.js"]
+# Command to run the application (path relative to WORKDIR)
+CMD ["node", "dist/index.js"]
