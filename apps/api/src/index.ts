@@ -16,6 +16,13 @@ const providers: Record<string, Protocol> = {
     symbiosis: new SymbiosisProvider(process.env.TRON_URL || "https://api.trongrid.io"),
 };
 
+app.get('/', (_, res) => {
+    res.json({
+        providers: Object.keys(providers),
+        version: process.env.npm_package_version
+    });
+});
+
 app.post('/:providerId/quote', async (req, res) => {
     const providerId = req.params.providerId;
     const provider = providers[providerId];
