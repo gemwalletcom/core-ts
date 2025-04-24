@@ -3,7 +3,7 @@ import { getReferrerAddresses } from "../referrer";
 
 import { Protocol } from "../protocol";
 import { SymbiosisApiClient, SYMBIOSIS_BASE_URL, SymbiosisApiResponse } from "./client";
-import { buildTronQuoteData, TronChainId } from "./tron";
+import { TronTxBuilder, TronChainId } from "./tron";
 import { TronWeb } from "tronweb";
 
 export class SymbiosisProvider implements Protocol {
@@ -90,11 +90,17 @@ export class SymbiosisProvider implements Protocol {
     async get_quote_data(quote: Quote): Promise<QuoteData> {
         const response = quote.route_data as SymbiosisApiResponse;
 
+        // Keep the original quoteRequest from the Quote object
+        const quoteRequest = quote.quote;
 
         if (response.type !== Chain.Tron) {
             throw new Error("Symbiosis only supports Tron");
         }
 
-        return buildTronQuoteData(this.tronweb, response.tx);
+        // Create an instance of TronTxBuilder
+        const tronBuilder = new TronTxBuilder(this.tronweb);
+
+        // Call the method on the instance, passing the original quote request
+        return tronBuilder.buildTronQuoteData(quoteRequest, response.tx);
     }
 }
