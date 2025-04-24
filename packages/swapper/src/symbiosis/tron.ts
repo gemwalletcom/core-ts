@@ -1,8 +1,8 @@
 import { AssetId, QuoteRequest, QuoteData } from "@gemwallet/types";
 import { SymbiosisTransactionData } from "../symbiosis/client";
 import { TronWeb } from 'tronweb';
-import { TransactionContract, TriggerSmartContract, TransactionWrapper } from "tronweb/lib/esm/types";
-import { keccak256 } from "tronweb/lib/esm/utils";
+import { TransactionWrapper } from "tronweb/lib/esm/types";
+import createHash from 'keccak';
 
 export const TronChainId = 728126428;
 const TRON_ENERGY_PRICE = 280;
@@ -68,7 +68,7 @@ export class TronTxBuilder {
         }
 
         const { functionSelector, feeLimit, value, to, from, data } = txData;
-        const methodId = "0x" + keccak256(functionSelector).slice(0, 4);
+        const methodId = "0x" + createHash('keccak256').update(functionSelector).digest().slice(0, 4);
         const callData = methodId + data;
         const fromAsset = AssetId.fromString(quote.from_asset.id);
         let finalFeeLimit = feeLimit;

@@ -19,7 +19,9 @@
     "@ston-fi/api": "0.21.0",
     "@ston-fi/sdk": "2.3.0",
     "@ton/ton": "15.2.1",
-    "tronweb": "6.0.2"
+    "@types/keccak": "3.0.5",
+    "tronweb": "6.0.2",
+    "keccak": "3.0.4"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",
