@@ -26,7 +26,7 @@ importers:
     dependencies:
       '@gemwallet/swapper':
         specifier: workspace:*
-        version: file:packages/swapper(@ton/core@0.60.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)(typescript@5.3.3)
+        version: link:../../packages/swapper
       '@gemwallet/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -2409,28 +2409,7 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@gemwallet/swapper@file:packages/swapper(@ton/core@0.60.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)(typescript@5.3.3)':
-    dependencies:
-      '@gemwallet/types': file:packages/types
-      '@mayanfinance/swap-sdk': 10.5.0(bufferutil@4.0.9)(typescript@5.3.3)(utf-8-validate@5.0.10)
-      '@mysten/sui': 1.26.0(typescript@5.3.3)
-      '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      '@ston-fi/api': 0.21.0
-      '@ston-fi/sdk': 2.3.0(@ston-fi/api@0.21.0)(@ton/ton@15.2.1(@ton/core@0.60.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0))
-      '@ton/ton': 15.2.1(@ton/core@0.60.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)
-      '@types/keccak': 3.0.5
-      keccak: 3.0.4
-      tronweb: 6.0.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-    transitivePeerDependencies:
-      - '@gql.tada/svelte-support'
-      - '@gql.tada/vue-support'
-      - '@ton/core'
-      - '@ton/crypto'
-      - bufferutil
-      - debug
-      - encoding
-      - typescript
-      - utf-8-validate
+  '@gemwallet/swapper@file:packages/swapper': {}
 
   '@gemwallet/types@file:packages/types': {}
 
