@@ -89,18 +89,11 @@ export class SymbiosisProvider implements Protocol {
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
         const response = quote.route_data as SymbiosisApiResponse;
-
-        // Keep the original quoteRequest from the Quote object
-        const quoteRequest = quote.quote;
-
         if (response.type !== Chain.Tron) {
             throw new Error("Symbiosis only supports Tron");
         }
 
-        // Create an instance of TronTxBuilder
-        const tronBuilder = new TronTxBuilder(this.tronweb);
-
-        // Call the method on the instance, passing the original quote request
-        return tronBuilder.buildTronQuoteData(quoteRequest, response.tx);
+        const tronBuilder = new TronTxBuilder();
+        return tronBuilder.buildTronQuoteData(response.tx);
     }
 }

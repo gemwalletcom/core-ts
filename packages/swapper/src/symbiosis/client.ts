@@ -21,6 +21,7 @@ export interface SymbiosisApiResponse {
     tokenAmountOutMin: SymbiosisTokenAmount;   // REQUIRED: Details of the minimum output amount
     tx: SymbiosisTransactionData;              // REQUIRED: Transaction data for execution
     type: string;                              // REQUIRED: Type of the transaction, tron etc
+    approveTo?: string;                        // Optional: Contract address to approve
     estimatedTime?: number;                    // Optional: Estimated time for the transaction
 }
 
