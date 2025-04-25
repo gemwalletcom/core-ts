@@ -5,7 +5,10 @@ import { keccak256 } from "js-sha3";
 export const TronChainId = 728126428;
 
 export class TronTxBuilder {
-    constructor() { }
+    private energyFee: number
+    constructor(energyFee: number) {
+        this.energyFee = energyFee;
+    }
 
     buildTronQuoteData(txData: SymbiosisTransactionData): QuoteData {
         // Check for all required fields
@@ -22,7 +25,7 @@ export class TronTxBuilder {
             to: to,
             value: value,
             data: callData,
-            limit: feeLimit.toString(),
+            limit: Math.ceil(feeLimit / this.energyFee).toString()
         };
     }
 }
