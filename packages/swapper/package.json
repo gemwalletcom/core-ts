@@ -24,13 +24,6 @@
     "keccak": "3.0.4"
   },
   "devDependencies": {},
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "^@gemwallet/types$": "<rootDir>/../types/src/index.ts"
-    }
-  },
   "files": [
     "dist"
   ]

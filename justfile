@@ -1,13 +1,18 @@
 install:
     pnpm install
-build:
+build: install
     pnpm run build
 start:
     pnpm run start:api
 dev:
     pnpm dev
-test:
+test: build
     pnpm run test
+
+clean:
+    pnpm run clean
+    rm -rf packages/swapper/dist packages/swapper/tsconfig.tsbuildinfo
+    rm -rf packages/types/dist packages/types/tsconfig.tsbuildinfo
 
 docker-build:
     docker build -t core-ts:test .

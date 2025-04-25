@@ -2,6 +2,10 @@
     "compilerOptions": {
       "target": "ES2016",
       "module": "CommonJS",
+      "baseUrl": ".", 
+      "paths": { 
+        "@gemwallet/types": ["../types/src/index.ts"]
+      },
       "outDir": "./dist",
       "rootDir": "./src",
       "strict": true,
@@ -11,12 +15,11 @@
       "declaration": true,
       "declarationMap": true,
       "sourceMap": true,
-      "composite": true, // Required for project references
+      "composite": true, 
     },
     "include": ["src/**/*"],
     "exclude": ["node_modules", "dist"],
     "references": [
-      { "path": "../types" } // Path relative to this tsconfig.json
+      { "path": "../types" } 
     ]
   }
-  
