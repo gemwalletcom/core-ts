@@ -1,12 +1,16 @@
 install:
     pnpm install
-build: install
+
+build:
     pnpm run build
+
 start:
     pnpm run start:api
+
 dev:
     pnpm dev
-test: build
+
+test:
     pnpm run test
 
 clean:
