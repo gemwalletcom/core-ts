@@ -1,13 +1,22 @@
 install:
     pnpm install
+
 build:
     pnpm run build
+
 start:
     pnpm run start:api
+
 dev:
     pnpm dev
+
 test:
     pnpm run test
+
+clean:
+    pnpm run clean
+    rm -rf packages/swapper/dist packages/swapper/tsconfig.tsbuildinfo
+    rm -rf packages/types/dist packages/types/tsconfig.tsbuildinfo
 
 docker-build:
     docker build -t core-ts:test .
@@ -24,3 +33,4 @@ generate:
         exit 1
     fi
     typeshare --lang=typescript --output-file=packages/types/src/primitives.ts --config-file=../core/typeshare.toml ../core/crates/primitives 1>/dev/null 2>&1
+    

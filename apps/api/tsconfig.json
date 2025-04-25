@@ -3,6 +3,11 @@
       "target": "ES2016",
       "module": "CommonJS",
       "outDir": "./dist",
+      "baseUrl": ".",
+      "paths": {
+        "@gemwallet/swapper": ["../../packages/swapper/src/index.ts"],
+        "@gemwallet/types": ["../../packages/types/src/index.ts"]
+      },
       "rootDir": "./src",
       "strict": true,
       "esModuleInterop": true,

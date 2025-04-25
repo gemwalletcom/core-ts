@@ -3,7 +3,7 @@ import { getReferrerAddresses } from "../referrer";
 
 import { Protocol } from "../protocol";
 import { SymbiosisApiClient, SYMBIOSIS_BASE_URL, SymbiosisApiResponse } from "./client";
-import { buildTronQuoteData, TronChainId } from "./tron";
+import { TronTxBuilder, TronChainId } from "./tron";
 import { TronWeb } from "tronweb";
 
 export class SymbiosisProvider implements Protocol {
@@ -95,6 +95,6 @@ export class SymbiosisProvider implements Protocol {
             throw new Error("Symbiosis only supports Tron");
         }
 
-        return buildTronQuoteData(this.tronweb, response.tx);
+        return new TronTxBuilder().buildTronQuoteData(response.tx);
     }
 }
