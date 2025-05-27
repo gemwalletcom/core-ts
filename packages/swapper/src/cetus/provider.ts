@@ -70,7 +70,7 @@ export class CetusAggregatorProvider implements Protocol {
 
         try {
             const txb = new Transaction();
-            const slippageDecimal = new BigNumber(slippage_bps).dividedBy(10000).toNumber();
+            const slippageDecimal = Number(slippage_bps) / 10000;
 
             await this.client.fastRouterSwap({
                 routers: route_data as RouterData,
