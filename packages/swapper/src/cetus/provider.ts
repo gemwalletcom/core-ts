@@ -51,10 +51,12 @@ export class CetusAggregatorProvider implements Protocol {
             };
 
             return quoteResult;
-        } catch (error: any) {
-            console.error("CetusProvider: Error in get_quote", error);
-            // It's good practice to wrap provider-specific errors or re-throw a standardized error.
-            throw new Error(`Cetus get_quote failed: ${error.message}`);
+        } catch (err: unknown) {
+            console.error("CetusProvider: Error in get_quote", err);
+            if (err instanceof Error) {
+                throw new Error(`Cetus get_quote failed: ${err.message}`);
+            }
+            throw new Error(`Cetus get_quote failed: ${err}`);
         }
     }
 

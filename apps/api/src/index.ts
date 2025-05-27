@@ -16,7 +16,7 @@ const providers: Record<string, Protocol> = {
     symbiosis: new SymbiosisProvider(process.env.TRON_URL || "https://api.trongrid.io"),
     cetus: new CetusAggregatorProvider(
         process.env.SUI_URL || "https://fullnode.mainnet.sui.io",
-        0.005, // 0.5% or 50 bps overlay fee rate
+        parseFloat(process.env.CETUS_OVERLAY_FEE_RATE || "0.005"),
         getReferrerAddresses().sui
     ),
 };
