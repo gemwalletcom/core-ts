@@ -89,12 +89,12 @@ export class CetusAggregatorProvider implements Protocol {
             };
 
             return quoteDataResult;
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Error building transaction data with Cetus:", error);
             if (error instanceof Error) {
                 throw new Error(`Cetus API error in get_quote_data: ${error.message}`);
             }
-            throw new Error("An unknown error occurred while building transaction data with Cetus");
+            throw new Error(`An unknown error occurred while building transaction data with Cetus: ${error}`);
         }
     }
 }
