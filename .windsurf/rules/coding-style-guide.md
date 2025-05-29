@@ -35,9 +35,8 @@ description: General coding style guide
 5.  **Data Integrity:** No shared test data modification. Avoid hardcoding in prod to pass tests.
 
 ## Documentation & Comments
-1.  **JSDoc (`/** ... */`):** For public APIs (functions, classes, interfaces). Include `@param`, `@returns`, `@throws`.
-2.  **Module Docs:** JSDoc (`/** @module ... */`) or leading comment block.
-3.  **Code Comments (`//`):** Only for complex, non-obvious logic. Keep updated. Avoid redundant comments.
+1.  **Module Docs:** JSDoc (`/** @module ... */`) or leading comment block.
+2.  **Code Comments (`//`):** Only for complex, non-obvious logic. Keep updated. Avoid redundant comments.
 
 ## Imports
 1.  **Grouping/Order:** 1. External npm, 2. Internal packages/aliases, 3. Relative local. Alphabetize within groups.

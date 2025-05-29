@@ -6,6 +6,10 @@ export type Referrers = {
     tron: string;
 };
 
+export function getReferrerFeeBps(): number {
+    return 50;
+}
+
 export function getReferrerAddresses(): Referrers {
     return {
         evm: "0x0D9DAB1A248f63B0a48965bA8435e4de7497a3dC",
