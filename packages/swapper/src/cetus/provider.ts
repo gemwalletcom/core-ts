@@ -7,26 +7,25 @@ import { BN } from "bn.js";
 import { SUI_COIN_TYPE } from "../chain/sui/constants";
 import { bnReplacer, bnReviver } from "./bn_replacer";
 import { calculateGasBudget, prefillTransaction, getGasPriceAndCoinRefs } from "../chain/sui/tx_builder";
+import { getReferrerAddresses } from "../referrer";
 
 export class CetusAggregatorProvider implements Protocol {
     private client: AggregatorClient;
     private suiClient: SuiClient;
-    private overlayFeeRate: number;
     private overlayFeeReceiver: string;
 
-    constructor(suiRpcUrl: string, overlayFeeRate: number, overlayFeeReceiver: string) {
+    constructor(suiRpcUrl: string) {
         this.suiClient = new SuiClient({ url: suiRpcUrl });
-        this.overlayFeeRate = overlayFeeRate;
-        this.overlayFeeReceiver = overlayFeeReceiver;
+        this.overlayFeeReceiver = getReferrerAddresses().sui;
         this.client = this.createClient();
     }
 
-    createClient(address?: string) {
+    createClient(address?: string, overlayFeeRate?: number, overlayFeeReceiver?: string) {
         return new AggregatorClient({
             client: this.suiClient,
             env: Env.Mainnet,
-            overlayFeeRate: this.overlayFeeRate,
-            overlayFeeReceiver: this.overlayFeeReceiver,
+            overlayFeeRate,
+            overlayFeeReceiver,
             signer: address,
         });
     }
@@ -60,12 +59,14 @@ export class CetusAggregatorProvider implements Protocol {
                 throw new Error(`Cetus get_quote failed: ${routeData.error.msg}`);
             }
 
-            const output_value = routeData.amountOut.toString();
+            const rawOutputValue = BigInt(routeData.amountOut.toString(10));
+            const referralValue = rawOutputValue * BigInt(request.referral_bps) / BigInt(10000);
+            const minOutputValue = rawOutputValue - referralValue;
 
             const quoteResult: Quote = {
                 quote: request,
-                output_value,
-                output_min_value: output_value,
+                output_value: minOutputValue.toString(),
+                output_min_value: minOutputValue.toString(),
                 route_data: {
                     data: JSON.stringify(routeData, bnReplacer),
                 },
@@ -100,8 +101,8 @@ export class CetusAggregatorProvider implements Protocol {
                 refreshAllCoins: true
             };
 
-            // create a new client with user's address as signer
-            const client = this.createClient(quote.quote.from_address);
+            // create a new client with user's address as signer, overlay fee rate and overlay fee receiver
+            const client = this.createClient(quote.quote.from_address, quote.quote.referral_bps / 10000, this.overlayFeeReceiver);
 
             const gasPriceAndCoinRefsReq = getGasPriceAndCoinRefs(this.suiClient, quote.quote.from_address);
             const fastRouterSwapReq = client.fastRouterSwap(swapParams);
