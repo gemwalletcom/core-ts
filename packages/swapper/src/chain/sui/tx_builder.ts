@@ -12,19 +12,19 @@ export async function getGasPriceAndCoinRefs(
     suiClient: SuiClient,
     ownerAddress: string
 ): Promise<SuiTransactionPrerequisites> {
-    const gasPrice = BigInt(await suiClient.getReferenceGasPrice());
-    const coins = await suiClient.getCoins({ owner: ownerAddress, coinType: SUI_COIN_TYPE, limit: 100 });
+
+    const [gasPrice, coins] = await Promise.all([
+        suiClient.getReferenceGasPrice(),
+        suiClient.getCoins({ owner: ownerAddress, coinType: SUI_COIN_TYPE, limit: 100 })
+    ]);
+
     const coinRefs = coins.data.map(coin => ({
         objectId: coin.coinObjectId,
         version: coin.version,
         digest: coin.digest,
     }));
 
-    if (coinRefs.length === 0) {
-        console.warn(`No SUI coins found for gas payment for address ${ownerAddress}. Ensure gas is provided by other means or use a different gas coin type.`);
-    }
-
-    return { gasPrice, coinRefs };
+    return { gasPrice: BigInt(gasPrice), coinRefs };
 }
 
 export function calculateGasBudget(
@@ -40,31 +40,20 @@ export function calculateGasBudget(
     return BigIntMath.increaseByPercent(baseBudget, increasePercentage);
 }
 
-export async function buildSuiTransaction(
-    suiClient: SuiClient,
-    transactionBlock: Transaction,
+export function prefillTransaction(
+    transaction: Transaction,
     senderAddress: string,
     gasBudget: bigint,
     gasPrice: bigint,
     coinRefs: { objectId: string; version: string; digest: string }[]
-): Promise<string> {
-    try {
-        transactionBlock.setSender(senderAddress);
-        transactionBlock.setGasPrice(gasPrice);
-        transactionBlock.setGasBudget(gasBudget);
-        if (coinRefs.length > 0) {
-            transactionBlock.setGasPayment(coinRefs);
-        } else {
-            throw new Error("No gas payment coins provided");
-        }
+) {
 
-        const serializedTx = await transactionBlock.build({ client: suiClient });
-        return Buffer.from(serializedTx).toString("base64");
-    } catch (error) {
-        console.error("Error in buildSuiTransaction:", error);
-        if (error instanceof Error) {
-            throw new Error(`Failed to build Sui transaction: ${error.message}`);
-        }
-        throw new Error(`Failed to build Sui transaction: ${error}`);
+    transaction.setSender(senderAddress);
+    transaction.setGasPrice(gasPrice);
+    transaction.setGasBudget(gasBudget);
+    if (coinRefs.length > 0) {
+        transaction.setGasPayment(coinRefs);
+    } else {
+        throw new Error("No gas payment coins provided");
     }
 }

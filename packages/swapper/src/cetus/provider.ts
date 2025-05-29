@@ -6,7 +6,7 @@ import { Transaction } from '@mysten/sui/transactions';
 import { BN } from "bn.js";
 import { SUI_COIN_TYPE } from "../chain/sui/constants";
 import { bnReplacer, bnReviver } from "./bn_replacer";
-import { calculateGasBudget, buildSuiTransaction, getGasPriceAndCoinRefs } from "../chain/sui/tx_builder";
+import { calculateGasBudget, prefillTransaction, getGasPriceAndCoinRefs } from "../chain/sui/tx_builder";
 
 export class CetusAggregatorProvider implements Protocol {
     private client: AggregatorClient;
@@ -121,14 +121,8 @@ export class CetusAggregatorProvider implements Protocol {
 
             // build transaction
             const gasBudget = calculateGasBudget(result.effects);
-            const serializedTx = await buildSuiTransaction(
-                this.suiClient,
-                txb,
-                quote.quote.from_address,
-                gasBudget,
-                gasPrice,
-                coinRefs
-            );
+            prefillTransaction(txb, quote.quote.from_address, gasBudget, gasPrice, coinRefs);
+            const serializedTx = await txb.build({ client: this.suiClient });
 
             // build quote data
             const quoteData: QuoteData = {
