@@ -6,7 +6,7 @@ import { buildSolanaQuoteData } from "./solana";
 import { buildSuiQuoteData } from "./sui";
 import { BigIntMath } from "../bigint_math";
 import { getReferrerAddresses } from "../referrer";
-import { SUI_COIN_TYPE } from "../asset";
+import { SUI_COIN_TYPE } from "../chain/sui/constants";
 
 export class MayanProvider implements Protocol {
     private solanaRpc: string;

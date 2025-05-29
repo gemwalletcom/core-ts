@@ -4,9 +4,9 @@ import { AggregatorClient, Env, RouterData } from "@cetusprotocol/aggregator-sdk
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from '@mysten/sui/transactions';
 import { BN } from "bn.js";
-import { SUI_COIN_TYPE } from "../asset";
-import { bnReplacer, bnReviver } from "./bn_replacer"
-import { CalculateGasBudget } from "./calculator";
+import { SUI_COIN_TYPE } from "../chain/sui/constants";
+import { bnReplacer, bnReviver } from "./bn_replacer";
+import { calculateGasBudget, buildSuiTransaction, getGasPriceAndCoinRefs } from "../chain/sui/tx_builder";
 
 export class CetusAggregatorProvider implements Protocol {
     private client: AggregatorClient;
@@ -83,10 +83,8 @@ export class CetusAggregatorProvider implements Protocol {
     }
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
-        const fromAsset = AssetId.fromString(quote.quote.from_asset.id);
         const slippage_bps = quote.quote.slippage_bps;
         const route_data = JSON.parse((quote.route_data as { data: string }).data, bnReviver) as RouterData;
-        const fromToken = this.mapAssetToTokenId(fromAsset);
 
         if (!route_data) {
             throw new Error("Missing route_data in quote object, cannot build transaction.");
@@ -104,28 +102,35 @@ export class CetusAggregatorProvider implements Protocol {
 
             // create a new client with user's address as signer
             const client = this.createClient(quote.quote.from_address);
-            await client.fastRouterSwap(swapParams);
-            const result = await client.devInspectTransactionBlock(txb);
 
+            const gasPriceAndCoinRefsReq = getGasPriceAndCoinRefs(this.suiClient, quote.quote.from_address);
+            const fastRouterSwapReq = client.fastRouterSwap(swapParams);
+            const [{ gasPrice, coinRefs }, swapResult] = await Promise.all([
+                gasPriceAndCoinRefsReq,
+                fastRouterSwapReq
+            ]);
+
+            // inspect transaction
+            const result = await client.devInspectTransactionBlock(txb);
             if (result.error) {
                 throw new Error(`Swap transaction simulation failed: ${result.error}`);
             }
             if (result.effects.status.status !== "success") {
-                throw new Error("Swap transaction simulation failed");
+                throw new Error(`Swap transaction simulation failed: ${result.effects.status.error}`);
             }
 
-            const coins = await this.suiClient.getCoins({ owner: quote.quote.from_address, coinType: fromToken });
-            txb.setSender(quote.quote.from_address);
-            txb.setGasPrice(750);
-            txb.setGasBudget(CalculateGasBudget(result.effects));
-            txb.setGasPayment(coins.data.map(coin => {
-                return {
-                    objectId: coin.coinObjectId,
-                    version: coin.version,
-                    digest: coin.digest,
-                }
-            }));
-            const serializedTx = await txb.build();
+            // build transaction
+            const gasBudget = calculateGasBudget(result.effects);
+            const serializedTx = await buildSuiTransaction(
+                this.suiClient,
+                txb,
+                quote.quote.from_address,
+                gasBudget,
+                gasPrice,
+                coinRefs
+            );
+
+            // build quote data
             const quoteData: QuoteData = {
                 to: "",
                 value: "0",
