@@ -1,6 +1,6 @@
 import express from "express";
 import { Quote, QuoteRequest } from "@gemwallet/types";
-import { StonfiProvider, Protocol, MayanProvider, SymbiosisProvider, CetusAggregatorProvider, getReferrerAddresses } from "@gemwallet/swapper";
+import { StonfiProvider, Protocol, MayanProvider, SymbiosisProvider, CetusAggregatorProvider, getReferrerAddresses, getReferrerFeeBps } from "@gemwallet/swapper";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,7 +16,7 @@ const providers: Record<string, Protocol> = {
     symbiosis: new SymbiosisProvider(process.env.TRON_URL || "https://api.trongrid.io"),
     cetus: new CetusAggregatorProvider(
         process.env.SUI_URL || "https://fullnode.mainnet.sui.io",
-        parseFloat(process.env.CETUS_OVERLAY_FEE_RATE || "0.005"),
+        getReferrerFeeBps() / 10000,
         getReferrerAddresses().sui
     ),
 };

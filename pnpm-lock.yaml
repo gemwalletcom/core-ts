@@ -53,8 +53,8 @@ importers:
   packages/swapper:
     dependencies:
       '@cetusprotocol/aggregator-sdk':
-        specifier: ^0.10.0
-        version: 0.10.0(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)
+        specifier: 0.11.0
+        version: 0.11.0(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)
       '@gemwallet/types':
         specifier: workspace:*
         version: link:../types
@@ -77,10 +77,10 @@ importers:
         specifier: 15.2.1
         version: 15.2.1(@ton/core@0.60.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)
       '@types/bn.js':
-        specifier: ^5.1.6
+        specifier: 5.1.6
         version: 5.1.6
       bn.js:
-        specifier: ^5.2.1
+        specifier: 5.2.1
         version: 5.2.1
       js-sha3:
         specifier: ^0.8.0
@@ -776,8 +776,8 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@cetusprotocol/aggregator-sdk@0.10.0':
-    resolution: {integrity: sha512-SmLv1rJt9V+nC4aQuKElwupi62zRLzeqM0tnJeQ29abwBb02LDcWVU/VNoVYmaLwcQ9wdnDi0sD0qk3jIhyAgQ==}
+  '@cetusprotocol/aggregator-sdk@0.11.0':
+    resolution: {integrity: sha512-paVlO6Ka9p0MFkoLY1t4HqSq0aDaM6I0BcfpddQXsbdT9emw/TgloQ16LXwSFUPP3m3A+bF0eKyLum6H/6rbcg==}
     peerDependencies:
       typescript: ^5.8.2
 
@@ -3548,7 +3548,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.26.10
       '@babel/helper-plugin-utils': 7.27.1
-      '@babel/types': 7.27.0
+      '@babel/types': 7.27.3
       esutils: 2.0.3
 
   '@babel/preset-typescript@7.27.1(@babel/core@7.26.10)':
@@ -3614,7 +3614,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@cetusprotocol/aggregator-sdk@0.10.0(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)':
+  '@cetusprotocol/aggregator-sdk@0.11.0(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)':
     dependencies:
       '@babel/core': 7.26.10
       '@babel/preset-env': 7.27.2(@babel/core@7.26.10)
@@ -5865,7 +5865,7 @@ snapshots:
       bs-logger: 0.2.6
       ejs: 3.1.10
       fast-json-stable-stringify: 2.1.0
-      jest: 29.7.0(@types/node@22.15.0)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))
+      jest: 29.7.0(@types/node@20.17.50)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))
       jest-util: 29.7.0
       json5: 2.2.3
       lodash.memoize: 4.1.2

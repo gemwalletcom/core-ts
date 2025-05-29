@@ -1,52 +1,74 @@
-import { QuoteRequest, Quote, QuoteData } from "@gemwallet/types";
+import { QuoteRequest, Quote, QuoteData, AssetId } from "@gemwallet/types";
 import { Protocol } from "../protocol";
 import { AggregatorClient, Env, RouterData } from "@cetusprotocol/aggregator-sdk";
 import { SuiClient } from "@mysten/sui/client";
-import { Transaction } from "@mysten/sui/transactions";
+import { Transaction } from '@mysten/sui/transactions';
 import { BN } from "bn.js";
+import { SUI_COIN_TYPE } from "../asset";
+import { bnReplacer, bnReviver } from "./bn_replacer"
+import { CalculateGasBudget } from "./calculator";
 
 export class CetusAggregatorProvider implements Protocol {
     private client: AggregatorClient;
     private suiClient: SuiClient;
+    private overlayFeeRate: number;
+    private overlayFeeReceiver: string;
 
-    constructor(suiRpcUrl: string, overlayFeeRate?: number, overlayFeeReceiver?: string) {
+    constructor(suiRpcUrl: string, overlayFeeRate: number, overlayFeeReceiver: string) {
         this.suiClient = new SuiClient({ url: suiRpcUrl });
-        this.client = new AggregatorClient({
+        this.overlayFeeRate = overlayFeeRate;
+        this.overlayFeeReceiver = overlayFeeReceiver;
+        this.client = this.createClient();
+    }
+
+    createClient(address?: string) {
+        return new AggregatorClient({
             client: this.suiClient,
             env: Env.Mainnet,
-            ...(overlayFeeRate && overlayFeeReceiver && { overlayFeeRate, overlayFeeReceiver }),
+            overlayFeeRate: this.overlayFeeRate,
+            overlayFeeReceiver: this.overlayFeeReceiver,
+            signer: address,
         });
     }
 
-    async get_quote(request: QuoteRequest): Promise<Quote> {
-        console.log("CetusProvider get_quote called with:", request);
-
-        const { from_asset, to_asset, from_value } = request;
-
-        if (!from_asset?.id || !to_asset?.id || !from_value) {
-            throw new Error(
-                "Missing required parameters: from_asset.id, to_asset.id, or from_value",
-            );
+    mapAssetToTokenId(asset: AssetId): string {
+        if (asset.isNative()) {
+            return SUI_COIN_TYPE;
         }
+        return asset.tokenId!;
+    }
+
+    async get_quote(request: QuoteRequest): Promise<Quote> {
+        const { from_asset, to_asset, from_value } = request;
+        const fromAsset = AssetId.fromString(from_asset.id);
+        const toAsset = AssetId.fromString(to_asset.id);
 
         try {
             const byAmountIn = true;
-            const routeResponse = await this.client.findRouters({
-                from: from_asset.id,
-                target: to_asset.id,
+            const routeData = await this.client.findRouters({
+                from: this.mapAssetToTokenId(fromAsset),
+                target: this.mapAssetToTokenId(toAsset),
                 amount: new BN(from_value),
                 byAmountIn,
             });
 
-            if (!routeResponse || !routeResponse.amountOut) {
-                throw new Error("Failed to fetch a valid quote from Cetus API or amountOut is missing");
+            if (!routeData) {
+                throw new Error("Failed to fetch a valid quote");
             }
+
+            if (routeData.error) {
+                throw new Error(`Cetus get_quote failed: ${routeData.error.msg}`);
+            }
+
+            const output_value = routeData.amountOut.toString();
 
             const quoteResult: Quote = {
                 quote: request,
-                output_value: routeResponse.amountOut.toString(),
-                output_min_value: routeResponse.amountOut.toString(),
-                route_data: routeResponse,
+                output_value,
+                output_min_value: output_value,
+                route_data: {
+                    data: JSON.stringify(routeData, bnReplacer),
+                },
                 eta_in_seconds: 0,
             };
 
@@ -61,10 +83,10 @@ export class CetusAggregatorProvider implements Protocol {
     }
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
-        console.log("CetusProvider get_quote_data called with:", quote);
-
-        const { route_data, quote: original_request } = quote;
-        const { slippage_bps } = original_request;
+        const fromAsset = AssetId.fromString(quote.quote.from_asset.id);
+        const slippage_bps = quote.quote.slippage_bps;
+        const route_data = JSON.parse((quote.route_data as { data: string }).data, bnReviver) as RouterData;
+        const fromToken = this.mapAssetToTokenId(fromAsset);
 
         if (!route_data) {
             throw new Error("Missing route_data in quote object, cannot build transaction.");
@@ -72,23 +94,45 @@ export class CetusAggregatorProvider implements Protocol {
 
         try {
             const txb = new Transaction();
-            const slippageDecimal = Number(slippage_bps) / 10000;
-
-            await this.client.fastRouterSwap({
-                routers: route_data as RouterData,
+            const swapParams = {
+                routers: route_data,
                 txb,
-                slippage: slippageDecimal,
-            });
-
-            const transactionDataPayload = await txb.build();
-
-            const quoteDataResult: QuoteData = {
-                to: "",
-                value: "0",
-                data: Buffer.from(transactionDataPayload).toString("base64"),
+                slippage: slippage_bps / 10000,
+                isMergeTragetCoin: true,
+                refreshAllCoins: true
             };
 
-            return quoteDataResult;
+            // create a new client with user's address as signer
+            const client = this.createClient(quote.quote.from_address);
+            await client.fastRouterSwap(swapParams);
+            const result = await client.devInspectTransactionBlock(txb);
+
+            if (result.error) {
+                throw new Error(`Swap transaction simulation failed: ${result.error}`);
+            }
+            if (result.effects.status.status !== "success") {
+                throw new Error("Swap transaction simulation failed");
+            }
+
+            const coins = await this.suiClient.getCoins({ owner: quote.quote.from_address, coinType: fromToken });
+            txb.setSender(quote.quote.from_address);
+            txb.setGasPrice(750);
+            txb.setGasBudget(CalculateGasBudget(result.effects));
+            txb.setGasPayment(coins.data.map(coin => {
+                return {
+                    objectId: coin.coinObjectId,
+                    version: coin.version,
+                    digest: coin.digest,
+                }
+            }));
+            const serializedTx = await txb.build();
+            const quoteData: QuoteData = {
+                to: "",
+                value: "0",
+                data: Buffer.from(serializedTx).toString("base64"),
+            };
+
+            return quoteData;
         } catch (error: unknown) {
             console.error("Error building transaction data with Cetus:", error);
             if (error instanceof Error) {

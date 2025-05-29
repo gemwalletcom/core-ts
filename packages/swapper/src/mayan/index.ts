@@ -3,9 +3,10 @@ import { QuoteRequest, Quote, QuoteData, AssetId, Chain } from "@gemwallet/types
 import { Protocol } from "../protocol";
 import { buildEvmQuoteData, EMPTY_ADDRESS } from "./evm";
 import { buildSolanaQuoteData } from "./solana";
-import { buildSuiQuoteData, SUI_COIN_TYPE } from "./sui";
+import { buildSuiQuoteData } from "./sui";
 import { BigIntMath } from "../bigint_math";
 import { getReferrerAddresses } from "../referrer";
+import { SUI_COIN_TYPE } from "../asset";
 
 export class MayanProvider implements Protocol {
     private solanaRpc: string;

@@ -3,8 +3,7 @@ import { Quote as MayanQuote, ReferrerAddresses, createSwapFromSuiMoveCalls } fr
 import { DevInspectResults, SuiClient } from "@mysten/sui/client";
 import { BigIntMath } from "../bigint_math";
 import { getReferrerAddresses } from "../referrer";
-
-export const SUI_COIN_TYPE = "0x2::sui::SUI";
+import { SUI_COIN_TYPE } from "../asset";
 
 function getGasBudget(inspectResult: DevInspectResults) {
     const gasUsed = inspectResult.effects.gasUsed;
