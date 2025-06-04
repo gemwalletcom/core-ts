@@ -1,4 +1,3 @@
-import axios from 'axios';
 import type { RelayQuotePostBodyParams, RelayQuoteResponse } from './model';
 
 const RELAY_API_BASE_URL = 'https://api.relay.link/';
@@ -11,21 +10,35 @@ export async function fetchQuote(
   try {
     console.log(`Fetching quote from: ${apiUrl} with body:`, JSON.stringify(params, null, 2));
 
-    const response = await axios.post<RelayQuoteResponse>(apiUrl, params, {
+    const response = await fetch(apiUrl, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify(params),
     });
-    return response.data;
-  } catch (error: any) {
-    if (axios.isAxiosError(error)) {
-      console.error('Relay API error:', error.response?.status, error.response?.data);
+
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        // If response is not JSON, use text
+        errorData = await response.text();
+      }
+      console.error('Relay API error:', response.status, errorData);
       throw new Error(
-        `Relay API request failed with status ${error.response?.status}: ${JSON.stringify(error.response?.data)}`
+        `Relay API request failed with status ${response.status}: ${JSON.stringify(errorData)}`
       );
-    } else {
-      console.error('Unexpected error fetching Relay quote:', error);
-      throw new Error('An unexpected error occurred while fetching the quote from Relay.');
     }
+
+    return await response.json() as RelayQuoteResponse;
+  } catch (error: any) {
+    // Handle network errors or other issues not caught by !response.ok
+    if (error instanceof Error && error.message.startsWith('Relay API request failed')) {
+      throw error; // Re-throw errors already processed from the API response
+    }
+    console.error('Unexpected error fetching Relay quote:', error);
+    throw new Error(`An unexpected error occurred while fetching the quote from Relay: ${error.message}`);
   }
 }

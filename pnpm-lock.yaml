@@ -76,15 +76,9 @@ importers:
       '@ton/ton':
         specifier: 15.2.1
         version: 15.2.1(@ton/core@0.60.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)
-      '@types/axios':
-        specifier: ^0.14.4
-        version: 0.14.4
       '@types/bn.js':
         specifier: 5.1.6
         version: 5.1.6
-      axios:
-        specifier: ^1.9.0
-        version: 1.9.0
       bn.js:
         specifier: 5.2.1
         version: 5.2.1
@@ -1033,10 +1027,6 @@ packages:
 
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
-
-  '@types/axios@0.14.4':
-    resolution: {integrity: sha512-9JgOaunvQdsQ/qW2OPmE5+hCeUB52lQSolecrFrthct55QekhmXEwT203s20RL+UHtCQc15y3VXpby9E7Kkh/g==}
-    deprecated: This is a stub types definition. axios provides its own type definitions, so you do not need this installed.
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -3678,9 +3668,7 @@ snapshots:
       '@ston-fi/api': 0.21.0
       '@ston-fi/sdk': 2.3.0(@ston-fi/api@0.21.0)(@ton/ton@15.2.1(@ton/core@0.60.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0))
       '@ton/ton': 15.2.1(@ton/core@0.60.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)
-      '@types/axios': 0.14.4
       '@types/bn.js': 5.1.6
-      axios: 1.9.0
       bn.js: 5.2.1
       js-sha3: 0.8.0
       tronweb: 6.0.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -4115,12 +4103,6 @@ snapshots:
   '@tsconfig/node14@1.0.3': {}
 
   '@tsconfig/node16@1.0.4': {}
-
-  '@types/axios@0.14.4':
-    dependencies:
-      axios: 1.9.0
-    transitivePeerDependencies:
-      - debug
 
   '@types/babel__core@7.20.5':
     dependencies:
