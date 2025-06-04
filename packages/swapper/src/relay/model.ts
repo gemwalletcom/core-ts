@@ -6,12 +6,13 @@ export interface RelayQuotePostBodyParams {
   originChainId: number;           // e.g., 1 (Ethereum)
   destinationChainId: number;      // e.g., 8253038 (Bitcoin)
   recipient: string;               // e.g., "bc1q4vxn43l44h30nkluqfxd9eckf45vr2awz38lwa"
-  tradeType: 'EXACT_INPUT' | 'EXACT_OUTPUT'; // e.g., "EXACT_INPUT"
+  tradeType: 'EXACT_INPUT' | 'EXACT_OUTPUT';
   referrer?: string;                // e.g., "relay.link"
+  referrerAddress?: string;         // e.g., "0x0D9DAB1A248f63B0a48965bA8435e4de7497a3dC"
   useDepositAddress?: boolean;      // e.g., false
   useExternalLiquidity?: boolean;   // e.g., false
   topupGas?: boolean;               // e.g., false
-  slippage?: string;                // Optional: Slippage tolerance as a decimal (e.g., "0.005" for 0.5%)
+  slippageTolerance?: string;       // Optional: basis points (if not specified then the slippage tolerance is automatically calculated)
 }
 
 export interface CurrencyMetadata {
@@ -34,17 +35,7 @@ export interface AmountDetails {
   amount: string;
   amountFormatted: string;
   amountUsd: string;
-  minimumAmount?: string; // Present in some fee/currency objects
-}
-
-export interface FeeComponent extends AmountDetails { }
-
-export interface Fees {
-  gas?: FeeComponent;
-  relayer?: FeeComponent;
-  relayerGas?: FeeComponent;
-  relayerService?: FeeComponent;
-  app?: FeeComponent;
+  minimumAmount: string;
 }
 
 export interface StepDataItem {
@@ -58,21 +49,13 @@ export interface StepDataItem {
   gas?: string;
 }
 
-export interface StepCheck {
-  endpoint: string;
-  method: string;
-}
-
 export interface StepItem {
   status: string;
-  data: StepDataItem | any;
-  check?: StepCheck;
+  data: StepDataItem;
 }
 
 export interface Step {
   id: string;
-  action: string;
-  description: string;
   kind: string;
   requestId?: string;
   items: StepItem[];
@@ -102,11 +85,9 @@ export interface QuoteDetails {
   rate: string;
   slippageTolerance?: SlippageTolerance;
   timeEstimate?: number;
-  userBalance?: string;
 }
 
 export interface RelayQuoteResponse {
   steps: Step[];
-  fees: Fees;
   details: QuoteDetails;
 }

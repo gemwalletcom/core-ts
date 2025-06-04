@@ -8,8 +8,6 @@ export async function fetchQuote(
   const apiUrl = `${RELAY_API_BASE_URL}quote`;
 
   try {
-    console.log(`Fetching quote from: ${apiUrl} with body:`, JSON.stringify(params, null, 2));
-
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {

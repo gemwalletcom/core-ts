@@ -1,36 +1,113 @@
 import { Protocol } from '../protocol';
-import { QuoteRequest, Quote, QuoteData, QuoteAsset } from '@gemwallet/types';
+import { QuoteRequest, Quote, QuoteData, AssetId } from '@gemwallet/types';
 import { fetchQuote } from './client';
-import { RelayQuotePostBodyParams, RelayQuoteResponse, Step, StepDataItem } from './model';
+import { RelayQuotePostBodyParams, RelayQuoteResponse, Step } from './model';
+import { Chain } from '@gemwallet/types';
+import { getReferrerAddresses } from '../referrer';
+
+const RELAY_REFERRER = "gemwallet";
 
 export class RelayProvider implements Protocol {
-  constructor() {
+  constructor() { }
+
+  mapChainToRelayChainId(chain: Chain): number {
+    switch (chain) {
+      case Chain.Ethereum:
+        return 1;
+      case Chain.Base:
+        return 8453;
+      case Chain.Berachain:
+        return 80094;
+      case Chain.Hyperliquid:
+        return 999;
+      case Chain.Manta:
+        return 169;
+      case Chain.Mantle:
+        return 5000;
+      case Chain.SmartChain:
+        return 56;
+      case Chain.Unichain:
+        return 130;
+      // case Chain.Bitcoin:
+      //   return 8253038;
+      // case Chain.Solana:
+      //   return 792703809;
+      default:
+        throw new Error(`Unsupported chain: ${chain}`);
+    }
   }
 
+  mapAssetIdToCurrency(assetId: AssetId): string {
+    switch (assetId.chain) {
+      case Chain.Ethereum,
+        Chain.Base,
+        Chain.Berachain,
+        Chain.Hyperliquid,
+        Chain.Manta,
+        Chain.Mantle,
+        Chain.SmartChain,
+        Chain.Unichain: {
+          if (assetId.tokenId) {
+            return assetId.tokenId;
+          }
+          return '0x0000000000000000000000000000000000000000';
+        }
+      case Chain.Bitcoin:
+        return 'bc1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmql8k8';
+      case Chain.Solana:
+        return '11111111111111111111111111111111';
+      default:
+        throw new Error(`Unsupported asset: ${assetId}`);
+    }
+  }
+
+  getReferrerAddress(chain: Chain): string {
+    const referrers = getReferrerAddresses();
+    switch (chain) {
+      case Chain.Ethereum,
+        Chain.Base,
+        Chain.Berachain,
+        Chain.Hyperliquid,
+        Chain.Manta,
+        Chain.Mantle,
+        Chain.SmartChain,
+        Chain.Unichain: {
+          return referrers.evm;
+        }
+      case Chain.Bitcoin:
+        return referrers.bitcoin;
+      case Chain.Solana:
+        return referrers.solana;
+      default:
+        throw new Error(`Unsupported chain: ${chain}`);
+    }
+  }
+
+
   async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
-    // FIXME map Chain to chain_id
-    // FIXME map AssetId to currency
-    // FIXME pass referrerAddress
-    const originChainId = 1;
-    const destinationChainId = 1;
+    const fromAsset = AssetId.fromString(quoteRequest.from_asset.id);
+    const toAsset = AssetId.fromString(quoteRequest.to_asset.id);
+
+    const originChainId = this.mapChainToRelayChainId(fromAsset.chain);
+    const destinationChainId = this.mapChainToRelayChainId(toAsset.chain);
 
     const relayParams: RelayQuotePostBodyParams = {
       user: quoteRequest.from_address,
       amount: quoteRequest.from_value,
-      originCurrency: quoteRequest.from_asset.id,
-      destinationCurrency: quoteRequest.to_asset.id,
+      originCurrency: this.mapAssetIdToCurrency(fromAsset),
+      destinationCurrency: this.mapAssetIdToCurrency(toAsset),
       originChainId: originChainId,
       destinationChainId: destinationChainId,
       recipient: quoteRequest.to_address,
       tradeType: 'EXACT_INPUT',
-      referrer: 'gemwallet',
-      slippage: quoteRequest.slippage_bps ? (quoteRequest.slippage_bps / 10000).toString() : undefined,
+      referrer: RELAY_REFERRER,
+      referrerAddress: this.getReferrerAddress(fromAsset.chain),
     };
 
     const relayResponse: RelayQuoteResponse = await fetchQuote(relayParams);
 
     const outputValue = relayResponse.details.currencyOut.amount;
-    const outputMinValue = relayResponse.details.currencyOut.minimumAmount || outputValue;
+    const outputMinValue = relayResponse.details.currencyOut.minimumAmount;
 
     return {
       quote: quoteRequest,
@@ -42,22 +119,20 @@ export class RelayProvider implements Protocol {
   }
 
   async get_quote_data(quote: Quote): Promise<QuoteData> {
-    const steps = quote.route_data as RelayQuoteResponse['steps'];
-
-    // Find the first step of kind 'transaction'
-    const firstTransactionStep = steps?.find(step => step.kind === 'transaction');
-    const firstTransactionStepItem = firstTransactionStep?.items?.[0];
-
-    if (firstTransactionStepItem && firstTransactionStepItem.data) {
-      const txData = firstTransactionStepItem.data as StepDataItem;
-      return {
-        to: txData.to,
-        value: txData.value || '0',
-        data: txData.data || '0x',
-      };
+    const steps = quote.route_data as Step[];
+    if (!steps || steps.length === 0) {
+      throw new Error('RelayProvider: No steps found in quote data');
     }
-
-    console.warn('RelayProvider: Could not derive QuoteData from the provided Quote object.', quote);
-    throw new Error('RelayProvider: Unable to derive transaction data from the quote.');
+    // Find id = 'deposit', kind = 'transaction', we skip 'approve' step because it is handled by the client
+    const depositStep = steps.find(step => step.id === 'deposit' && step.kind === 'transaction');
+    if (!depositStep || depositStep.items.length === 0) {
+      throw new Error('RelayProvider: No deposit step found in quote data');
+    }
+    const txData = depositStep.items[0].data;
+    return {
+      to: txData.to,
+      value: txData.value,
+      data: txData.data,
+    };
   }
 }

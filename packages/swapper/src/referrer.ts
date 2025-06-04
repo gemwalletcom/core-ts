@@ -4,6 +4,7 @@ export type Referrers = {
     sui: string;
     ton: string;
     tron: string;
+    bitcoin: string;
 };
 
 export function getReferrerFeeBps(): number {
@@ -17,5 +18,6 @@ export function getReferrerAddresses(): Referrers {
         sui: "0x9d6b98b18fd26b5efeec68d020dcf1be7a94c2c315353779bc6b3aed44188ddf",
         ton: "UQDxJKarPSp0bCta9DFgp81Mpt5hpGbuVcSxwfeza0Bin201",
         tron: "TYeyZXywpA921LEtw2PF3obK4B8Jjgpp32",
+        bitcoin: "bc1qe7qlndxgfv76c0ulnfhh7j0vdwkqdkkl4yf9gm", // FIXME
     };
 }

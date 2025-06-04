@@ -18,7 +18,6 @@ describe('Relay Client - fetchQuote', () => {
         useDepositAddress: false,
         useExternalLiquidity: false,
         topupGas: false,
-        // slippage: '0.005', // Example slippage
       };
 
       console.log('Running test: Fetching quote with params:', JSON.stringify(params, null, 2));
