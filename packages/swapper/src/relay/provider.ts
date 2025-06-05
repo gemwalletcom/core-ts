@@ -5,7 +5,6 @@ import { RelayQuotePostBodyParams, RelayQuoteResponse, Step } from './model';
 import { Chain } from '@gemwallet/types';
 import { getReferrerAddresses } from '../referrer';
 
-const RELAY_REFERRER = "gemwallet";
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 export class RelayProvider implements Protocol {
@@ -103,8 +102,12 @@ export class RelayProvider implements Protocol {
       destinationChainId: destinationChainId,
       recipient: quoteRequest.to_address,
       tradeType: 'EXACT_INPUT',
-      referrer: RELAY_REFERRER,
-      referrerAddress: this.getReferrerAddress(fromAsset.chain),
+      appFee: [
+        {
+          recipient: this.getReferrerAddress(fromAsset.chain),
+          fee: quoteRequest.referral_bps.toString(),
+        }
+      ],
       refundTo: quoteRequest.from_address,
     };
 
