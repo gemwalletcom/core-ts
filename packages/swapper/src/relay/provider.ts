@@ -105,6 +105,7 @@ export class RelayProvider implements Protocol {
       tradeType: 'EXACT_INPUT',
       referrer: RELAY_REFERRER,
       referrerAddress: this.getReferrerAddress(fromAsset.chain),
+      refundTo: quoteRequest.from_address,
     };
 
     const relayResponse: RelayQuoteResponse = await fetchQuote(relayParams);
