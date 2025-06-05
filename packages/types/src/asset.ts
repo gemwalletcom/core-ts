@@ -20,6 +20,10 @@ export class AssetId {
         return !this.tokenId;
     }
 
+    isToken(): boolean {
+        return !!this.tokenId;
+    }
+
     toJSON(): string {
         return this.toString();
     }

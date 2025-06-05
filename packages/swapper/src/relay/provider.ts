@@ -6,6 +6,7 @@ import { Chain } from '@gemwallet/types';
 import { getReferrerAddresses } from '../referrer';
 
 const RELAY_REFERRER = "gemwallet";
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 export class RelayProvider implements Protocol {
   constructor() { }
@@ -38,42 +39,41 @@ export class RelayProvider implements Protocol {
   }
 
   mapAssetIdToCurrency(assetId: AssetId): string {
+    console.log("RelayProvider: assetId", assetId, assetId.isNative());
     switch (assetId.chain) {
-      case Chain.Ethereum,
-        Chain.Base,
-        Chain.Berachain,
-        Chain.Hyperliquid,
-        Chain.Manta,
-        Chain.Mantle,
-        Chain.SmartChain,
-        Chain.Unichain: {
-          if (assetId.tokenId) {
-            return assetId.tokenId;
-          }
-          return '0x0000000000000000000000000000000000000000';
+      case Chain.Ethereum:
+      case Chain.Base:
+      case Chain.Berachain:
+      case Chain.Hyperliquid:
+      case Chain.Manta:
+      case Chain.Mantle:
+      case Chain.SmartChain:
+      case Chain.Unichain:
+        if (assetId.isNative()) {
+          return ZERO_ADDRESS;
         }
+        return assetId.tokenId!;
       case Chain.Bitcoin:
         return 'bc1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmql8k8';
       case Chain.Solana:
         return '11111111111111111111111111111111';
       default:
-        throw new Error(`Unsupported asset: ${assetId}`);
+        throw new Error(`Unsupported asset: ${assetId.toString()}`);
     }
   }
 
   getReferrerAddress(chain: Chain): string {
     const referrers = getReferrerAddresses();
     switch (chain) {
-      case Chain.Ethereum,
-        Chain.Base,
-        Chain.Berachain,
-        Chain.Hyperliquid,
-        Chain.Manta,
-        Chain.Mantle,
-        Chain.SmartChain,
-        Chain.Unichain: {
-          return referrers.evm;
-        }
+      case Chain.Ethereum:
+      case Chain.Base:
+      case Chain.Berachain:
+      case Chain.Hyperliquid:
+      case Chain.Manta:
+      case Chain.Mantle:
+      case Chain.SmartChain:
+      case Chain.Unichain:
+        return referrers.evm;
       case Chain.Bitcoin:
         return referrers.bitcoin;
       case Chain.Solana:

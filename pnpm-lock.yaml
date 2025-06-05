@@ -32,7 +32,7 @@ importers:
     dependencies:
       '@gemwallet/swapper':
         specifier: workspace:*
-        version: file:packages/swapper(@jest/transform@29.7.0)(@jest/types@29.6.3)(@ton/core@0.60.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)
+        version: link:../../packages/swapper
       '@gemwallet/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -784,12 +784,6 @@ packages:
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
-
-  '@gemwallet/swapper@file:packages/swapper':
-    resolution: {directory: packages/swapper, type: directory}
-
-  '@gemwallet/types@file:packages/types':
-    resolution: {directory: packages/types, type: directory}
 
   '@gql.tada/cli-utils@1.6.3':
     resolution: {integrity: sha512-jFFSY8OxYeBxdKi58UzeMXG1tdm4FVjXa8WHIi66Gzu9JWtCE6mqom3a8xkmSw+mVaybFW5EN2WXf1WztJVNyQ==}
@@ -3657,40 +3651,6 @@ snapshots:
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
-
-  '@gemwallet/swapper@file:packages/swapper(@jest/transform@29.7.0)(@jest/types@29.6.3)(@ton/core@0.60.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)':
-    dependencies:
-      '@cetusprotocol/aggregator-sdk': 0.11.0(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)
-      '@gemwallet/types': file:packages/types
-      '@mayanfinance/swap-sdk': 10.5.0(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
-      '@mysten/sui': 1.26.0(typescript@5.8.2)
-      '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      '@ston-fi/api': 0.21.0
-      '@ston-fi/sdk': 2.3.0(@ston-fi/api@0.21.0)(@ton/ton@15.2.1(@ton/core@0.60.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0))
-      '@ton/ton': 15.2.1(@ton/core@0.60.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)
-      '@types/bn.js': 5.1.6
-      bn.js: 5.2.1
-      js-sha3: 0.8.0
-      tronweb: 6.0.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-    transitivePeerDependencies:
-      - '@gql.tada/svelte-support'
-      - '@gql.tada/vue-support'
-      - '@jest/transform'
-      - '@jest/types'
-      - '@ton/core'
-      - '@ton/crypto'
-      - babel-plugin-macros
-      - bufferutil
-      - debug
-      - encoding
-      - esbuild
-      - node-notifier
-      - supports-color
-      - ts-node
-      - typescript
-      - utf-8-validate
-
-  '@gemwallet/types@file:packages/types': {}
 
   '@gql.tada/cli-utils@1.6.3(@0no-co/graphqlsp@1.12.16(graphql@16.10.0)(typescript@5.8.2))(graphql@16.10.0)(typescript@5.8.2)':
     dependencies:
