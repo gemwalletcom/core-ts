@@ -29,17 +29,16 @@ export class RelayProvider implements Protocol {
         return 56;
       case Chain.Unichain:
         return 130;
-      // case Chain.Bitcoin:
-      //   return 8253038;
-      // case Chain.Solana:
-      //   return 792703809;
+      case Chain.Bitcoin:
+        return 8253038;
+      case Chain.Solana:
+        return 792703809;
       default:
         throw new Error(`Unsupported chain: ${chain}`);
     }
   }
 
   mapAssetIdToCurrency(assetId: AssetId): string {
-    console.log("RelayProvider: assetId", assetId, assetId.isNative());
     switch (assetId.chain) {
       case Chain.Ethereum:
       case Chain.Base:
@@ -49,10 +48,10 @@ export class RelayProvider implements Protocol {
       case Chain.Mantle:
       case Chain.SmartChain:
       case Chain.Unichain:
-        if (assetId.isNative()) {
+        if (!assetId.tokenId) {
           return ZERO_ADDRESS;
         }
-        return assetId.tokenId!;
+        return assetId.tokenId;
       case Chain.Bitcoin:
         return 'bc1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmql8k8';
       case Chain.Solana:
@@ -88,6 +87,10 @@ export class RelayProvider implements Protocol {
     const fromAsset = AssetId.fromString(quoteRequest.from_asset.id);
     const toAsset = AssetId.fromString(quoteRequest.to_asset.id);
 
+    if (fromAsset.chain === Chain.Bitcoin || fromAsset.chain === Chain.Solana) {
+      throw new Error('Swapping from Bitcoin or Solana is not supported yet');
+    }
+
     const originChainId = this.mapChainToRelayChainId(fromAsset.chain);
     const destinationChainId = this.mapChainToRelayChainId(toAsset.chain);
 
@@ -119,16 +122,20 @@ export class RelayProvider implements Protocol {
   }
 
   async get_quote_data(quote: Quote): Promise<QuoteData> {
+    if (!quote.route_data || !Array.isArray(quote.route_data)) {
+      throw new Error('RelayProvider: Invalid route_data structure');
+    }
     const steps = quote.route_data as Step[];
-    if (!steps || steps.length === 0) {
+    // filter out approve step and get first transaction
+    const filtered = steps.filter(step => step.id !== 'approve' && step.kind === 'transaction');
+    if (filtered.length === 0) {
       throw new Error('RelayProvider: No steps found in quote data');
     }
-    // Find id = 'deposit', kind = 'transaction', we skip 'approve' step because it is handled by the client
-    const depositStep = steps.find(step => step.id === 'deposit' && step.kind === 'transaction');
-    if (!depositStep || depositStep.items.length === 0) {
-      throw new Error('RelayProvider: No deposit step found in quote data');
+    const stepItems = filtered[0].items;
+    if (stepItems.length !== 1) {
+      throw new Error('RelayProvider: expect only one transaction in the step');
     }
-    const txData = depositStep.items[0].data;
+    const txData = stepItems[0].data;
     return {
       to: txData.to,
       value: txData.value,

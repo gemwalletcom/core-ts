@@ -55,7 +55,7 @@ export interface StepItem {
 }
 
 export interface Step {
-  id: string;
+  id: 'deposit' | 'approve' | 'swap';
   kind: string;
   requestId?: string;
   items: StepItem[];
