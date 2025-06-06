@@ -28,10 +28,6 @@ export class RelayProvider implements Protocol {
         return 56;
       case Chain.Unichain:
         return 130;
-      case Chain.Bitcoin:
-        return 8253038;
-      case Chain.Solana:
-        return 792703809;
       default:
         throw new Error(`Unsupported chain: ${chain}`);
     }
@@ -51,10 +47,6 @@ export class RelayProvider implements Protocol {
           return ZERO_ADDRESS;
         }
         return assetId.tokenId;
-      case Chain.Bitcoin:
-        return 'bc1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqmql8k8';
-      case Chain.Solana:
-        return '11111111111111111111111111111111';
       default:
         throw new Error(`Unsupported asset: ${assetId.toString()}`);
     }
@@ -72,10 +64,6 @@ export class RelayProvider implements Protocol {
       case Chain.SmartChain:
       case Chain.Unichain:
         return referrers.evm;
-      case Chain.Bitcoin:
-        return referrers.bitcoin;
-      case Chain.Solana:
-        return referrers.solana;
       default:
         throw new Error(`Unsupported chain: ${chain}`);
     }
@@ -85,11 +73,6 @@ export class RelayProvider implements Protocol {
   async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
     const fromAsset = AssetId.fromString(quoteRequest.from_asset.id);
     const toAsset = AssetId.fromString(quoteRequest.to_asset.id);
-
-    if (fromAsset.chain === Chain.Bitcoin || fromAsset.chain === Chain.Solana) {
-      throw new Error('Swapping from Bitcoin or Solana is not supported yet');
-    }
-
     const originChainId = this.mapChainToRelayChainId(fromAsset.chain);
     const destinationChainId = this.mapChainToRelayChainId(toAsset.chain);
 
