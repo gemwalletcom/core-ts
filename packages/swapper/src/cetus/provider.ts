@@ -77,9 +77,9 @@ export class CetusAggregatorProvider implements Protocol {
         } catch (err: unknown) {
             console.error("CetusProvider: Error in get_quote", err);
             if (err instanceof Error) {
-                throw new Error(`Cetus get_quote failed: ${err.message}`);
+                throw new Error(`Get Quote failed: ${err.message}`);
             }
-            throw new Error(`Cetus get_quote failed: ${err}`);
+            throw new Error(`Get Quote failed: ${err}`);
         }
     }
 
@@ -114,10 +114,10 @@ export class CetusAggregatorProvider implements Protocol {
             // inspect transaction
             const result = await client.devInspectTransactionBlock(txb);
             if (result.error) {
-                throw new Error(`Swap transaction simulation failed: ${result.error}`);
+                throw new Error(`Swap simulation failed: ${result.error}`);
             }
             if (result.effects.status.status !== "success") {
-                throw new Error(`Swap transaction simulation failed: ${result.effects.status.error}`);
+                throw new Error(`Swap simulation failed: ${result.effects.status.error}`);
             }
 
             // build transaction
@@ -136,7 +136,7 @@ export class CetusAggregatorProvider implements Protocol {
         } catch (error: unknown) {
             console.error("Error building transaction data with Cetus:", error);
             if (error instanceof Error) {
-                throw new Error(`Cetus API error in get_quote_data: ${error.message}`);
+                throw new Error(`Get Quote Data failed: ${error.message}`);
             }
             throw new Error(`An unknown error occurred while building transaction data with Cetus: ${error}`);
         }
