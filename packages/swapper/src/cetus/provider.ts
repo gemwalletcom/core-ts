@@ -130,6 +130,7 @@ export class CetusAggregatorProvider implements Protocol {
                 to: "",
                 value: "0",
                 data: Buffer.from(serializedTx).toString("base64"),
+                limit: gasBudget.toString(10)
             };
 
             return quoteData;
