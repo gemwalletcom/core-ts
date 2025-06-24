@@ -53,8 +53,8 @@ importers:
   packages/swapper:
     dependencies:
       '@cetusprotocol/aggregator-sdk':
-        specifier: 0.12.0
-        version: 0.12.0(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)
+        specifier: 0.13.0
+        version: 0.13.0(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)
       '@gemwallet/types':
         specifier: workspace:*
         version: link:../types
@@ -780,8 +780,8 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@cetusprotocol/aggregator-sdk@0.12.0':
-    resolution: {integrity: sha512-uhTCpm3M2M7bUsqeZCUohr9DTAob3UKISjwmhutVt2z5dkga1EUhlwgPLD9o1AcYIEBSQ8FIQBrx5/AEIQqs+Q==}
+  '@cetusprotocol/aggregator-sdk@0.13.0':
+    resolution: {integrity: sha512-fhfQvrgXFTPnoOa2djHPzR3mjIUsQw/+zrQnRLhHe3yr+uvhkTcHmGD62tHz2FrS3MqcW3RlMr1DkASclzhLNQ==}
     peerDependencies:
       typescript: ^5.8.2
 
@@ -3627,7 +3627,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@cetusprotocol/aggregator-sdk@0.12.0(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)':
+  '@cetusprotocol/aggregator-sdk@0.13.0(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)':
     dependencies:
       '@babel/core': 7.26.10
       '@babel/preset-env': 7.27.2(@babel/core@7.26.10)
