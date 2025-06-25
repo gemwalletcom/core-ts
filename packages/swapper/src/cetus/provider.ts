@@ -96,9 +96,7 @@ export class CetusAggregatorProvider implements Protocol {
             const swapParams = {
                 routers: route_data,
                 txb,
-                slippage: slippage_bps / 10000,
-                isMergeTragetCoin: true,
-                refreshAllCoins: true
+                slippage: slippage_bps / 10000
             };
 
             // create a new client with user's address as signer, overlay fee rate and overlay fee receiver
