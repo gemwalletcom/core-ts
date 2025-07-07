@@ -76,5 +76,5 @@ app.post('/:providerId/quote_data', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`App is running on port ${PORT}!`);
+    console.log(`swapper api is running on port ${PORT}.`);
 });
