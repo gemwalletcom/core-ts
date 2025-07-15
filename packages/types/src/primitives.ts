@@ -847,7 +847,7 @@ export enum AssetRank {
 	Migrated = "migrated",
 	Deprecated = "deprecated",
 	Spam = "spam",
-	Fradulent = "fradulent",
+	Fraudulent = "fraudulent",
 	Unknown = "unknown",
 }
 
