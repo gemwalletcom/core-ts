@@ -25,7 +25,7 @@ export class TronTxBuilder {
             to: to,
             value: value,
             data: callData,
-            limit: Math.ceil(feeLimit / this.energyFee).toString()
+            gasLimit: Math.ceil(feeLimit / this.energyFee).toString()
         };
     }
 }

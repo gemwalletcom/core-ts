@@ -58,6 +58,12 @@ export interface Account {
 	extendedPublicKey?: string;
 }
 
+export interface ApprovalData {
+	token: string;
+	spender: string;
+	value: string;
+}
+
 export enum AssetType {
 	NATIVE = "NATIVE",
 	ERC20 = "ERC20",
@@ -79,11 +85,6 @@ export interface Asset {
 	type: AssetType;
 }
 
-export interface AssetAddress {
-	asset: Asset;
-	address: string;
-}
-
 export interface AssetProperties {
 	isEnabled: boolean;
 	isBuyable: boolean;
@@ -103,54 +104,6 @@ export interface AssetBasic {
 	score: AssetScore;
 }
 
-export interface Balance {
-	available: BigInteger;
-	frozen: BigInteger;
-	locked: BigInteger;
-	staked: BigInteger;
-	pending: BigInteger;
-	rewards: BigInteger;
-}
-
-export interface Price {
-	price: number;
-	priceChangePercentage24h: number;
-}
-
-export enum PriceAlertDirection {
-	Up = "up",
-	Down = "down",
-}
-
-export interface PriceAlert {
-	assetId: string;
-	currency: string;
-	price?: number;
-	pricePercentChange?: number;
-	priceDirection?: PriceAlertDirection;
-	lastNotifiedAt?: Date;
-}
-
-export interface AssetMetaData {
-	isEnabled: boolean;
-	isBuyEnabled: boolean;
-	isSellEnabled: boolean;
-	isSwapEnabled: boolean;
-	isStakeEnabled: boolean;
-	isPinned: boolean;
-	isActive: boolean;
-	stakingApr?: number;
-}
-
-export interface AssetData {
-	asset: Asset;
-	balance: Balance;
-	account: Account;
-	price?: Price;
-	price_alerts: PriceAlert[];
-	metadata: AssetMetaData;
-}
-
 export interface AssetLink {
 	name: string;
 	url: string;
@@ -160,6 +113,7 @@ export interface AssetFull {
 	asset: Asset;
 	properties: AssetProperties;
 	score: AssetScore;
+	tags: string[];
 	links: AssetLink[];
 }
 
@@ -173,15 +127,40 @@ export interface AssetMarket {
 	maxSupply?: number;
 }
 
+export interface Price {
+	price: number;
+	priceChangePercentage24h: number;
+	updatedAt: Date;
+}
+
 export interface AssetMarketPrice {
 	price?: Price;
 	market?: AssetMarket;
+}
+
+export interface AssetMetaData {
+	isEnabled: boolean;
+	isBuyEnabled: boolean;
+	isSellEnabled: boolean;
+	isSwapEnabled: boolean;
+	isStakeEnabled: boolean;
+	isPinned: boolean;
+	isActive: boolean;
+	stakingApr?: number;
+	rankScore: number;
 }
 
 export interface AssetPrice {
 	assetId: string;
 	price: number;
 	priceChangePercentage24h: number;
+	updatedAt: Date;
+}
+
+export interface AssetPriceInfo {
+	assetId: string;
+	price: Price;
+	market: AssetMarket;
 }
 
 export interface AssetPrices {
@@ -296,9 +275,36 @@ export interface ConfigVersions {
 	swapAssets: number;
 }
 
+export enum SwapProvider {
+	UniswapV3 = "uniswap_v3",
+	UniswapV4 = "uniswap_v4",
+	PancakeswapV3 = "pancakeswap_v3",
+	Aerodrome = "aerodrome",
+	PancakeswapAptosV2 = "pancakeswap_aptos_v2",
+	Thorchain = "thorchain",
+	Orca = "orca",
+	Jupiter = "jupiter",
+	Across = "across",
+	Oku = "oku",
+	Wagmi = "wagmi",
+	Cetus = "cetus",
+	StonfiV2 = "stonfi_v2",
+	Mayan = "mayan",
+	Reservoir = "reservoir",
+	Symbiosis = "symbiosis",
+	Chainflip = "chainflip",
+	CetusAggregator = "cetus_aggregator",
+	Relay = "relay",
+}
+
+export interface SwapConfig {
+	enabledProviders: SwapProvider[];
+}
+
 export interface ConfigResponse {
 	releases: Release[];
 	versions: ConfigVersions;
+	swap: SwapConfig;
 }
 
 export enum DelegationState {
@@ -355,38 +361,6 @@ export interface Device {
 	subscriptionsVersion: number;
 }
 
-export interface EIP712Domain {
-	name: string;
-	version: string;
-	chainId: number;
-	verifyingContract: string;
-}
-
-export interface EIP712Type {
-	name: string;
-	type: string;
-}
-
-export interface ERC2612Permit {
-	owner: string;
-	spender: string;
-	value: string;
-	nonce: string;
-	deadline: string;
-}
-
-export interface ERC2612Types {
-	EIP712Domain: EIP712Type[];
-	Permit: EIP712Type[];
-}
-
-export interface ERC2612PermitMessage {
-	types: ERC2612Types;
-	primaryType: string;
-	domain: EIP712Domain;
-	message: ERC2612Permit;
-}
-
 export interface FiatAssets {
 	version: number;
 	assetIds: string[];
@@ -429,6 +403,26 @@ export interface FiatQuoteRequest {
 
 export interface FiatQuotes {
 	quotes: FiatQuote[];
+}
+
+export interface FiatRate {
+	symbol: string;
+	rate: number;
+}
+
+export interface GraphqlError {
+	message: string;
+}
+
+export interface GraphqlData<T> {
+	data?: T;
+	errors?: GraphqlError[];
+}
+
+export interface GraphqlRequest {
+	operationName: string;
+	variables: Record<string, string>;
+	query: string;
 }
 
 export interface MarketDominance {
@@ -513,12 +507,6 @@ export interface NFTData {
 	assets: NFTAsset[];
 }
 
-export interface NFTImageOld {
-	imageUrl: string;
-	previewImageUrl: string;
-	originalSourceUrl: string;
-}
-
 export interface NameRecord {
 	name: string;
 	chain: Chain;
@@ -529,6 +517,20 @@ export interface NameRecord {
 export interface NodesResponse {
 	version: number;
 	nodes: ChainNodes[];
+}
+
+export enum PriceAlertDirection {
+	Up = "up",
+	Down = "down",
+}
+
+export interface PriceAlert {
+	assetId: string;
+	currency: string;
+	price?: number;
+	pricePercentChange?: number;
+	priceDirection?: PriceAlertDirection;
+	lastNotifiedAt?: Date;
 }
 
 export interface PriceAlertData {
@@ -543,6 +545,30 @@ export interface PriceData {
 	priceAlerts: PriceAlert[];
 	market?: AssetMarket;
 	links: AssetLink[];
+}
+
+export interface QuoteAsset {
+	id: string;
+	symbol: string;
+	decimals: number;
+}
+
+export interface ProxyQuoteRequest {
+	from_address: string;
+	to_address: string;
+	from_asset: QuoteAsset;
+	to_asset: QuoteAsset;
+	from_value: string;
+	referral_bps: number;
+	slippage_bps: number;
+}
+
+export interface ProxyQuote {
+	quote: ProxyQuoteRequest;
+	output_value: string;
+	output_min_value: string;
+	route_data: object;
+	eta_in_seconds: number;
 }
 
 export interface PushNotificationAsset {
@@ -571,37 +597,6 @@ export interface PushNotificationTransaction {
 	walletIndex: number;
 	assetId: string;
 	transactionId: string;
-}
-
-export interface QuoteAsset {
-	id: string;
-	symbol: string;
-	decimals: number;
-}
-
-export interface QuoteRequest {
-	from_address: string;
-	to_address: string;
-	from_asset: QuoteAsset;
-	to_asset: QuoteAsset;
-	from_value: string;
-	referral_bps: number;
-	slippage_bps: number;
-}
-
-export interface Quote {
-	quote: QuoteRequest;
-	output_value: string;
-	output_min_value: string;
-	route_data: object;
-	eta_in_seconds: number;
-}
-
-export interface QuoteData {
-	to: string;
-	value: string;
-	data: string;
-	limit?: string;
 }
 
 export interface ResponseError {
@@ -646,18 +641,6 @@ export interface ScanTransactionPayload {
 	type: TransactionType;
 }
 
-export enum SignDigestType {
-	Sign = "sign",
-	Eip191 = "eip191",
-	Eip712 = "eip712",
-	Base58 = "base58",
-}
-
-export interface SignMessage {
-	type: SignDigestType;
-	data: Uint8Array;
-}
-
 export interface StakeValidator {
 	id: string;
 	name: string;
@@ -667,6 +650,27 @@ export interface Subscription {
 	wallet_index: number;
 	chain: Chain;
 	address: string;
+}
+
+export interface SwapQuote {
+	fromValue: string;
+	toValue: string;
+	provider: SwapProvider;
+	walletAddress: string;
+	slippageBps: number;
+}
+
+export interface SwapQuoteData {
+	to: string;
+	value: string;
+	data: string;
+	approval?: ApprovalData;
+	gasLimit?: string;
+}
+
+export interface SwapData {
+	quote: SwapQuote;
+	data: SwapQuoteData;
 }
 
 export enum TransactionState {
@@ -721,6 +725,7 @@ export interface TransactionExtended {
 
 export interface TransactionNFTTransferMetadata {
 	assetId: string;
+	name?: string;
 }
 
 export interface TransactionSwapMetadata {
@@ -811,12 +816,31 @@ export interface WalletId {
 	id: string;
 }
 
+export enum WebSocketPriceActionType {
+	Subscribe = "subscribe",
+	Add = "add",
+}
+
+export interface WebSocketPriceAction {
+	action: WebSocketPriceActionType;
+	assets?: string[];
+}
+
+export interface WebSocketPricePayload {
+	prices: AssetPrice[];
+	rates: FiatRate[];
+}
+
+export enum AssetOrder {
+	PriceChange24hAsc = "priceChange24hAsc",
+	PriceChange24hDesc = "priceChange24hDesc",
+}
+
 export enum AssetRank {
 	High = "high",
 	Medium = "medium",
 	Low = "low",
 	Trivial = "trivial",
-	Unknown = "unknown",
 	Inactive = "inactive",
 	Abandoned = "abandoned",
 	Suspended = "suspended",
@@ -824,6 +848,13 @@ export enum AssetRank {
 	Deprecated = "deprecated",
 	Spam = "spam",
 	Fradulent = "fradulent",
+	Unknown = "unknown",
+}
+
+export enum AssetScoreType {
+	Verified = "verified",
+	Unverified = "unverified",
+	Suspicious = "suspicious",
 }
 
 export enum AssetSubtype {
@@ -1028,7 +1059,8 @@ export enum NameProvider {
 	Injective = "injective",
 	Icns = "icns",
 	Lens = "lens",
-	Bns = "bns",
+	Basenames = "basenames",
+	Hyperliquid = "hyperliquid",
 }
 
 export enum PriceAlertNotificationType {
@@ -1059,29 +1091,11 @@ export enum SwapMode {
 	ExactOut = "ExactOut",
 }
 
-export enum SwapProvider {
-	UniswapV3 = "uniswap_v3",
-	UniswapV4 = "uniswap_v4",
-	PancakeswapV3 = "pancakeswap_v3",
-	PancakeswapAptosV2 = "pancakeswap_aptos_v2",
-	Thorchain = "thorchain",
-	Orca = "orca",
-	Jupiter = "jupiter",
-	Across = "across",
-	Oku = "oku",
-	Wagmi = "wagmi",
-	Cetus = "cetus",
-	StonfiV2 = "stonfi_v2",
-	Mayan = "mayan",
-	Reservoir = "reservoir",
-	Symbiosis = "symbiosis",
-}
-
-export enum SwapProviderMode {
-	OnChain = "OnChain",
-	CrossChain = "CrossChain",
-	Bridge = "Bridge",
-}
+export type SwapProviderMode = 
+	| { type: "OnChain", content?: undefined }
+	| { type: "CrossChain", content?: undefined }
+	| { type: "Bridge", content?: undefined }
+	| { type: "OmniChain", content: Chain[] };
 
 export enum WalletConnectCAIP2 {
 	Eip155 = "eip155",
@@ -1111,5 +1125,6 @@ export enum WalletConnectionMethods {
 	solana_sign_message = "solana_signMessage",
 	solana_sign_transaction = "solana_signTransaction",
 	solana_sign_and_send_transaction = "solana_signAndSendTransaction",
+	solana_sign_all_transactions = "solana_signAllTransactions",
 }
 
