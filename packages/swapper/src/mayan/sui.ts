@@ -43,7 +43,7 @@ export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQ
             to: "",
             value: "0",
             data: Buffer.from(serializedTx).toString("base64"),
-            limit: gasBudget.toString(10)
+            gasLimit: gasBudget.toString(10)
         };
     } catch (error) {
         throw new Error(`Failed to build Sui transaction: ${error}`);
