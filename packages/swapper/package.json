@@ -14,7 +14,7 @@
   "dependencies": {
     "@gemwallet/types": "workspace:*",
     "@types/bn.js": "5.1.6",
-    "@mayanfinance/swap-sdk": "10.8.0",
+    "@mayanfinance/swap-sdk": "10.9.2",
     "@cetusprotocol/aggregator-sdk": "0.14.0",
     "bn.js": "5.2.1",
     "@mysten/sui": "1.35.0",
