@@ -59,8 +59,8 @@ importers:
         specifier: workspace:*
         version: link:../types
       '@mayanfinance/swap-sdk':
-        specifier: 10.8.0
-        version: 10.8.0(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
+        specifier: 10.9.2
+        version: 10.9.2(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
       '@mysten/sui':
         specifier: 1.35.0
         version: 1.35.0(typescript@5.8.2)
@@ -915,8 +915,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@mayanfinance/swap-sdk@10.8.0':
-    resolution: {integrity: sha512-v10bFsjXEAScoqR5Md0B3D2aXxzgrOQWREeSbuFM3twJD31OkL8PFXeo+uZ1nLRz6txAvkkb5A+WF2cHe6iIsQ==}
+  '@mayanfinance/swap-sdk@10.9.2':
+    resolution: {integrity: sha512-h7FpLOnZ4qlJPnz1CZkzTtfe0Y1tcNjU62M1Y9h/uDwAHJBlnORzjVo48kMMrNLE7MySttK1Cc2YQj3+8o4H/Q==}
 
   '@mysten/bcs@1.6.3':
     resolution: {integrity: sha512-QQ6u0U7a4+/o6rZ9tALTeGYMdf6V5z/HkRI/mhD5/fSr80DJoGzOWpFszcN/fhJpKb36vBaSQUMpS7yNQ10xBQ==}
@@ -3685,7 +3685,7 @@ snapshots:
     dependencies:
       '@cetusprotocol/aggregator-sdk': 0.14.0(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)
       '@gemwallet/types': file:packages/types
-      '@mayanfinance/swap-sdk': 10.8.0(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
+      '@mayanfinance/swap-sdk': 10.9.2(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
       '@mysten/sui': 1.35.0(typescript@5.8.2)
       '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@ston-fi/api': 0.21.0
@@ -3926,7 +3926,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@mayanfinance/swap-sdk@10.8.0(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)':
+  '@mayanfinance/swap-sdk@10.9.2(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)':
     dependencies:
       '@mysten/sui': 1.35.0(typescript@5.8.2)
       '@solana/buffer-layout': 4.0.1
