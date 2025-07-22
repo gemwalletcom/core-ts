@@ -1,6 +1,6 @@
 import { QuoteRequest, QuoteData } from "@gemwallet/types";
 import { Quote as MayanQuote, ReferrerAddresses, createSwapFromSolanaInstructions } from "@mayanfinance/swap-sdk";
-import { Connection, MessageV0, PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
+import { Connection, MessageV0, PublicKey, VersionedTransaction } from "@solana/web3.js";
 import { getReferrerAddresses } from "../referrer";
 
 export async function buildSolanaQuoteData(request: QuoteRequest, routeData: MayanQuote, rpcEndpoint: string): Promise<QuoteData> {
@@ -42,50 +42,40 @@ async function prepareSolanaSwapTransaction(
         lookupTables,
     } = await createSwapFromSolanaInstructions(
         quote, swapperWalletAddress, destinationAddress,
-        referrerAddresses, connection, { separateSwapTx: false });
+        referrerAddresses, connection, {
+            allowSwapperOffCurve: undefined,
+            forceSkipCctpInstructions: undefined,
+            separateSwapTx: false,
+            usdcPermitSignature: undefined,
+        });
+
+    if (quote.gasless) {
+        throw new Error("Gasless swaps are not currently supported");
+    }
 
     const swapper = new PublicKey(swapperWalletAddress);
-    const feePayer = quote.gasless ? new PublicKey(quote.relayer) : swapper;
+    const feePayer = swapper;
 
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
-    let serializedTrx: Uint8Array;
-    let isVersionedTransaction = false;
+    // Use MessageV0.compile as per the latest SDK pattern
+    const message = MessageV0.compile({
+        instructions,
+        payerKey: feePayer,
+        recentBlockhash: blockhash,
+        addressLookupTableAccounts: lookupTables,
+    });
+    const transaction = new VersionedTransaction(message);
+    transaction.sign(signers);
 
-    if (lookupTables.length > 0) {
-        isVersionedTransaction = true;
-        const message = MessageV0.compile({
-            instructions,
-            payerKey: feePayer,
-            recentBlockhash: blockhash,
-            addressLookupTableAccounts: lookupTables,
-        });
-        const transaction = new VersionedTransaction(message);
-        transaction.sign(signers);
-        serializedTrx = transaction.serialize();
-    } else {
-        const transaction = new Transaction();
-        transaction.recentBlockhash = blockhash;
-        transaction.feePayer = feePayer;
-
-        instructions.forEach(instruction => transaction.add(instruction));
-
-        if (signers.length > 0) {
-            transaction.partialSign(...signers);
-        }
-
-        serializedTrx = transaction.serialize({
-            requireAllSignatures: false,
-            verifySignatures: false,
-        });
-    }
+    const serializedTrx = transaction.serialize();
 
     return {
         serializedTrx,
         additionalInfo: {
             blockhash,
             lastValidBlockHeight,
-            isVersionedTransaction,
+            isVersionedTransaction: true,
             feePayer: feePayer.toBase58(),
         }
     };
