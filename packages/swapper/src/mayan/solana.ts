@@ -43,11 +43,8 @@ async function prepareSolanaSwapTransaction(
     } = await createSwapFromSolanaInstructions(
         quote, swapperWalletAddress, destinationAddress,
         referrerAddresses, connection, {
-            allowSwapperOffCurve: undefined,
-            forceSkipCctpInstructions: undefined,
-            separateSwapTx: false,
-            usdcPermitSignature: undefined,
-        });
+        separateSwapTx: false,
+    });
 
     if (quote.gasless) {
         throw new Error("Gasless swaps are not currently supported");
