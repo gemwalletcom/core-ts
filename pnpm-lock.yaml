@@ -53,8 +53,8 @@ importers:
   packages/swapper:
     dependencies:
       '@cetusprotocol/aggregator-sdk':
-        specifier: 0.14.0
-        version: 0.14.0(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)
+        specifier: 0.14.2
+        version: 0.14.2(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)
       '@gemwallet/types':
         specifier: workspace:*
         version: link:../types
@@ -780,8 +780,8 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@cetusprotocol/aggregator-sdk@0.14.0':
-    resolution: {integrity: sha512-7c4H5lZeM/GUueikswJDoK/geWhHo260dvIb/MUg38ZnTxm6xMDSnpmLr6ccTu464a+TZPxe4qaY9yAUK3UFvQ==}
+  '@cetusprotocol/aggregator-sdk@0.14.2':
+    resolution: {integrity: sha512-defXS6YsxTvKLJ4an23IKk/jAnd0zy5N6HsU6IcAm2orSBSxyWPu6DZ3CHcWnau6Du63Xq4TY1Mf7G7gQAFVTQ==}
     peerDependencies:
       typescript: ^5.8.2
 
@@ -3644,7 +3644,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@cetusprotocol/aggregator-sdk@0.14.0(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)':
+  '@cetusprotocol/aggregator-sdk@0.14.2(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)':
     dependencies:
       '@babel/core': 7.26.10
       '@babel/preset-env': 7.27.2(@babel/core@7.26.10)
@@ -3683,7 +3683,7 @@ snapshots:
 
   '@gemwallet/swapper@file:packages/swapper(@jest/transform@29.7.0)(@jest/types@29.6.3)(@ton/core@0.60.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)':
     dependencies:
-      '@cetusprotocol/aggregator-sdk': 0.14.0(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)
+      '@cetusprotocol/aggregator-sdk': 0.14.2(@jest/transform@29.7.0)(@jest/types@29.6.3)(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@5.0.10)
       '@gemwallet/types': file:packages/types
       '@mayanfinance/swap-sdk': 10.9.2(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
       '@mysten/sui': 1.35.0(typescript@5.8.2)
