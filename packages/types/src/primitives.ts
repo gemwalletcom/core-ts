@@ -48,6 +48,7 @@ export enum Chain {
 	Ink = "ink",
 	Unichain = "unichain",
 	Hyperliquid = "hyperliquid",
+	HyperCore = "hypercore",
 	Monad = "monad",
 }
 
@@ -56,6 +57,12 @@ export interface Account {
 	address: string;
 	derivationPath: string;
 	extendedPublicKey?: string;
+}
+
+export interface AddressName {
+	chain: Chain;
+	address: string;
+	name: string;
 }
 
 export interface ApprovalData {
@@ -75,6 +82,7 @@ export enum AssetType {
 	JETTON = "JETTON",
 	SYNTH = "SYNTH",
 	ASA = "ASA",
+	PERPETUAL = "PERPETUAL",
 }
 
 export interface Asset {
@@ -237,6 +245,20 @@ export interface ChainNode {
 export interface ChainNodes {
 	chain: string;
 	nodes: Node[];
+}
+
+export interface ChartCandleStick {
+	date: Date;
+	open: number;
+	high: number;
+	low: number;
+	close: number;
+	volume: number;
+}
+
+export interface ChartDateValue {
+	date: Date;
+	value: number;
 }
 
 export interface ChartValue {
@@ -519,6 +541,78 @@ export interface NodesResponse {
 	nodes: ChainNodes[];
 }
 
+export enum PerpetualProvider {
+	Hypercore = "hypercore",
+}
+
+export interface Perpetual {
+	id: string;
+	name: string;
+	provider: PerpetualProvider;
+	assetId: string;
+	identifier: string;
+	price: number;
+	pricePercentChange24h: number;
+	openInterest: number;
+	volume24h: number;
+	funding: number;
+	leverage: number[];
+}
+
+export interface PerpetualBalance {
+	available: number;
+	reserved: number;
+}
+
+export interface PerpetualData {
+	perpetual: Perpetual;
+	asset: Asset;
+}
+
+export enum PerpetualMarginType {
+	Cross = "cross",
+	Isolated = "isolated",
+}
+
+export enum PerpetualDirection {
+	Short = "short",
+	Long = "long",
+}
+
+export interface PriceTarget {
+	price?: number;
+	percentage?: number;
+}
+
+export interface PerpetualPosition {
+	id: string;
+	perpetualId: string;
+	assetId: string;
+	size: number;
+	sizeValue: number;
+	leverage: number;
+	entryPrice?: number;
+	liquidationPrice?: number;
+	marginType: PerpetualMarginType;
+	direction: PerpetualDirection;
+	marginAmount: number;
+	takeProfit?: PriceTarget;
+	stopLoss?: PriceTarget;
+	pnl: number;
+	funding?: number;
+}
+
+export interface PerpetualPositionData {
+	perpetual: Perpetual;
+	asset: Asset;
+	position: PerpetualPosition;
+}
+
+export interface PerpetualPositionsSummary {
+	positions: PerpetualPosition[];
+	balance: PerpetualBalance;
+}
+
 export enum PriceAlertDirection {
 	Up = "up",
 	Down = "down",
@@ -608,6 +702,22 @@ export interface ResponseResult<T> {
 	error?: ResponseError;
 }
 
+export enum AddressType {
+	Address = "address",
+	Contract = "contract",
+	Validator = "validator",
+}
+
+export interface ScanAddress {
+	chain: Chain;
+	address: string;
+	name?: string;
+	type?: AddressType;
+	isMalicious?: boolean;
+	isMemoRequired?: boolean;
+	isVerified?: boolean;
+}
+
 export interface ScanAddressTarget {
 	chain: Chain;
 	address: string;
@@ -630,6 +740,8 @@ export enum TransactionType {
 	StakeWithdraw = "stakeWithdraw",
 	AssetActivation = "assetActivation",
 	SmartContractCall = "smartContractCall",
+	PerpetualOpenPosition = "perpetualOpenPosition",
+	PerpetualClosePosition = "perpetualClosePosition",
 }
 
 export interface ScanTransactionPayload {
@@ -652,12 +764,19 @@ export interface Subscription {
 	address: string;
 }
 
+export interface SwapProviderData {
+	provider: SwapProvider;
+	name: string;
+	protocolName: string;
+}
+
 export interface SwapQuote {
 	fromValue: string;
 	toValue: string;
-	provider: SwapProvider;
+	providerData: SwapProviderData;
 	walletAddress: string;
 	slippageBps: number;
+	etaInSeconds?: number;
 }
 
 export interface SwapQuoteData {
@@ -721,6 +840,8 @@ export interface TransactionExtended {
 	feePrice?: Price;
 	assets: Asset[];
 	prices: AssetPrice[];
+	fromAddress?: AddressName;
+	toAddress?: AddressName;
 }
 
 export interface TransactionNFTTransferMetadata {
@@ -736,10 +857,20 @@ export interface TransactionSwapMetadata {
 	provider?: string;
 }
 
+export interface TransactionWallet {
+	transaction: Transaction;
+	wallet: Wallet;
+}
+
 export interface TransactionsFetchOption {
 	wallet_index: number;
 	asset_id?: string;
 	from_timestamp?: number;
+}
+
+export interface TransactionsResponse {
+	transactions: Transaction[];
+	addressNames: AddressName[];
 }
 
 export interface UTXO {
@@ -903,6 +1034,7 @@ export enum ChainType {
 	Algorand = "algorand",
 	Polkadot = "polkadot",
 	Cardano = "cardano",
+	HyperCore = "hypercore",
 }
 
 export enum ChartPeriod {
@@ -910,7 +1042,6 @@ export enum ChartPeriod {
 	Day = "day",
 	Week = "week",
 	Month = "month",
-	Quarter = "quarter",
 	Year = "year",
 	All = "all",
 }
@@ -1014,6 +1145,7 @@ export enum EVMChain {
 export enum EncodingType {
 	Hex = "Hex",
 	Base58 = "Base58",
+	Base32 = "Base32",
 }
 
 export enum FeePriority {
@@ -1102,6 +1234,26 @@ export enum WalletConnectCAIP2 {
 	Solana = "solana",
 	Cosmos = "cosmos",
 	Algorand = "algorand",
+}
+
+export enum WalletConnectEthereumMethods {
+	chain_id = "chainId",
+	sign = "sign",
+	personal_sign = "personalSign",
+	sign_typed_data = "signTypedData",
+	sign_typed_data_v4 = "signTypedDataV4",
+	sign_transaction = "signTransaction",
+	send_transaction = "sendTransaction",
+	send_raw_transaction = "sendRawTransaction",
+	switch_chain = "switchChain",
+	add_chain = "addChain",
+}
+
+export enum WalletConnectSolanaMethods {
+	sign_message = "signMessage",
+	sign_transaction = "signTransaction",
+	sign_and_send_transaction = "signAndSendTransaction",
+	sign_all_transactions = "signAllTransactions",
 }
 
 export enum WalletConnectionEvents {
