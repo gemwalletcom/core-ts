@@ -52,7 +52,7 @@ Each provider implements a common interface for quotes and transaction building.
 To add a new swap provider, follow this structured approach using the established patterns:
 
 **1. Create Provider Structure**
-Create a new folder in `packages/swapper/src/` following the relay/nearintent pattern:
+Create a new folder in `packages/swapper/src/` following the pattern of existing providers (e.g., `relay`, `nearintent`):
 ```
 packages/swapper/src/newprovider/
 ├── model.ts      # TypeScript interfaces and types
