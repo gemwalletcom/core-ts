@@ -1,8 +1,9 @@
 import { Protocol } from '../protocol';
-import { QuoteRequest, Quote, QuoteData, AssetId, Chain } from '@gemwallet/types';
+import { QuoteRequest, Quote, QuoteData, AssetId } from '@gemwallet/types';
 import { NearIntentClient } from './client';
 import { NearIntentQuoteRequest, NearIntentQuoteResponse } from './model';
 import { getReferrerAddresses } from '../referrer';
+import { getNearIntentAssetId } from './assets';
 
 export class NearIntentProvider implements Protocol {
     private client: NearIntentClient;
@@ -11,85 +12,65 @@ export class NearIntentProvider implements Protocol {
         this.client = new NearIntentClient(baseUrl, apiToken);
     }
 
-    private mapChainToBlockchain(chain: Chain): string {
-        switch (chain) {
-            case Chain.Ethereum:
-                return "eth";
-            case Chain.Arbitrum:
-                return "arb";
-            case Chain.Bitcoin:
-                return "btc";
-            case Chain.Solana:
-                return "sol";
-            case Chain.Berachain:
-                return "bera";
-            case Chain.SmartChain:
-                return "bsc";
-            case Chain.Polygon:
-                return "pol";
-            case Chain.Optimism:
-                return "op";
-            case Chain.AvalancheC:
-                return "avax";
-            default:
-                // For chains where enum value matches blockchain identifier
-                const supportedChains = ["near", "base", "ton", "doge", "xrp", "gnosis", "tron", "sui", "cardano"];
-                if (supportedChains.includes(chain)) {
-                    return chain;
-                }
-                throw new Error(`Unsupported chain: ${chain}`);
-        }
-    }
 
     private buildAssetId(asset: AssetId): string {
-        const blockchain = this.mapChainToBlockchain(asset.chain);
-        
-        if (asset.isNative()) {
-            return blockchain;
-        }
-        
-        return `${blockchain}:${asset.tokenId}`;
+        return getNearIntentAssetId(asset.chain, asset.toString());
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
         const fromAsset = AssetId.fromString(quoteRequest.from_asset.id);
         const toAsset = AssetId.fromString(quoteRequest.to_asset.id);
         const referrerAddresses = getReferrerAddresses();
-        
+
         const nearIntentRequest: NearIntentQuoteRequest = {
             originAsset: this.buildAssetId(fromAsset),
             destinationAsset: this.buildAssetId(toAsset),
             amount: quoteRequest.from_value,
             recipient: quoteRequest.to_address,
             swapType: "EXACT_INPUT",
-            slippageTolerance: quoteRequest.slippage_bps / 100, // Convert basis points to percentage
+            slippageTolerance: quoteRequest.slippage_bps / 100,
             appFees: [{
                 recipient: referrerAddresses.near,
                 fee: quoteRequest.referral_bps
-            }]
+            }],
+            depositType: "ORIGIN_CHAIN",
+            refundTo: quoteRequest.from_address,
+            refundType: "ORIGIN_CHAIN",
+            recipientType: "DESTINATION_CHAIN",
+            quoteWaitingTimeMs: 1000,
+            dry: true // Get quotes only
         };
 
-        const quoteResponse: NearIntentQuoteResponse = await this.client.fetchQuote(nearIntentRequest);
+        const response: NearIntentQuoteResponse = await this.client.fetchQuote(nearIntentRequest);
 
         return {
             quote: quoteRequest,
-            output_value: quoteResponse.outputAmount,
-            output_min_value: quoteResponse.outputAmountMin,
-            eta_in_seconds: quoteResponse.estimatedSwapTime,
-            route_data: {
-                depositAddress: quoteResponse.depositAddress
-            }
+            output_value: response.quote.amountOut,
+            output_min_value: response.quote.minAmountOut,
+            eta_in_seconds: response.quote.timeEstimate,
+            route_data: nearIntentRequest
         };
     }
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
-        const routeData = quote.route_data as { depositAddress: string };
-        
+        const routeData = quote.route_data as NearIntentQuoteRequest;
+
+        // Make another quote request with dry: false to get deposit address
+        const quoteRequest: NearIntentQuoteRequest = {
+            ...routeData,
+            dry: false
+        };
+
+        const response: NearIntentQuoteResponse = await this.client.fetchQuote(quoteRequest);
+
+        if (!response.quote.depositAddress || !response.quote.amountIn) {
+            throw new Error("Failed to get deposit address from Near Intent API");
+        }
+
         return {
-            to: routeData.depositAddress,
-            value: quote.quote.from_value,
+            to: response.quote.depositAddress,
+            value: response.quote.amountIn,
             data: "0x",
-            gasLimit: undefined
         };
     }
 }
