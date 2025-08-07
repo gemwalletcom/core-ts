@@ -317,6 +317,7 @@ export enum SwapProvider {
 	Chainflip = "chainflip",
 	CetusAggregator = "cetus_aggregator",
 	Relay = "relay",
+	NearIntent = "near_intent",
 }
 
 export interface SwapConfig {
