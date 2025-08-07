@@ -37,13 +37,19 @@ export class NearIntentClient {
             });
 
             if (!response.ok) {
+                // Read response as text first to avoid consuming body twice
+                const responseText = await response.text();
                 let errorMessage: string;
+                
                 try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.message || JSON.stringify(errorData);
+                    // Try to parse as JSON
+                    const errorData = JSON.parse(responseText);
+                    errorMessage = errorData.message || (typeof errorData === 'string' ? errorData : JSON.stringify(errorData));
                 } catch (e) {
-                    errorMessage = await response.text();
+                    // If JSON parsing fails, use the raw text
+                    errorMessage = responseText || `HTTP ${response.status} ${response.statusText}`;
                 }
+                
                 console.error('Near Intent API error:', response.status, errorMessage);
                 throw new Error(errorMessage);
             }
