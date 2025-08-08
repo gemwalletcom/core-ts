@@ -32,6 +32,115 @@ describe('NearIntentsProvider', () => {
                 .toThrow('Asset not supported by Near Intents');
         });
     });
+
+    describe('buildTransactionData', () => {
+        it('should build EVM native token transaction correctly', () => {
+            const ethAsset = new AssetId(Chain.Ethereum);
+            const result = provider['buildTransactionData'](
+                ethAsset, 
+                '0x1234567890123456789012345678901234567890', 
+                '1000000000000000000', 
+                '0xabcd'
+            );
+            
+            expect(result.to).toBe('0x1234567890123456789012345678901234567890');
+            expect(result.value).toBe('1000000000000000000');
+            expect(result.data).toBe('0x');
+        });
+
+        it('should build EVM ERC20 token transaction correctly', () => {
+            const usdcAsset = new AssetId(Chain.Ethereum, '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48');
+            const result = provider['buildTransactionData'](
+                usdcAsset, 
+                '0x1234567890123456789012345678901234567890', 
+                '1000000', 
+                '0xabcd'
+            );
+            
+            expect(result.to).toBe('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48');
+            expect(result.value).toBe('0');
+            expect(result.data).toMatch(/^0xa9059cbb/); // Should start with transfer function selector
+        });
+
+        it('should build Solana transaction correctly', () => {
+            const solAsset = new AssetId(Chain.Solana);
+            const result = provider['buildTransactionData'](
+                solAsset, 
+                'DepositAddress123456789', 
+                '1000000000', 
+                'From123456789'
+            );
+            
+            expect(result.to).toBe('DepositAddress123456789');
+            expect(result.value).toBe('1000000000');
+            
+            const parsedData = JSON.parse(result.data);
+            expect(parsedData.type).toBe('solana_transfer');
+            expect(parsedData.isNative).toBe(true);
+        });
+
+        it('should build Sui transaction correctly', () => {
+            const suiAsset = new AssetId(Chain.Sui);
+            const result = provider['buildTransactionData'](
+                suiAsset, 
+                'DepositAddress123456789', 
+                '1000000000', 
+                'From123456789'
+            );
+            
+            expect(result.to).toBe('DepositAddress123456789');
+            expect(result.value).toBe('1000000000');
+            
+            const parsedData = JSON.parse(result.data);
+            expect(parsedData.type).toBe('sui_transfer');
+            expect(parsedData.isNative).toBe(true);
+        });
+
+        it('should build TRON native transaction correctly', () => {
+            const trxAsset = new AssetId(Chain.Tron);
+            const result = provider['buildTransactionData'](
+                trxAsset, 
+                'TDepositAddress12345678901234567890123456', 
+                '1000000', 
+                'TFrom12345678901234567890123456789012'
+            );
+            
+            expect(result.to).toBe('TDepositAddress12345678901234567890123456');
+            expect(result.value).toBe('1000000');
+            expect(result.data).toBe('0x');
+        });
+
+        it('should build TRON TRC20 transaction correctly', () => {
+            const usdtAsset = new AssetId(Chain.Tron, 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t');
+            const result = provider['buildTransactionData'](
+                usdtAsset, 
+                'TDepositAddress12345678901234567890123456', 
+                '1000000', 
+                'TFrom12345678901234567890123456789012'
+            );
+            
+            expect(result.to).toBe('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t');
+            expect(result.value).toBe('0');
+            expect(result.data).toMatch(/^0xa9059cbb/); // Should start with transfer function selector
+        });
+
+        it('should build TON transaction correctly', () => {
+            const tonAsset = new AssetId(Chain.Ton);
+            const result = provider['buildTransactionData'](
+                tonAsset, 
+                'EQDepositAddress123456789', 
+                '1000000000', 
+                'EQFrom123456789'
+            );
+            
+            expect(result.to).toBe('EQDepositAddress123456789');
+            expect(result.value).toBe('1000000000');
+            
+            const parsedData = JSON.parse(result.data);
+            expect(parsedData.type).toBe('ton_transfer');
+            expect(parsedData.isNative).toBe(true);
+        });
+    });
 });
 
 describe('getNearIntentsAssetId', () => {
