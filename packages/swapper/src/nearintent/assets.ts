@@ -3,8 +3,8 @@ import { Chain } from '@gemwallet/types';
 // Mapping of our internal asset IDs to Near Intents asset IDs
 export const NEAR_INTENTS_ASSETS: Partial<Record<Chain, Record<string, string>>> = {
     [Chain.Near]: {
-        // Native NEAR
-        "near": "near",
+        // Native NEAR (wrapped NEAR)
+        "near": "nep141:wrap.near",
     },
 
     [Chain.Ethereum]: {

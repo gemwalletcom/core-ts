@@ -15,7 +15,7 @@ describe('NearIntentsProvider', () => {
             const nativeAsset = new AssetId(Chain.Near);
 
             const result = provider['buildAssetId'](nativeAsset);
-            expect(result).toBe('near');
+            expect(result).toBe('nep141:wrap.near');
         });
 
         it('should build asset id correctly for native ETH', () => {
@@ -37,7 +37,7 @@ describe('NearIntentsProvider', () => {
 describe('getNearIntentsAssetId', () => {
     describe('Native tokens', () => {
         it('should map native NEAR correctly', () => {
-            expect(getNearIntentsAssetId(Chain.Near, 'near')).toBe('near');
+            expect(getNearIntentsAssetId(Chain.Near, 'near')).toBe('nep141:wrap.near');
         });
 
         it('should map native ETH correctly', () => {
