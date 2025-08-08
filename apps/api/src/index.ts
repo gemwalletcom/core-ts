@@ -1,7 +1,7 @@
 import express from "express";
 
 import { Quote, QuoteRequest } from "@gemwallet/types";
-import { StonfiProvider, Protocol, MayanProvider, SymbiosisProvider, CetusAggregatorProvider, RelayProvider, NearIntentProvider } from "@gemwallet/swapper";
+import { StonfiProvider, Protocol, MayanProvider, SymbiosisProvider, CetusAggregatorProvider, RelayProvider, NearIntentsProvider } from "@gemwallet/swapper";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,7 +17,7 @@ const providers: Record<string, Protocol> = {
     symbiosis: new SymbiosisProvider(process.env.TRON_URL || "https://api.trongrid.io"),
     cetus: new CetusAggregatorProvider(process.env.SUI_URL || "https://fullnode.mainnet.sui.io"),
     relay: new RelayProvider(),
-    near_intent: new NearIntentProvider(
+    near_intents: new NearIntentsProvider(
         process.env.NEAR_INTENT_URL || "https://1click.chaindefuser.com",
         process.env.NEAR_INTENT_API_TOKEN
     ),

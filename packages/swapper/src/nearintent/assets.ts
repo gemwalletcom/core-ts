@@ -1,7 +1,7 @@
 import { Chain } from '@gemwallet/types';
 
-// Mapping of our internal asset IDs to Near Intent asset IDs
-export const NEAR_INTENT_ASSETS: Partial<Record<Chain, Record<string, string>>> = {
+// Mapping of our internal asset IDs to Near Intents asset IDs
+export const NEAR_INTENTS_ASSETS: Partial<Record<Chain, Record<string, string>>> = {
     [Chain.Near]: {
         // Native NEAR
         "near": "near",
@@ -130,15 +130,15 @@ export const NEAR_INTENT_ASSETS: Partial<Record<Chain, Record<string, string>>> 
 
 };
 
-export function getNearIntentAssetId(chain: Chain, assetId: string): string {
-    const chainAssets = NEAR_INTENT_ASSETS[chain];
+export function getNearIntentsAssetId(chain: Chain, assetId: string): string {
+    const chainAssets = NEAR_INTENTS_ASSETS[chain];
     if (!chainAssets) {
-        throw new Error(`Chain not supported by Near Intent: ${chain}`);
+        throw new Error(`Chain not supported by Near Intents: ${chain}`);
     }
 
     const nearAssetId = chainAssets[assetId.toLowerCase()];
     if (!nearAssetId) {
-        throw new Error(`Asset not supported by Near Intent: ${assetId}. Only native tokens and major stablecoins (USDC, USDT) are currently supported.`);
+        throw new Error(`Asset not supported by Near Intents: ${assetId}. Only native tokens and major stablecoins (USDC, USDT) are currently supported.`);
     }
 
     return nearAssetId;

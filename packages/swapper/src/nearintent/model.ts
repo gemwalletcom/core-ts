@@ -1,16 +1,16 @@
-export interface NearIntentAppFee {
+export interface NearIntentsAppFee {
     recipient: string;
     fee: number; // basis points
 }
 
-export interface NearIntentQuoteRequest {
+export interface NearIntentsQuoteRequest {
     originAsset: string;
     destinationAsset: string;
     amount: string;
     recipient: string;
     swapType: "EXACT_INPUT" | "EXACT_OUTPUT" | "FLEX_INPUT";
     slippageTolerance?: number;
-    appFees?: NearIntentAppFee[];
+    appFees?: NearIntentsAppFee[];
     depositType?: string;
     refundTo?: string;
     refundType?: string;
@@ -20,7 +20,7 @@ export interface NearIntentQuoteRequest {
     dry?: boolean;
 }
 
-export interface NearIntentQuoteResponse {
+export interface NearIntentsQuoteResponse {
     quote: {
         amountIn: string;
         minAmountIn: string;
@@ -31,5 +31,5 @@ export interface NearIntentQuoteResponse {
         timeWhenInactive: string;
         depositAddress?: string;
     };
-    quoteRequest: NearIntentQuoteRequest;
+    quoteRequest: NearIntentsQuoteRequest;
 }

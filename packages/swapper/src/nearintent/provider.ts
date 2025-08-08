@@ -1,20 +1,20 @@
 import { Protocol } from '../protocol';
 import { QuoteRequest, Quote, QuoteData, AssetId } from '@gemwallet/types';
-import { NearIntentClient } from './client';
-import { NearIntentQuoteRequest, NearIntentQuoteResponse } from './model';
+import { NearIntentsClient } from './client';
+import { NearIntentsQuoteRequest, NearIntentsQuoteResponse } from './model';
 import { getReferrerAddresses } from '../referrer';
-import { getNearIntentAssetId } from './assets';
+import { getNearIntentsAssetId } from './assets';
 
-export class NearIntentProvider implements Protocol {
-    private client: NearIntentClient;
+export class NearIntentsProvider implements Protocol {
+    private client: NearIntentsClient;
 
     constructor(baseUrl?: string, apiToken?: string) {
-        this.client = new NearIntentClient(baseUrl, apiToken);
+        this.client = new NearIntentsClient(baseUrl, apiToken);
     }
 
 
     private buildAssetId(asset: AssetId): string {
-        return getNearIntentAssetId(asset.chain, asset.toString());
+        return getNearIntentsAssetId(asset.chain, asset.toString());
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
@@ -22,7 +22,7 @@ export class NearIntentProvider implements Protocol {
         const toAsset = AssetId.fromString(quoteRequest.to_asset.id);
         const referrerAddresses = getReferrerAddresses();
 
-        const nearIntentRequest: NearIntentQuoteRequest = {
+        const nearIntentsRequest: NearIntentsQuoteRequest = {
             originAsset: this.buildAssetId(fromAsset),
             destinationAsset: this.buildAssetId(toAsset),
             amount: quoteRequest.from_value,
@@ -41,27 +41,27 @@ export class NearIntentProvider implements Protocol {
             dry: true // Get quotes only
         };
 
-        const response: NearIntentQuoteResponse = await this.client.fetchQuote(nearIntentRequest);
+        const response: NearIntentsQuoteResponse = await this.client.fetchQuote(nearIntentsRequest);
 
         return {
             quote: quoteRequest,
             output_value: response.quote.amountOut,
             output_min_value: response.quote.minAmountOut,
             eta_in_seconds: response.quote.timeEstimate,
-            route_data: nearIntentRequest
+            route_data: nearIntentsRequest
         };
     }
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
-        const routeData = quote.route_data as NearIntentQuoteRequest;
+        const routeData = quote.route_data as NearIntentsQuoteRequest;
 
         // Make another quote request with dry: false to get deposit address
-        const quoteRequest: NearIntentQuoteRequest = {
+        const quoteRequest: NearIntentsQuoteRequest = {
             ...routeData,
             dry: false
         };
 
-        const response: NearIntentQuoteResponse = await this.client.fetchQuote(quoteRequest);
+        const response: NearIntentsQuoteResponse = await this.client.fetchQuote(quoteRequest);
 
         if (!response.quote.depositAddress || !response.quote.amountIn) {
             throw new Error("Failed to get deposit address from Near Intent API");

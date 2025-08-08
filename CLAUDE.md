@@ -118,12 +118,12 @@ export * from './provider';
 - Export from `packages/swapper/src/index.ts`
 - Register in API at `apps/api/src/index.ts`
 
-**Example: Near Intent Provider**
+**Example: Near Intents Provider**
 ```typescript
 // In apps/api/src/index.ts
 const providers: Record<string, Protocol> = {
     // ... other providers
-    near_intent: new NearIntentProvider(
+    near_intents: new NearIntentsProvider(
         process.env.NEAR_INTENT_URL || "https://1click.chaindefuser.com",
         process.env.NEAR_INTENT_API_TOKEN
     ),

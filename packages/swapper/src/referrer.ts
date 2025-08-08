@@ -18,6 +18,6 @@ export function getReferrerAddresses(): Referrers {
         sui: "0x9d6b98b18fd26b5efeec68d020dcf1be7a94c2c315353779bc6b3aed44188ddf",
         ton: "UQDxJKarPSp0bCta9DFgp81Mpt5hpGbuVcSxwfeza0Bin201",
         tron: "TYeyZXywpA921LEtw2PF3obK4B8Jjgpp32",
-        near: "0x1085c5f70f7f7591d97da281a64688385455c2bd" // Near Intents Account
+        near: "0x0d9dab1a248f63b0a48965ba8435e4de7497a3dc" // Near Intents Account
     };
 }
