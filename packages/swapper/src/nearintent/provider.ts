@@ -37,6 +37,7 @@ export class NearIntentsProvider implements Protocol {
             refundTo: quoteRequest.from_address,
             refundType: "ORIGIN_CHAIN",
             recipientType: "DESTINATION_CHAIN",
+            deadline: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes from now
             quoteWaitingTimeMs: 1000,
             dry: true // Get quotes only
         };
