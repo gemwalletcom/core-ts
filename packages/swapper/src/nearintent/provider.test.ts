@@ -140,6 +140,20 @@ describe('NearIntentsProvider', () => {
             expect(parsedData.type).toBe('ton_transfer');
             expect(parsedData.isNative).toBe(true);
         });
+
+        it('should handle unsupported chains gracefully', () => {
+            const aptosAsset = new AssetId(Chain.Aptos);
+            const result = provider['buildTransactionData'](
+                aptosAsset, 
+                'DepositAddress123456789', 
+                '1000000', 
+                'FromAddress123456789'
+            );
+            
+            expect(result.to).toBe('DepositAddress123456789');
+            expect(result.value).toBe('1000000');
+            expect(result.data).toBe('0x');
+        });
     });
 });
 

@@ -111,7 +111,12 @@ export class NearIntentsProvider implements Protocol {
                 return buildTonTransactionData(fromAsset, depositAddress, amount);
             
             default:
-                throw new Error(`Unsupported chain for Near Intents: ${fromAsset.chain}`);
+                // For unsupported chains, let the client handle the transaction building
+                return {
+                    to: depositAddress,
+                    value: amount,
+                    data: "0x",
+                };
         }
     }
 }
