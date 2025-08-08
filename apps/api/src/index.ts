@@ -1,6 +1,6 @@
 import express from "express";
 
-import { Quote, QuoteRequest } from "@gemwallet/types";
+import { Quote, QuoteRequest, DEFAULT_NODES } from "@gemwallet/types";
 import { StonfiProvider, Protocol, MayanProvider, SymbiosisProvider, CetusAggregatorProvider, RelayProvider, NearIntentsProvider } from "@gemwallet/swapper";
 
 const app = express();
@@ -9,17 +9,19 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 const providers: Record<string, Protocol> = {
-    stonfi_v2: new StonfiProvider(process.env.TON_URL || "https://toncenter.com"),
+    stonfi_v2: new StonfiProvider(process.env.TON_URL || DEFAULT_NODES.TON_RPC),
     mayan: new MayanProvider(
-        process.env.SOLANA_URL || "https://solana-rpc.publicnode.com",
-        process.env.SUI_URL || "https://fullnode.mainnet.sui.io"
+        process.env.SOLANA_URL || DEFAULT_NODES.SOLANA,
+        process.env.SUI_URL || DEFAULT_NODES.SUI
     ),
-    symbiosis: new SymbiosisProvider(process.env.TRON_URL || "https://api.trongrid.io"),
-    cetus: new CetusAggregatorProvider(process.env.SUI_URL || "https://fullnode.mainnet.sui.io"),
+    symbiosis: new SymbiosisProvider(process.env.TRON_URL || DEFAULT_NODES.TRON),
+    cetus: new CetusAggregatorProvider(process.env.SUI_URL || DEFAULT_NODES.SUI),
     relay: new RelayProvider(),
     near_intents: new NearIntentsProvider(
-        process.env.NEAR_INTENT_URL || "https://1click.chaindefuser.com",
-        process.env.NEAR_INTENT_API_TOKEN
+        process.env.NEAR_INTENT_URL || DEFAULT_NODES.NEAR_INTENT,
+        process.env.NEAR_INTENT_API_TOKEN,
+        process.env.SOLANA_URL || DEFAULT_NODES.SOLANA,
+        process.env.SUI_URL || DEFAULT_NODES.SUI
     ),
 };
 
@@ -45,8 +47,7 @@ app.post('/:providerId/quote', async (req, res) => {
         const quote = await provider.get_quote(request);
         res.json(quote);
     } catch (error) {
-        console.log("Error fetching quote via POST:", error);
-        console.log("Request body:", req.body);
+        console.error("Error fetching quote:", error instanceof Error ? error.message : error);
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
         } else {
@@ -70,7 +71,7 @@ app.post('/:providerId/quote_data', async (req, res) => {
         const quote = await provider.get_quote_data(quote_request);
         res.json(quote);
     } catch (error) {
-        console.log("quote_request", quote_request);
+        console.error("Error fetching quote data:", error instanceof Error ? error.message : error);
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
         } else {

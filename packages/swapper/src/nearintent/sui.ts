@@ -1,24 +1,31 @@
 import { QuoteData, AssetId } from '@gemwallet/types';
+import { SuiClient } from '@mysten/sui/client';
+import { buildSuiTransferData, isValidSuiAddress } from '../chain/sui/tx_builder';
 
 /**
- * Builds transaction data for Sui
- * Returns JSON metadata for client-side transaction building since Sui transactions
- * require async operations with RPC calls and proper SDK integration
+ * Builds transaction data for Sui using common chain utilities
+ * Creates proper transfer transactions with real gas price and coin references
  */
-export function buildSuiTransactionData(
+export async function buildSuiTransactionData(
     fromAsset: AssetId, 
     depositAddress: string, 
-    amount: string
-): QuoteData {
-    return {
-        to: depositAddress,
-        value: amount,
-        data: JSON.stringify({
-            type: "sui_transfer",
-            coinType: fromAsset.isNative() ? "0x2::sui::SUI" : fromAsset.tokenId,
-            to: depositAddress,
-            amount: amount,
-            isNative: fromAsset.isNative()
-        }),
-    };
+    amount: string,
+    fromAddress: string,
+    suiClient?: SuiClient
+): Promise<QuoteData> {
+    if (!isValidSuiAddress(depositAddress)) {
+        throw new Error('Invalid Sui deposit address format');
+    }
+
+    if (!suiClient) {
+        throw new Error('Sui client required for transaction building');
+    }
+
+    return await buildSuiTransferData(
+        suiClient,
+        fromAddress,
+        fromAsset,
+        depositAddress,
+        amount
+    );
 }

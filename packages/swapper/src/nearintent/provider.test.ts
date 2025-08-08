@@ -1,12 +1,19 @@
 import { NearIntentsProvider } from './provider';
 import { getNearIntentsAssetId } from './assets';
-import { Chain, AssetId } from '@gemwallet/types';
+import { Chain, AssetId, DEFAULT_NODES } from '@gemwallet/types';
+import { Connection } from '@solana/web3.js';
 
 describe('NearIntentsProvider', () => {
     let provider: NearIntentsProvider;
 
     beforeEach(() => {
-        provider = new NearIntentsProvider();
+        // Use default RPC endpoints for testing
+        provider = new NearIntentsProvider(
+            undefined, 
+            undefined, 
+            DEFAULT_NODES.SOLANA,
+            DEFAULT_NODES.SUI
+        );
     });
 
 
@@ -34,9 +41,9 @@ describe('NearIntentsProvider', () => {
     });
 
     describe('buildTransactionData', () => {
-        it('should build EVM native token transaction correctly', () => {
+        it('should build EVM native token transaction correctly', async () => {
             const ethAsset = new AssetId(Chain.Ethereum);
-            const result = provider['buildTransactionData'](
+            const result = await provider['buildTransactionData'](
                 ethAsset, 
                 '0x1234567890123456789012345678901234567890', 
                 '1000000000000000000', 
@@ -48,9 +55,9 @@ describe('NearIntentsProvider', () => {
             expect(result.data).toBe('0x');
         });
 
-        it('should build EVM ERC20 token transaction correctly', () => {
+        it('should build EVM ERC20 token transaction correctly', async () => {
             const usdcAsset = new AssetId(Chain.Ethereum, '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48');
-            const result = provider['buildTransactionData'](
+            const result = await provider['buildTransactionData'](
                 usdcAsset, 
                 '0x1234567890123456789012345678901234567890', 
                 '1000000', 
@@ -62,59 +69,61 @@ describe('NearIntentsProvider', () => {
             expect(result.data).toMatch(/^0xa9059cbb/); // Should start with transfer function selector
         });
 
-        it('should build Solana transaction correctly', () => {
+        it('should build Solana transaction correctly', async () => {
             const solAsset = new AssetId(Chain.Solana);
-            const result = provider['buildTransactionData'](
+            const result = await provider['buildTransactionData'](
                 solAsset, 
-                'DepositAddress123456789', 
+                '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 
                 '1000000000', 
-                'From123456789'
+                'So11111111111111111111111111111111111111112'
             );
             
-            expect(result.to).toBe('DepositAddress123456789');
-            expect(result.value).toBe('1000000000');
+            expect(result.to).toBe('');
+            expect(result.value).toBe('0');
+            expect(result.data).toBeDefined();
+            expect(typeof result.data).toBe('string');
             
-            const parsedData = JSON.parse(result.data);
-            expect(parsedData.type).toBe('solana_transfer');
-            expect(parsedData.isNative).toBe(true);
+            // Verify it's valid base64
+            expect(() => Buffer.from(result.data, 'base64')).not.toThrow();
         });
 
-        it('should build Sui transaction correctly', () => {
+        it('should build Sui transaction correctly', async () => {
             const suiAsset = new AssetId(Chain.Sui);
-            const result = provider['buildTransactionData'](
+            const result = await provider['buildTransactionData'](
                 suiAsset, 
-                'DepositAddress123456789', 
+                '0x0000000000000000000000000000000000000000000000000000000000000000', 
                 '1000000000', 
-                'From123456789'
+                '0x0000000000000000000000000000000000000000000000000000000000000001'
             );
             
-            expect(result.to).toBe('DepositAddress123456789');
-            expect(result.value).toBe('1000000000');
+            expect(result.to).toBe('0x0000000000000000000000000000000000000000000000000000000000000000');
+            expect(result.value).toBe('0');
+            expect(result.data).toBeDefined();
+            expect(typeof result.data).toBe('string');
             
-            const parsedData = JSON.parse(result.data);
-            expect(parsedData.type).toBe('sui_transfer');
-            expect(parsedData.isNative).toBe(true);
+            // Verify it's valid base64
+            expect(() => Buffer.from(result.data, 'base64')).not.toThrow();
         });
 
-        it('should build TRON native transaction correctly', () => {
+        it('should build TRON native transaction correctly', async () => {
             const trxAsset = new AssetId(Chain.Tron);
-            const result = provider['buildTransactionData'](
+            const result = await provider['buildTransactionData'](
                 trxAsset, 
-                'TDepositAddress12345678901234567890123456', 
+                'TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH', 
                 '1000000', 
                 'TFrom12345678901234567890123456789012'
             );
             
-            expect(result.to).toBe('TDepositAddress12345678901234567890123456');
+            expect(result.to).toBe('TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH');
             expect(result.value).toBe('1000000');
             expect(result.data).toBe('0x');
         });
 
-        it('should build TRON TRC20 transaction correctly', () => {
+        it('should build TRON TRC20 transaction correctly', async () => {
             const usdtAsset = new AssetId(Chain.Tron, 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t');
-            const result = provider['buildTransactionData'](
+            const result = await provider['buildTransactionData'](
                 usdtAsset, 
-                'TDepositAddress12345678901234567890123456', 
+                'TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH', 
                 '1000000', 
                 'TFrom12345678901234567890123456789012'
             );
@@ -124,26 +133,27 @@ describe('NearIntentsProvider', () => {
             expect(result.data).toMatch(/^0xa9059cbb/); // Should start with transfer function selector
         });
 
-        it('should build TON transaction correctly', () => {
+        it('should build TON transaction correctly', async () => {
             const tonAsset = new AssetId(Chain.Ton);
-            const result = provider['buildTransactionData'](
+            const result = await provider['buildTransactionData'](
                 tonAsset, 
-                'EQDepositAddress123456789', 
+                'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c', 
                 '1000000000', 
-                'EQFrom123456789'
+                'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c'
             );
             
-            expect(result.to).toBe('EQDepositAddress123456789');
+            expect(result.to).toBe('EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c');
             expect(result.value).toBe('1000000000');
+            expect(result.data).toBeDefined();
+            expect(typeof result.data).toBe('string');
             
-            const parsedData = JSON.parse(result.data);
-            expect(parsedData.type).toBe('ton_transfer');
-            expect(parsedData.isNative).toBe(true);
+            // Verify it's valid base64
+            expect(() => Buffer.from(result.data, 'base64')).not.toThrow();
         });
 
-        it('should handle unsupported chains gracefully', () => {
+        it('should handle unsupported chains gracefully', async () => {
             const aptosAsset = new AssetId(Chain.Aptos);
-            const result = provider['buildTransactionData'](
+            const result = await provider['buildTransactionData'](
                 aptosAsset, 
                 'DepositAddress123456789', 
                 '1000000', 

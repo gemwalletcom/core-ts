@@ -9,12 +9,24 @@ import { buildSolanaTransactionData } from './solana';
 import { buildSuiTransactionData } from './sui';
 import { buildTronTransactionData } from './tron';
 import { buildTonTransactionData } from './ton';
+import { Connection } from '@solana/web3.js';
+import { SuiClient } from '@mysten/sui/client';
 
 export class NearIntentsProvider implements Protocol {
     private client: NearIntentsClient;
+    private solanaConnection?: Connection;
+    private suiClient?: SuiClient;
 
-    constructor(baseUrl?: string, apiToken?: string) {
+    constructor(baseUrl?: string, apiToken?: string, solanaRpcUrl?: string, suiRpcUrl?: string) {
         this.client = new NearIntentsClient(baseUrl, apiToken);
+        
+        if (solanaRpcUrl) {
+            this.solanaConnection = new Connection(solanaRpcUrl, 'confirmed');
+        }
+        
+        if (suiRpcUrl) {
+            this.suiClient = new SuiClient({ url: suiRpcUrl });
+        }
     }
 
 
@@ -75,7 +87,7 @@ export class NearIntentsProvider implements Protocol {
         }
 
         // Build transaction data based on the source chain
-        return this.buildTransactionData(
+        return await this.buildTransactionData(
             fromAsset,
             response.quote.depositAddress,
             response.quote.amountIn,
@@ -83,12 +95,12 @@ export class NearIntentsProvider implements Protocol {
         );
     }
 
-    private buildTransactionData(
+    private async buildTransactionData(
         fromAsset: AssetId,
         depositAddress: string,
         amount: string,
         fromAddress: string
-    ): QuoteData {
+    ): Promise<QuoteData> {
         switch (fromAsset.chain) {
             case Chain.Ethereum:
             case Chain.Arbitrum:
@@ -99,16 +111,16 @@ export class NearIntentsProvider implements Protocol {
                 return buildEvmTransactionData(fromAsset, depositAddress, amount);
             
             case Chain.Solana:
-                return buildSolanaTransactionData(fromAsset, depositAddress, amount, fromAddress);
+                return await buildSolanaTransactionData(fromAsset, depositAddress, amount, fromAddress, this.solanaConnection);
             
             case Chain.Sui:
-                return buildSuiTransactionData(fromAsset, depositAddress, amount);
+                return await buildSuiTransactionData(fromAsset, depositAddress, amount, fromAddress, this.suiClient);
 
             case Chain.Tron:
                 return buildTronTransactionData(fromAsset, depositAddress, amount);
 
             case Chain.Ton:
-                return buildTonTransactionData(fromAsset, depositAddress, amount);
+                return await buildTonTransactionData(fromAsset, depositAddress, amount, fromAddress);
             
             default:
                 // For unsupported chains, let the client handle the transaction building

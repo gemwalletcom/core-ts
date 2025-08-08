@@ -40,8 +40,6 @@ export class StonfiProvider implements Protocol {
             referralFeeBps: quoteRequest.referral_bps.toString(),
         });
 
-        console.log("swapDirectSimulation", swapDirectSimulation);
-
         return {
             quote: quoteRequest,
             output_value: swapDirectSimulation.askUnits,

@@ -152,3 +152,96 @@ Uses pnpm workspaces with packages referenced by `@gemwallet/*` naming conventio
 - **Express.js** for API server
 - **Jest** for testing
 - **Just** command runner for task automation
+
+## Logging Guidelines
+
+### Logging Standards
+- Use `console.error()` for errors and exceptions
+- Use `console.log()` sparingly, only for essential information
+- Avoid debug logs in production code
+- Keep log messages concise and meaningful
+
+### When to Log
+**Always log:**
+- API server startup messages
+- HTTP API errors with clear error descriptions
+- External API failures with provider context
+- Critical errors that affect user experience
+
+**Avoid logging:**
+- Debug information and internal state
+- Request/response bodies (privacy concerns)
+- Verbose operational details
+- Success cases (unless specifically needed)
+
+### Log Format Examples
+```typescript
+// Good: Clear, concise error logging
+console.error("Error fetching quote:", error instanceof Error ? error.message : error);
+console.error("Near Intents API error:", response.status, errorMessage);
+
+// Avoid: Debug logs and verbose information
+console.log("Request body:", req.body); // Privacy risk
+console.log("swapDirectSimulation", swapDirectSimulation); // Debug noise
+```
+
+## Code Comments Guidelines
+
+### Commenting Standards
+- Use JSDoc comments (`/** */`) for functions, classes, and interfaces
+- Use inline comments (`//`) sparingly for complex business logic only
+- Avoid obvious comments that restate what the code does
+- Focus comments on **why** not **what**
+
+### When to Comment
+**Always comment:**
+- Complex business logic or algorithms
+- Non-obvious workarounds or hacks
+- External API integrations and data mappings
+- Public functions and interfaces with JSDoc
+- Regex patterns and complex conditions
+
+**Avoid commenting:**
+- Simple variable assignments
+- Obvious function calls or operations
+- Code that is self-explanatory
+- Implementation details that change frequently
+
+### Comment Format Examples
+```typescript
+// Good: Explains business logic and context
+/**
+ * Builds transaction data for EVM-compatible chains using common chain utilities
+ * Handles both native token transfers and ERC20 token transfers
+ */
+export function buildEvmTransactionData(asset: AssetId, depositAddress: string, amount: string): QuoteData {
+    return buildEvmTransferData(asset, depositAddress, amount);
+}
+
+// Good: Explains non-obvious mapping
+export const NEAR_INTENTS_ASSETS = {
+    [Chain.Ethereum]: {
+        "ethereum": "nep141:eth.omft.near",
+        "ethereum_0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near", // USDC
+    }
+};
+
+// Avoid: States the obvious
+const paddedAmount = BigInt(amount).toString(16).padStart(64, '0'); // Convert amount to hex and pad to 32 bytes
+if (!connection) { // Check if connection exists
+    throw new Error('Solana connection required for transaction building');
+}
+```
+
+### JSDoc Standards
+```typescript
+/**
+ * Converts TRON base58 address to hex format using TronWeb
+ * @param address - TRON address in base58 or hex format
+ * @returns Hex formatted address with 0x prefix
+ * @throws Error if address format is invalid or conversion fails
+ */
+function convertTronAddressToHex(address: string): string {
+    // Implementation...
+}
+```
