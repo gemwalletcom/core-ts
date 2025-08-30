@@ -85,7 +85,15 @@ export class CetusAggregatorProvider implements Protocol {
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
         const slippage_bps = quote.quote.slippage_bps;
-        const route_data = JSON.parse((quote.route_data as { data: string }).data, bnReviver) as RouterDataV3;
+        const routeDataString = (quote.route_data as { data: string }).data;
+
+        let route_data: RouterDataV3;
+        try {
+            route_data = JSON.parse(routeDataString, bnReviver) as RouterDataV3;
+        } catch (parseError) {
+            console.error("Route data that failed to parse:", routeDataString);
+            throw new Error(`Failed to parse route data: ${parseError}`);
+        }
 
         if (!route_data) {
             throw new Error("Missing route_data in quote object, cannot build transaction.");
@@ -104,7 +112,7 @@ export class CetusAggregatorProvider implements Protocol {
 
             const gasPriceAndCoinRefsReq = getGasPriceAndCoinRefs(this.suiClient, quote.quote.from_address);
             const fastRouterSwapReq = client.fastRouterSwap(swapParams);
-            const [{ gasPrice, coinRefs }, swapResult] = await Promise.all([
+            const [{ gasPrice, coinRefs }] = await Promise.all([
                 gasPriceAndCoinRefsReq,
                 fastRouterSwapReq
             ]);
