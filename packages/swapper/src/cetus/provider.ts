@@ -1,6 +1,6 @@
 import { QuoteRequest, Quote, QuoteData, AssetId } from "@gemwallet/types";
 import { Protocol } from "../protocol";
-import { AggregatorClient, Env, RouterData } from "@cetusprotocol/aggregator-sdk";
+import { AggregatorClient, Env, RouterDataV3 } from "@cetusprotocol/aggregator-sdk";
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from '@mysten/sui/transactions';
 import { BN } from "bn.js";
@@ -85,7 +85,7 @@ export class CetusAggregatorProvider implements Protocol {
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
         const slippage_bps = quote.quote.slippage_bps;
-        const route_data = JSON.parse((quote.route_data as { data: string }).data, bnReviver) as RouterData;
+        const route_data = JSON.parse((quote.route_data as { data: string }).data, bnReviver) as RouterDataV3;
 
         if (!route_data) {
             throw new Error("Missing route_data in quote object, cannot build transaction.");
@@ -94,7 +94,7 @@ export class CetusAggregatorProvider implements Protocol {
         try {
             const txb = new Transaction();
             const swapParams = {
-                routers: route_data,
+                router: route_data,
                 txb,
                 slippage: slippage_bps / 10000
             };
