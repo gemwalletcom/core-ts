@@ -1,13 +1,13 @@
 import { QuoteRequest, Quote, QuoteData, AssetId } from "@gemwallet/types";
 import { Protocol } from "../protocol";
-import { AggregatorClient, Env, RouterDataV3 } from "@cetusprotocol/aggregator-sdk";
+import { AggregatorClient, Env, RouterDataV3, BuildFastRouterSwapParamsV3 } from "@cetusprotocol/aggregator-sdk";
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from '@mysten/sui/transactions';
 import { BN } from "bn.js";
 import { SUI_COIN_TYPE } from "../chain/sui/constants";
 import { bnReplacer, bnReviver } from "./bn_replacer";
 import { calculateGasBudget, prefillTransaction, getGasPriceAndCoinRefs } from "../chain/sui/tx_builder";
-import { getReferrerAddresses } from "../referrer";
+import { getReferrerAddresses, CETUS_PARTNER_ID } from "../referrer";
 
 export class CetusAggregatorProvider implements Protocol {
     private client: AggregatorClient;
@@ -27,6 +27,7 @@ export class CetusAggregatorProvider implements Protocol {
             overlayFeeRate,
             overlayFeeReceiver,
             signer: address,
+            partner: CETUS_PARTNER_ID
         });
     }
 
@@ -101,10 +102,10 @@ export class CetusAggregatorProvider implements Protocol {
 
         try {
             const txb = new Transaction();
-            const swapParams = {
+            const swapParams: BuildFastRouterSwapParamsV3 = {
                 router: route_data,
                 txb,
-                slippage: slippage_bps / 10000
+                slippage: slippage_bps / 10000,
             };
 
             // create a new client with user's address as signer, overlay fee rate and overlay fee receiver
