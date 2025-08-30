@@ -1,13 +1,13 @@
 import { QuoteRequest, Quote, QuoteData, AssetId } from "@gemwallet/types";
 import { Protocol } from "../protocol";
-import { AggregatorClient, Env, RouterData } from "@cetusprotocol/aggregator-sdk";
+import { AggregatorClient, Env, RouterDataV3, BuildFastRouterSwapParamsV3 } from "@cetusprotocol/aggregator-sdk";
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from '@mysten/sui/transactions';
 import { BN } from "bn.js";
 import { SUI_COIN_TYPE } from "../chain/sui/constants";
 import { bnReplacer, bnReviver } from "./bn_replacer";
 import { calculateGasBudget, prefillTransaction, getGasPriceAndCoinRefs } from "../chain/sui/tx_builder";
-import { getReferrerAddresses } from "../referrer";
+import { getReferrerAddresses, CETUS_PARTNER_ID } from "../referrer";
 
 export class CetusAggregatorProvider implements Protocol {
     private client: AggregatorClient;
@@ -27,6 +27,7 @@ export class CetusAggregatorProvider implements Protocol {
             overlayFeeRate,
             overlayFeeReceiver,
             signer: address,
+            partner: CETUS_PARTNER_ID
         });
     }
 
@@ -85,7 +86,15 @@ export class CetusAggregatorProvider implements Protocol {
 
     async get_quote_data(quote: Quote): Promise<QuoteData> {
         const slippage_bps = quote.quote.slippage_bps;
-        const route_data = JSON.parse((quote.route_data as { data: string }).data, bnReviver) as RouterData;
+        const routeDataString = (quote.route_data as { data: string }).data;
+
+        let route_data: RouterDataV3;
+        try {
+            route_data = JSON.parse(routeDataString, bnReviver) as RouterDataV3;
+        } catch (parseError) {
+            console.error("Route data that failed to parse:", routeDataString);
+            throw new Error(`Failed to parse route data: ${parseError}`);
+        }
 
         if (!route_data) {
             throw new Error("Missing route_data in quote object, cannot build transaction.");
@@ -93,10 +102,10 @@ export class CetusAggregatorProvider implements Protocol {
 
         try {
             const txb = new Transaction();
-            const swapParams = {
-                routers: route_data,
+            const swapParams: BuildFastRouterSwapParamsV3 = {
+                router: route_data,
                 txb,
-                slippage: slippage_bps / 10000
+                slippage: slippage_bps / 10000,
             };
 
             // create a new client with user's address as signer, overlay fee rate and overlay fee receiver
@@ -104,7 +113,7 @@ export class CetusAggregatorProvider implements Protocol {
 
             const gasPriceAndCoinRefsReq = getGasPriceAndCoinRefs(this.suiClient, quote.quote.from_address);
             const fastRouterSwapReq = client.fastRouterSwap(swapParams);
-            const [{ gasPrice, coinRefs }, swapResult] = await Promise.all([
+            const [{ gasPrice, coinRefs }] = await Promise.all([
                 gasPriceAndCoinRefsReq,
                 fastRouterSwapReq
             ]);
