@@ -1,4 +1,4 @@
-name: Publish Swapper Container
+name: Publish Containers
 
 on:
   push:
