@@ -59,8 +59,8 @@ importers:
         specifier: workspace:*
         version: link:../types
       '@mayanfinance/swap-sdk':
-        specifier: 10.9.2
-        version: 10.9.2(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
+        specifier: 11.0.1
+        version: 11.0.1(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
       '@mysten/sui':
         specifier: 1.35.0
         version: 1.35.0(typescript@5.8.2)
@@ -422,8 +422,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@mayanfinance/swap-sdk@10.9.2':
-    resolution: {integrity: sha512-h7FpLOnZ4qlJPnz1CZkzTtfe0Y1tcNjU62M1Y9h/uDwAHJBlnORzjVo48kMMrNLE7MySttK1Cc2YQj3+8o4H/Q==}
+  '@mayanfinance/swap-sdk@11.0.1':
+    resolution: {integrity: sha512-DfD+Hw3ONdzqCrbKx7260C4y6A+LwfneT840yqxdXIqYejgnoJJphTm+j8VPVErZ92VL8PSZoZToVvB5a88jKA==}
 
   '@mysten/bcs@1.6.3':
     resolution: {integrity: sha512-QQ6u0U7a4+/o6rZ9tALTeGYMdf6V5z/HkRI/mhD5/fSr80DJoGzOWpFszcN/fhJpKb36vBaSQUMpS7yNQ10xBQ==}
@@ -2504,7 +2504,7 @@ snapshots:
     dependencies:
       '@cetusprotocol/aggregator-sdk': 1.1.6(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
       '@gemwallet/types': file:packages/types
-      '@mayanfinance/swap-sdk': 10.9.2(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
+      '@mayanfinance/swap-sdk': 11.0.1(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
       '@mysten/sui': 1.35.0(typescript@5.8.2)
       '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@ston-fi/api': 0.21.0
@@ -2738,7 +2738,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@mayanfinance/swap-sdk@10.9.2(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)':
+  '@mayanfinance/swap-sdk@11.0.1(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)':
     dependencies:
       '@mysten/sui': 1.35.0(typescript@5.8.2)
       '@solana/buffer-layout': 4.0.1
@@ -2814,7 +2814,7 @@ snapshots:
       '@types/ws': 8.18.1
       axios: 1.11.0
       axios-retry: 3.9.1
-      isomorphic-ws: 4.0.1(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+      isomorphic-ws: 4.0.1(ws@8.18.3)
       ts-log: 2.2.7
       ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
@@ -3804,11 +3804,11 @@ snapshots:
 
   isexe@2.0.0: {}
 
-  isomorphic-ws@4.0.1(ws@7.5.10):
+  isomorphic-ws@4.0.1(ws@7.5.10(bufferutil@4.0.9)(utf-8-validate@5.0.10)):
     dependencies:
       ws: 7.5.10(bufferutil@4.0.9)(utf-8-validate@5.0.10)
 
-  isomorphic-ws@4.0.1(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)):
+  isomorphic-ws@4.0.1(ws@8.18.3):
     dependencies:
       ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
 
@@ -3863,7 +3863,7 @@ snapshots:
       delay: 5.0.0
       es6-promisify: 5.0.0
       eyes: 0.1.8
-      isomorphic-ws: 4.0.1(ws@7.5.10)
+      isomorphic-ws: 4.0.1(ws@7.5.10(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       json-stringify-safe: 5.0.1
       uuid: 8.3.2
       ws: 7.5.10(bufferutil@4.0.9)(utf-8-validate@5.0.10)
