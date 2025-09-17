@@ -31,7 +31,7 @@ jobs:
 
       - name: Prepare image name
         run: |
-          echo "SWAPPER_IMAGE=$(echo ghcr.io/${GITHUB_REPOSITORY}/swapper | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          echo "SWAPPER_IMAGE=$(echo ghcr.io/${GITHUB_REPOSITORY_OWNER}/swapper | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
