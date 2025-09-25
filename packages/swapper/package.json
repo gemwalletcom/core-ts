@@ -15,7 +15,7 @@
     "@gemwallet/types": "workspace:*",
     "@types/bn.js": "5.1.6",
     "@mayanfinance/swap-sdk": "10.9.2",
-    "@cetusprotocol/aggregator-sdk": "1.1.6",
+    "@cetusprotocol/aggregator-sdk": "1.2.0",
     "bn.js": "5.2.1",
     "@mysten/sui": "1.35.0",
     "@solana/web3.js": "1.98.0",

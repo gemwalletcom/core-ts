@@ -53,8 +53,8 @@ importers:
   packages/swapper:
     dependencies:
       '@cetusprotocol/aggregator-sdk':
-        specifier: 1.1.6
-        version: 1.1.6(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
+        specifier: 1.2.0
+        version: 1.2.0(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
       '@gemwallet/types':
         specifier: workspace:*
         version: link:../types
@@ -287,8 +287,8 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@cetusprotocol/aggregator-sdk@1.1.6':
-    resolution: {integrity: sha512-imrr0euiONmr7lzo+8uiUNyjxPkjMu4pAhZh9XLxcSyXsW3dhv94Nk1YtZ7Uq+//kXj8MRDGS5Nw4Lv5b2mvGA==}
+  '@cetusprotocol/aggregator-sdk@1.2.0':
+    resolution: {integrity: sha512-Z1fy9rgXYgaO6jShUSivIjkDjcJSx7UVBEhJsZSTBSQ96hLhbXNwo/Tglq3FOArO4NrES/zTbwnCnQyxWNu8ig==}
     peerDependencies:
       typescript: ^5.8.2
 
@@ -2474,7 +2474,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@cetusprotocol/aggregator-sdk@1.1.6(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)':
+  '@cetusprotocol/aggregator-sdk@1.2.0(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)':
     dependencies:
       '@mysten/sui': 1.35.0(typescript@5.8.2)
       '@pythnetwork/pyth-sui-js': 2.2.0(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)
