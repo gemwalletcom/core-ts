@@ -4,3 +4,5 @@ packages:
 
 dangerouslyAllowAllBuilds:
   - bigint-buffer # Required to build native dependencies for bigint-buffer
+
+minimumReleaseAge: 1440 # 1 day

@@ -12,16 +12,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@cetusprotocol/aggregator-sdk": "0.14.2",
     "@gemwallet/types": "workspace:*",
+    "@types/bn.js": "5.1.6",
     "@mayanfinance/swap-sdk": "10.9.2",
+    "@cetusprotocol/aggregator-sdk": "1.1.6",
     "@mysten/sui": "1.35.0",
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "1.98.0",
     "@ston-fi/api": "0.21.0",
     "@ston-fi/sdk": "2.3.0",
     "@ton/ton": "15.2.1",
-    "@types/bn.js": "5.1.6",
     "bn.js": "5.2.1",
     "js-sha3": "0.9.3",
     "tronweb": "6.0.3"

@@ -21,3 +21,5 @@ export function getReferrerAddresses(): Referrers {
         near: "0x0d9dab1a248f63b0a48965ba8435e4de7497a3dc" // Near Intents Account
     };
 }
+
+export const CETUS_PARTNER_ID = "0x0364d744bd811122bbfdfe11a153aed9e91a2b3a5d6be1eaa5b7f081ed174487";
