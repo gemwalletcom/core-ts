@@ -18,10 +18,12 @@
     "@cetusprotocol/aggregator-sdk": "1.2.0",
     "bn.js": "5.2.1",
     "@mysten/sui": "1.35.0",
+    "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "1.98.0",
     "@ston-fi/api": "0.21.0",
     "@ston-fi/sdk": "2.3.0",
     "@ton/ton": "15.2.1",
+    "bn.js": "5.2.1",
     "js-sha3": "0.9.3",
     "tronweb": "6.0.3"
   },
