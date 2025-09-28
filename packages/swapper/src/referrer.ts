@@ -20,4 +20,4 @@ export function getReferrerAddresses(): Referrers {
     };
 }
 
-export const CETUS_PARTNER_ID = "0x0364d744bd811122bbfdfe11a153aed9e91a2b3a5d6be1eaa5b7f081ed174487";
+export const CETUS_PARTNER_ID = "0x08b1875b6541c847f05ed71d04cbcfa66e4e8619bf3b8923b07c5b5409433366";
