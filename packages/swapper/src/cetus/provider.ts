@@ -13,15 +13,12 @@ export class CetusAggregatorProvider implements Protocol {
     private client: AggregatorClient;
     private suiClient: SuiClient;
     private overlayFeeReceiver: string;
+    private readonly selectedProtocols: string[] = [CETUS, DEEPBOOKV2, DEEPBOOKV3, BLUEFIN];
 
     constructor(suiRpcUrl: string) {
         this.suiClient = new SuiClient({ url: suiRpcUrl });
         this.overlayFeeReceiver = getReferrerAddresses().sui;
         this.client = this.createClient();
-    }
-
-    selectedProtocol(): string[] {
-        return [CETUS, DEEPBOOKV2, DEEPBOOKV3, BLUEFIN];
     }
 
     createClient(address?: string, overlayFeeRate?: number, overlayFeeReceiver?: string) {
@@ -54,7 +51,7 @@ export class CetusAggregatorProvider implements Protocol {
                 target: this.mapAssetToTokenId(toAsset),
                 amount: new BN(from_value),
                 byAmountIn,
-                providers: this.selectedProtocol(),
+                providers: this.selectedProtocols,
             });
 
             if (!routeData) {
