@@ -1,6 +1,6 @@
 import { QuoteRequest, Quote, QuoteData, AssetId } from "@gemwallet/types";
 import { Protocol } from "../protocol";
-import { AggregatorClient, Env, RouterDataV3, BuildFastRouterSwapParamsV3 } from "@cetusprotocol/aggregator-sdk";
+import { AggregatorClient, Env, RouterDataV3, BuildFastRouterSwapParamsV3, CETUS, DEEPBOOKV2, DEEPBOOKV3, BLUEFIN } from "@cetusprotocol/aggregator-sdk";
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from '@mysten/sui/transactions';
 import { BN } from "bn.js";
@@ -13,6 +13,7 @@ export class CetusAggregatorProvider implements Protocol {
     private client: AggregatorClient;
     private suiClient: SuiClient;
     private overlayFeeReceiver: string;
+    private readonly selectedProtocols: string[] = [CETUS, DEEPBOOKV2, DEEPBOOKV3, BLUEFIN];
 
     constructor(suiRpcUrl: string) {
         this.suiClient = new SuiClient({ url: suiRpcUrl });
@@ -50,6 +51,7 @@ export class CetusAggregatorProvider implements Protocol {
                 target: this.mapAssetToTokenId(toAsset),
                 amount: new BN(from_value),
                 byAmountIn,
+                providers: this.selectedProtocols,
             });
 
             if (!routeData) {
