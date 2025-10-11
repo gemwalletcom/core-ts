@@ -1,0 +1,375 @@
+import { AnchorProvider, BN } from "@coral-xyz/anchor";
+import { Percentage, ReadOnlyWallet } from "@orca-so/common-sdk";
+import {
+    buildDefaultAccountFetcher,
+    buildWhirlpoolClient,
+    IGNORE_CACHE,
+    ORCA_SUPPORTED_TICK_SPACINGS,
+    ORCA_WHIRLPOOL_PROGRAM_ID,
+    ORCA_WHIRLPOOLS_CONFIG,
+    PDAUtil,
+    PoolUtil,
+    UseFallbackTickArray,
+    Whirlpool,
+    WhirlpoolAccountFetcherInterface,
+    WhirlpoolClient,
+    WhirlpoolContext,
+    WhirlpoolData,
+    swapQuoteByInputToken,
+} from "@orca-so/whirlpools-sdk";
+import {
+    Connection,
+    PublicKey,
+    SystemProgram,
+    VersionedTransaction,
+} from "@solana/web3.js";
+import { NATIVE_MINT } from "@solana/spl-token";
+
+import {
+    AssetId,
+    Chain,
+    Quote,
+    QuoteData,
+    QuoteRequest,
+} from "@gemwallet/types";
+import { Protocol } from "../protocol";
+import { getReferrerAddresses } from "../referrer";
+import { OrcaSwapRouteData, isOrcaRouteData } from "./model";
+import { calculateReferralFeeLamports, bnToNumberSafe } from "./fee";
+
+type CachedPool = {
+    poolAddress: string;
+    tickSpacing: number;
+};
+
+const DEFAULT_COMMITMENT: "confirmed" = "confirmed";
+const WSOL_MINT = NATIVE_MINT;
+
+export class OrcaWhirlpoolProvider implements Protocol {
+    private readonly connection: Connection;
+    private readonly fetcher: WhirlpoolAccountFetcherInterface;
+    private readonly programId = ORCA_WHIRLPOOL_PROGRAM_ID;
+    private readonly whirlpoolsConfig = ORCA_WHIRLPOOLS_CONFIG;
+    private readonly poolCache: Map<string, CachedPool> = new Map();
+
+    constructor(private readonly solanaRpcEndpoint: string) {
+        this.connection = new Connection(this.solanaRpcEndpoint, {
+            commitment: DEFAULT_COMMITMENT,
+        });
+        this.fetcher = buildDefaultAccountFetcher(this.connection);
+    }
+
+    async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
+        const fromAsset = AssetId.fromString(quoteRequest.from_asset.id);
+        const toAsset = AssetId.fromString(quoteRequest.to_asset.id);
+
+        if (
+            fromAsset.chain !== Chain.Solana ||
+            toAsset.chain !== Chain.Solana
+        ) {
+            throw new Error("Only Solana assets are supported by Orca");
+        }
+
+        const fromMint = this.getMintPublicKey(fromAsset);
+        const toMint = this.getMintPublicKey(toAsset);
+        const amountIn = this.parseAmount(quoteRequest.from_value);
+        const context = this.createContext(PublicKey.default);
+        const client = buildWhirlpoolClient(context);
+
+        const { whirlpool, data, tickSpacing } = await this.findBestPool(
+            client,
+            fromMint,
+            toMint,
+        );
+
+        const slippage = Percentage.fromFraction(
+            quoteRequest.slippage_bps,
+            10_000,
+        );
+        const quote = await swapQuoteByInputTokenWithFallback(
+            whirlpool,
+            fromMint,
+            amountIn,
+            slippage,
+            this.programId,
+            client.getFetcher(),
+        );
+
+        const routeData: OrcaSwapRouteData = {
+            poolAddress: whirlpool.getAddress().toBase58(),
+            tickSpacing,
+            tokenMintA: data.tokenMintA.toBase58(),
+            tokenMintB: data.tokenMintB.toBase58(),
+            swap: {
+                amount: quote.amount.toString(),
+                otherAmountThreshold: quote.otherAmountThreshold.toString(),
+                sqrtPriceLimit: quote.sqrtPriceLimit.toString(),
+                amountSpecifiedIsInput: quote.amountSpecifiedIsInput,
+                aToB: quote.aToB,
+                tickArrays: [
+                    quote.tickArray0.toBase58(),
+                    quote.tickArray1.toBase58(),
+                    quote.tickArray2.toBase58(),
+                ],
+                supplementalTickArrays: quote.supplementalTickArrays?.map(
+                    (addr) => addr.toBase58(),
+                ),
+            },
+        };
+
+        return {
+            quote: quoteRequest,
+            output_value: quote.estimatedAmountOut.toString(),
+            output_min_value: quote.otherAmountThreshold.toString(),
+            eta_in_seconds: 5,
+            route_data: routeData,
+        };
+    }
+
+    async get_quote_data(quote: Quote): Promise<QuoteData> {
+        if (!isOrcaRouteData(quote.route_data)) {
+            throw new Error("Invalid Orca route data");
+        }
+
+        const route = quote.route_data;
+        let userPublicKey: PublicKey;
+        try {
+            userPublicKey = new PublicKey(quote.quote.from_address);
+        } catch {
+            throw new Error("Invalid Solana address for from_address");
+        }
+
+        const context = this.createContext(userPublicKey);
+        const client = buildWhirlpoolClient(context);
+        const poolAddress = new PublicKey(route.poolAddress);
+        const whirlpool = await client.getPool(poolAddress, IGNORE_CACHE);
+
+        const swapInput = this.buildSwapInput(route);
+        const txBuilder = await whirlpool.swap(swapInput, userPublicKey);
+
+        const referralFeeLamports = calculateReferralFeeLamports(quote);
+        if (!referralFeeLamports.isZero()) {
+            const referrer = getReferrerAddresses().solana;
+            if (!referrer) {
+                throw new Error("Missing Solana referral address");
+            }
+
+            const referralInstruction = SystemProgram.transfer({
+                fromPubkey: userPublicKey,
+                toPubkey: new PublicKey(referrer),
+                lamports: bnToNumberSafe(referralFeeLamports),
+            });
+
+            // Pay the referral in lamports before executing the swap.
+            txBuilder.prependInstruction({
+                instructions: [referralInstruction],
+                cleanupInstructions: [],
+                signers: [],
+            });
+        }
+
+        const payload = await txBuilder.build();
+        const transaction = payload.transaction;
+
+        const serialized =
+            transaction instanceof VersionedTransaction
+                ? transaction.serialize()
+                : transaction.serialize({
+                      requireAllSignatures: false,
+                  });
+
+        return {
+            to: "",
+            value: "0",
+            data: Buffer.from(serialized).toString("base64"),
+        };
+    }
+
+    private createContext(walletPublicKey: PublicKey): WhirlpoolContext {
+        const wallet = new ReadOnlyWallet(walletPublicKey);
+        const provider = new AnchorProvider(this.connection, wallet, {
+            commitment: DEFAULT_COMMITMENT,
+            preflightCommitment: DEFAULT_COMMITMENT,
+        });
+
+        return WhirlpoolContext.withProvider(
+            provider,
+            this.programId,
+            this.fetcher,
+        );
+    }
+
+    private async findBestPool(
+        client: WhirlpoolClient,
+        mintA: PublicKey,
+        mintB: PublicKey,
+    ): Promise<{ whirlpool: Whirlpool; data: WhirlpoolData; tickSpacing: number }> {
+        const [canonicalA, canonicalB] = PoolUtil.orderMints(
+            mintA.toBase58(),
+            mintB.toBase58(),
+        );
+        const canonicalMintA = new PublicKey(canonicalA);
+        const canonicalMintB = new PublicKey(canonicalB);
+        const cacheKey = `${canonicalA}-${canonicalB}`;
+
+        const fetcher = client.getFetcher();
+        const cached = this.poolCache.get(cacheKey);
+        if (cached) {
+            const cachedAddress = new PublicKey(cached.poolAddress);
+            const cachedData = await fetcher.getPool(
+                cachedAddress,
+                IGNORE_CACHE,
+            );
+            if (cachedData && cachedData.liquidity.gt(new BN(0))) {
+                const cachedWhirlpool = await client.getPool(
+                    cachedAddress,
+                    IGNORE_CACHE,
+                );
+                return {
+                    whirlpool: cachedWhirlpool,
+                    data: cachedData,
+                    tickSpacing: cached.tickSpacing,
+                };
+            }
+            this.poolCache.delete(cacheKey);
+        }
+
+        const candidateInfos = ORCA_SUPPORTED_TICK_SPACINGS.map(
+            (tickSpacing) => ({
+                tickSpacing,
+                address: PDAUtil.getWhirlpool(
+                    this.programId,
+                    this.whirlpoolsConfig,
+                    canonicalMintA,
+                    canonicalMintB,
+                    tickSpacing,
+                ).publicKey,
+            }),
+        );
+
+        let bestCandidate: {
+            info: (typeof candidateInfos)[number];
+            data: WhirlpoolData;
+        } | null = null;
+
+        const poolsMap = await fetcher.getPools(
+            candidateInfos.map((candidate) => candidate.address),
+            IGNORE_CACHE,
+        );
+
+        for (const candidate of candidateInfos) {
+            const poolData = poolsMap.get(candidate.address.toBase58());
+            if (poolData && poolData.liquidity.gt(new BN(0))) {
+                if (
+                    !bestCandidate ||
+                    poolData.liquidity.gt(bestCandidate.data.liquidity)
+                ) {
+                    bestCandidate = { info: candidate, data: poolData };
+                }
+            }
+        }
+
+        if (!bestCandidate) {
+            throw new Error("No Orca whirlpool found for the provided assets");
+        }
+
+        const whirlpool = await client.getPool(
+            bestCandidate.info.address,
+            IGNORE_CACHE,
+        );
+
+        this.poolCache.set(cacheKey, {
+            poolAddress: bestCandidate.info.address.toBase58(),
+            tickSpacing: bestCandidate.info.tickSpacing,
+        });
+
+        return {
+            whirlpool,
+            data: bestCandidate.data,
+            tickSpacing: bestCandidate.info.tickSpacing,
+        };
+    }
+
+    private parseAmount(value: string): BN {
+        try {
+            const amount = new BN(value);
+            if (amount.lte(new BN(0))) {
+                throw new Error("Amount must be greater than zero");
+            }
+            return amount;
+        } catch {
+            throw new Error("Invalid amount");
+        }
+    }
+
+    private getMintPublicKey(asset: AssetId): PublicKey {
+        if (asset.chain !== Chain.Solana) {
+            throw new Error("Only Solana assets are supported by Orca");
+        }
+
+        if (asset.isNative()) {
+            return WSOL_MINT;
+        }
+
+        if (!asset.tokenId) {
+            throw new Error("Invalid token identifier for Solana asset");
+        }
+
+        try {
+            return new PublicKey(asset.tokenId);
+        } catch {
+            throw new Error("Invalid SPL token address");
+        }
+    }
+
+    private buildSwapInput(route: OrcaSwapRouteData) {
+        const tickArrays = route.swap.tickArrays.map(
+            (addr) => new PublicKey(addr),
+        ) as [PublicKey, PublicKey, PublicKey];
+        const supplementalTickArrays = route.swap.supplementalTickArrays?.map(
+            (addr) => new PublicKey(addr),
+        );
+
+        return {
+            amount: new BN(route.swap.amount),
+            otherAmountThreshold: new BN(route.swap.otherAmountThreshold),
+            sqrtPriceLimit: new BN(route.swap.sqrtPriceLimit),
+            amountSpecifiedIsInput: route.swap.amountSpecifiedIsInput,
+            aToB: route.swap.aToB,
+            tickArray0: tickArrays[0],
+            tickArray1: tickArrays[1],
+            tickArray2: tickArrays[2],
+            ...(supplementalTickArrays
+                ? { supplementalTickArrays }
+                : undefined),
+        };
+    }
+}
+
+async function swapQuoteByInputTokenWithFallback(
+    whirlpool: Whirlpool,
+    inputTokenMint: PublicKey,
+    tokenAmount: BN,
+    slippageTolerance: Percentage,
+    programId: PublicKey,
+    fetcher: WhirlpoolAccountFetcherInterface,
+) {
+    try {
+        return await swapQuoteByInputToken(
+            whirlpool,
+            inputTokenMint,
+            tokenAmount,
+            slippageTolerance,
+            programId,
+            fetcher,
+            IGNORE_CACHE,
+            UseFallbackTickArray.Situational,
+        );
+    } catch (error) {
+        throw new Error(
+            error instanceof Error
+                ? error.message
+                : "Unable to calculate Orca swap quote",
+        );
+    }
+}

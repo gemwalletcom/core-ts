@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "SlashCommand(/push_pr)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

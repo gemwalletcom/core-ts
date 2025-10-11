@@ -1,22 +1,24 @@
 import express from "express";
 
 import { Quote, QuoteRequest } from "@gemwallet/types";
-import { StonfiProvider, Protocol, MayanProvider, SymbiosisProvider, CetusAggregatorProvider, RelayProvider } from "@gemwallet/swapper";
+import { StonfiProvider, Protocol, MayanProvider, CetusAggregatorProvider, RelayProvider, OrcaWhirlpoolProvider } from "@gemwallet/swapper";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
+const solanaRpc = process.env.SOLANA_URL || "https://solana-rpc.publicnode.com";
+
 const providers: Record<string, Protocol> = {
     stonfi_v2: new StonfiProvider(process.env.TON_URL || "https://toncenter.com"),
     mayan: new MayanProvider(
-        process.env.SOLANA_URL || "https://solana-rpc.publicnode.com",
+        solanaRpc,
         process.env.SUI_URL || "https://fullnode.mainnet.sui.io"
     ),
-    symbiosis: new SymbiosisProvider(process.env.TRON_URL || "https://api.trongrid.io"),
     cetus: new CetusAggregatorProvider(process.env.SUI_URL || "https://fullnode.mainnet.sui.io"),
     relay: new RelayProvider(),
+    orca: new OrcaWhirlpoolProvider(solanaRpc),
 };
 
 app.get('/', (_, res) => {
