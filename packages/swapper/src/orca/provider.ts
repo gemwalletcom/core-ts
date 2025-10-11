@@ -21,9 +21,10 @@ import {
     Connection,
     PublicKey,
     SystemProgram,
+    TransactionInstruction,
     VersionedTransaction,
 } from "@solana/web3.js";
-import { NATIVE_MINT } from "@solana/spl-token";
+import { NATIVE_MINT, createTransferInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
 
 import {
     AssetId,
@@ -35,7 +36,7 @@ import {
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
 import { OrcaSwapRouteData, isOrcaRouteData } from "./model";
-import { calculateReferralFeeLamports, bnToNumberSafe } from "./fee";
+import { calculateReferralFeeAmount, bnToNumberSafe } from "./fee";
 
 type CachedPool = {
     poolAddress: string;
@@ -147,20 +148,39 @@ export class OrcaWhirlpoolProvider implements Protocol {
         const swapInput = this.buildSwapInput(route);
         const txBuilder = await whirlpool.swap(swapInput, userPublicKey);
 
-        const referralFeeLamports = calculateReferralFeeLamports(quote);
+        const referralFeeLamports = calculateReferralFeeAmount(quote);
         if (!referralFeeLamports.isZero()) {
             const referrer = getReferrerAddresses().solana;
             if (!referrer) {
                 throw new Error("Missing Solana referral address");
             }
 
-            const referralInstruction = SystemProgram.transfer({
-                fromPubkey: userPublicKey,
-                toPubkey: new PublicKey(referrer),
-                lamports: bnToNumberSafe(referralFeeLamports),
-            });
+            const fromAsset = AssetId.fromString(quote.quote.from_asset.id);
+            const referralInstruction = fromAsset.isNative()
+                ? SystemProgram.transfer({
+                      fromPubkey: userPublicKey,
+                      toPubkey: new PublicKey(referrer),
+                      lamports: bnToNumberSafe(referralFeeLamports),
+                  })
+                : (() => {
+                      const fromMint = this.getMintPublicKey(fromAsset);
+                      const userTokenAccount = getAssociatedTokenAddressSync(
+                          fromMint,
+                          userPublicKey,
+                      );
+                      const referrerTokenAccount = getAssociatedTokenAddressSync(
+                          fromMint,
+                          new PublicKey(referrer),
+                      );
+                      return createTransferInstruction(
+                          userTokenAccount,
+                          referrerTokenAccount,
+                          userPublicKey,
+                          bnToNumberSafe(referralFeeLamports),
+                      );
+                  })();
 
-            // Pay the referral in lamports before executing the swap.
+            // Pay the referral before executing the swap.
             txBuilder.prependInstruction({
                 instructions: [referralInstruction],
                 cleanupInstructions: [],

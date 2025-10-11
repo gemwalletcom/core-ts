@@ -4,7 +4,7 @@ import { Quote } from "@gemwallet/types";
 export const BASIS_POINTS_DENOMINATOR = 10_000;
 export const MAX_SAFE_NUMBER_BN = new BN(Number.MAX_SAFE_INTEGER.toString());
 
-export function calculateReferralFeeLamports(quote: Quote): BN {
+export function calculateReferralFeeAmount(quote: Quote): BN {
     const referralBps = quote.quote.referral_bps ?? 0;
     if (referralBps <= 0) {
         return new BN(0);

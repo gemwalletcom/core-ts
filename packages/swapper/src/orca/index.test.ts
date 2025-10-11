@@ -1,6 +1,6 @@
 import { Chain, Quote, QuoteRequest } from "@gemwallet/types";
 
-import { OrcaWhirlpoolProvider, calculateReferralFeeLamports } from "./index";
+import { OrcaWhirlpoolProvider, calculateReferralFeeAmount } from "./index";
 
 const RPC_ENDPOINT = "https://example.invalid";
 
@@ -48,7 +48,7 @@ describe("OrcaWhirlpoolProvider", () => {
     });
 });
 
-describe("calculateReferralFeeLamports", () => {
+describe("calculateReferralFeeAmount", () => {
     const baseQuote: Quote = {
         quote: createRequest(Chain.Solana),
         output_value: "0",
@@ -58,11 +58,11 @@ describe("calculateReferralFeeLamports", () => {
     };
 
     it("returns zero when referral_bps is zero", () => {
-        const result = calculateReferralFeeLamports(baseQuote);
+        const result = calculateReferralFeeAmount(baseQuote);
         expect(result.isZero()).toBe(true);
     });
 
-    it("calculates lamport fee using basis points", () => {
+    it("calculates fee amount using basis points", () => {
         const quote: Quote = {
             ...baseQuote,
             quote: {
@@ -72,7 +72,7 @@ describe("calculateReferralFeeLamports", () => {
             },
         };
 
-        const result = calculateReferralFeeLamports(quote);
+        const result = calculateReferralFeeAmount(quote);
         expect(result.toString()).toBe("5000");
     });
 
@@ -86,7 +86,7 @@ describe("calculateReferralFeeLamports", () => {
             },
         };
 
-        expect(() => calculateReferralFeeLamports(quote)).toThrow(
+        expect(() => calculateReferralFeeAmount(quote)).toThrow(
             /Invalid from_value provided/
         );
     });

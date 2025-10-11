@@ -2,7 +2,7 @@ import { Chain, Quote } from "@gemwallet/types";
 import { BN } from "@coral-xyz/anchor";
 
 import {
-    calculateReferralFeeLamports,
+    calculateReferralFeeAmount,
     bnToNumberSafe,
     BASIS_POINTS_DENOMINATOR,
     MAX_SAFE_NUMBER_BN,
@@ -39,18 +39,18 @@ describe("fee helpers", () => {
         const quote = buildQuote("100000", 25);
         const expected = new BN("100000").muln(25).divn(BASIS_POINTS_DENOMINATOR);
 
-        const result = calculateReferralFeeLamports(quote);
+        const result = calculateReferralFeeAmount(quote);
         expect(result.toString()).toBe(expected.toString());
     });
 
     it("returns zero when referral bps is not set", () => {
         const quote = buildQuote("100000", 0);
-        expect(calculateReferralFeeLamports(quote).isZero()).toBe(true);
+        expect(calculateReferralFeeAmount(quote).isZero()).toBe(true);
     });
 
     it("throws when from_value is invalid", () => {
         const quote = buildQuote("invalid", 10);
-        expect(() => calculateReferralFeeLamports(quote)).toThrow(/Invalid from_value/);
+        expect(() => calculateReferralFeeAmount(quote)).toThrow(/Invalid from_value/);
     });
 
     it("converts BN to number within safe range", () => {

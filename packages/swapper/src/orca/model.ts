@@ -46,8 +46,6 @@ export function isOrcaRouteData(value: unknown): value is OrcaSwapRouteData {
     }
 
     if (
-        candidate.tokenMintA === undefined ||
-        candidate.tokenMintB === undefined ||
         typeof candidate.tokenMintA !== "string" ||
         typeof candidate.tokenMintB !== "string"
     ) {
