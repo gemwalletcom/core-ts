@@ -28,7 +28,7 @@
 - Run focused tests with `pnpm --filter <pkg> test`.
 
 ## Architecture Overview
-- Providers implemented today: `stonfi_v2`, `mayan`, `symbiosis`, `cetus`, `relay`.
+- Providers implemented today: `stonfi_v2`, `mayan`, `cetus`, `relay`, `orca`.
 - API endpoints: `GET /` (providers, version), `POST /:providerId/quote`, `POST /:providerId/quote_data`.
 - Keep provider interface consistent for quotes and transaction building.
 
@@ -38,7 +38,7 @@
 - Must pass `pnpm build` and `pnpm test`; do not commit `dist/`.
 
 ## Security & Configuration Tips
-- Configure via env vars used by API/providers: `PORT`, `TRON_URL`, `SOLANA_URL`, `SUI_URL`, `TON_URL`.
+- Configure via env vars used by API/providers: `PORT`, `SOLANA_URL`, `SUI_URL`, `TON_URL`.
 - Never commit secrets; use local `.env`. Add/update an `.env.example` when introducing new vars.
 
 ## Agent‑Specific Instructions (all code agents)

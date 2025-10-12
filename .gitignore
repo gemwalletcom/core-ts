@@ -57,3 +57,5 @@ Thumbs.db
 dump.rdb
 heapdump*.heapsnapshot
 
+
+.claude/

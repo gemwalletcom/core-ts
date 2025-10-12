@@ -12,18 +12,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@gemwallet/types": "workspace:*",
-    "@types/bn.js": "5.1.6",
-    "@mayanfinance/swap-sdk": "10.9.2",
     "@cetusprotocol/aggregator-sdk": "1.2.0",
-    "bn.js": "5.2.1",
+    "@coral-xyz/anchor": "0.29.0",
+    "@gemwallet/types": "workspace:*",
+    "@mayanfinance/swap-sdk": "10.9.2",
     "@mysten/sui": "1.35.0",
+    "@orca-so/common-sdk": "0.6.11",
+    "@orca-so/whirlpools-sdk": "0.16.0",
+    "@solana/spl-token": "0.4.13",
     "@solana/web3.js": "1.98.0",
     "@ston-fi/api": "0.21.0",
     "@ston-fi/sdk": "2.3.0",
     "@ton/ton": "15.2.1",
-    "js-sha3": "0.9.3",
-    "tronweb": "6.0.3"
+    "@types/bn.js": "5.1.6",
+    "bn.js": "5.2.1",
+    "js-sha3": "0.9.3"
   },
   "files": [
     "dist"
