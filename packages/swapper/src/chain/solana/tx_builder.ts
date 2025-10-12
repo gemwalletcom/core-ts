@@ -7,20 +7,13 @@ import {
 } from "@solana/web3.js";
 
 export const DEFAULT_COMPUTE_UNIT_LIMIT = 420_000;
-export const DEFAULT_COMPUTE_UNIT_PRICE_MICRO_LAMPORTS = 50_000; // 0.00005 SOL per compute unit (fallback)
-export const PRIORITY_FEE_PERCENTILE = 75; // Use 75th percentile for higher priority
+export const DEFAULT_COMPUTE_UNIT_PRICE_MICRO_LAMPORTS = 50_000;
+export const PRIORITY_FEE_PERCENTILE = 75;
 
-/**
- * Get recent blockhash for transaction building
- */
 export async function getRecentBlockhash(connection: Connection, commitment?: "confirmed" | "finalized") {
     return await connection.getLatestBlockhash(commitment || "confirmed");
 }
 
-/**
- * Fetch recent priority fees from RPC and calculate recommended fee
- * Uses the median (50th percentile) of recent priority fees
- */
 export async function getRecentPriorityFee(connection: Connection): Promise<number> {
     try {
         const recentFees = await connection.getRecentPrioritizationFees();
@@ -29,7 +22,6 @@ export async function getRecentPriorityFee(connection: Connection): Promise<numb
             return DEFAULT_COMPUTE_UNIT_PRICE_MICRO_LAMPORTS;
         }
 
-        // Extract priority fees and sort them
         const fees = recentFees
             .map(fee => fee.prioritizationFee)
             .filter(fee => fee > 0)
@@ -42,10 +34,9 @@ export async function getRecentPriorityFee(connection: Connection): Promise<numb
         const medianIndex = Math.floor(fees.length * (PRIORITY_FEE_PERCENTILE / 100));
         const medianFee = fees[medianIndex];
 
-        // Add 20% buffer for better inclusion and ensure minimum
         const recommendedFee = Math.max(
             Math.ceil(medianFee * 1.2),
-            1000 // Minimum 1000 micro-lamports
+            1000
         );
 
         return recommendedFee;
@@ -55,27 +46,14 @@ export async function getRecentPriorityFee(connection: Connection): Promise<numb
     }
 }
 
-/**
- * Set compute unit limit instruction
- */
 export function createComputeUnitLimitInstruction(units: number): TransactionInstruction {
-    return ComputeBudgetProgram.setComputeUnitLimit({
-        units,
-    });
+    return ComputeBudgetProgram.setComputeUnitLimit({ units });
 }
 
-/**
- * Set compute unit price instruction (priority fee)
- */
 export function createComputeUnitPriceInstruction(microLamports: number): TransactionInstruction {
-    return ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports,
-    });
+    return ComputeBudgetProgram.setComputeUnitPrice({ microLamports });
 }
 
-/**
- * Add compute budget instructions to transaction
- */
 export function addComputeBudgetInstructions(
     instructions: TransactionInstruction[],
     computeUnitLimit: number = DEFAULT_COMPUTE_UNIT_LIMIT,
@@ -88,9 +66,6 @@ export function addComputeBudgetInstructions(
     ];
 }
 
-/**
- * Set recent blockhash on transaction
- */
 export function setTransactionBlockhash(
     transaction: VersionedTransaction | Transaction,
     blockhash: string,
@@ -104,9 +79,6 @@ export function setTransactionBlockhash(
     }
 }
 
-/**
- * Serialize transaction to base64
- */
 export function serializeTransaction(transaction: VersionedTransaction | Transaction): string {
     const serialized =
         transaction instanceof VersionedTransaction

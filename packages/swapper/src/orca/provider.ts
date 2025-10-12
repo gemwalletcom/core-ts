@@ -62,7 +62,6 @@ export class OrcaWhirlpoolProvider implements Protocol {
         this.connection = new Connection(this.solanaRpcEndpoint, {
             commitment: DEFAULT_COMMITMENT,
         });
-        // Create a custom fetcher with caching enabled
         this.fetcher = new WhirlpoolAccountFetcher(
             this.connection,
             new SimpleAccountFetcher(
@@ -87,7 +86,6 @@ export class OrcaWhirlpoolProvider implements Protocol {
         const toMint = this.getMintPublicKey(toAsset);
         const amountIn = this.parseAmount(quoteRequest.from_value);
 
-        // Calculate referral fee and deduct it from swap amount
         const referralBps = quoteRequest.referral_bps ?? 0;
         const referralFee = amountIn.muln(referralBps).divn(10_000);
         const swapAmount = amountIn.sub(referralFee);
@@ -165,13 +163,11 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const swapInput = this.buildSwapInput(route);
 
-        // Fetch swap transaction builder and priority fee in parallel
         const [txBuilder, priorityFee] = await Promise.all([
             whirlpool.swap(swapInput, userPublicKey),
             getRecentPriorityFee(this.connection),
         ]);
 
-        // Add compute budget instructions with dynamic priority fee
         const computeBudgetInstructions = addComputeBudgetInstructions([], undefined, priorityFee);
         txBuilder.prependInstruction({
             instructions: computeBudgetInstructions,
@@ -179,7 +175,6 @@ export class OrcaWhirlpoolProvider implements Protocol {
             signers: [],
         });
 
-        // Add referral fee transfer AFTER the swap (so fee is only charged if swap succeeds)
         const referralFeeLamports = calculateReferralFeeAmount(quote);
         if (!referralFeeLamports.isZero()) {
             const referrer = getReferrerAddresses().solana;
@@ -212,7 +207,6 @@ export class OrcaWhirlpoolProvider implements Protocol {
                     );
                 })();
 
-            // Append the referral transfer after the swap
             txBuilder.addInstruction({
                 instructions: [referralInstruction],
                 cleanupInstructions: [],
@@ -220,7 +214,6 @@ export class OrcaWhirlpoolProvider implements Protocol {
             });
         }
 
-        // Build transaction and fetch blockhash in parallel
         const [payload, { blockhash, lastValidBlockHeight }] = await Promise.all([
             txBuilder.build(),
             getRecentBlockhash(this.connection, DEFAULT_COMMITMENT),
@@ -228,10 +221,8 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const transaction = payload.transaction;
 
-        // Set the recent blockhash for the transaction
         setTransactionBlockhash(transaction, blockhash, lastValidBlockHeight);
 
-        // Sign with any signers returned by the builder (e.g., for token account creation)
         if (payload.signers && payload.signers.length > 0) {
             if (transaction instanceof Transaction) {
                 transaction.partialSign(...payload.signers);
@@ -240,7 +231,6 @@ export class OrcaWhirlpoolProvider implements Protocol {
             }
         }
 
-        // Serialize transaction
         const serialized = serializeTransaction(transaction);
 
         return {
@@ -281,7 +271,6 @@ export class OrcaWhirlpoolProvider implements Protocol {
         const cached = this.poolCache.get(cacheKey);
         if (cached) {
             const cachedAddress = new PublicKey(cached.poolAddress);
-            // Fetch pool data and whirlpool in parallel
             const [cachedData, cachedWhirlpool] = await Promise.all([
                 fetcher.getPool(cachedAddress, PREFER_CACHE),
                 client.getPool(cachedAddress, PREFER_CACHE),
