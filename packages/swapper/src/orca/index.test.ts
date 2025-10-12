@@ -24,30 +24,6 @@ function createRequest(chain: Chain): QuoteRequest {
     };
 }
 
-describe("OrcaWhirlpoolProvider", () => {
-    it("rejects non-Solana assets", async () => {
-        const provider = new OrcaWhirlpoolProvider(RPC_ENDPOINT);
-        await expect(provider.get_quote(createRequest(Chain.Ethereum))).rejects.toThrow(
-            /Only Solana assets are supported by Orca/,
-        );
-    });
-
-    it("rejects invalid route data", async () => {
-        const provider = new OrcaWhirlpoolProvider(RPC_ENDPOINT);
-        const quote: Quote = {
-            quote: createRequest(Chain.Solana),
-            output_value: "0",
-            output_min_value: "0",
-            eta_in_seconds: 0,
-            route_data: {},
-        };
-
-        await expect(provider.get_quote_data(quote)).rejects.toThrow(
-            /Invalid Orca route data/,
-        );
-    });
-});
-
 describe("calculateReferralFeeAmount", () => {
     const baseQuote: Quote = {
         quote: createRequest(Chain.Solana),

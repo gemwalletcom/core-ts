@@ -1,8 +1,5 @@
 export type OrcaSwapRouteData = {
     poolAddress: string;
-    tickSpacing: number;
-    tokenMintA: string;
-    tokenMintB: string;
     swap: {
         amount: string;
         otherAmountThreshold: string;
@@ -20,10 +17,7 @@ export function isOrcaRouteData(value: unknown): value is OrcaSwapRouteData {
     }
 
     const candidate = value as Partial<OrcaSwapRouteData>;
-    if (
-        typeof candidate.poolAddress !== "string" ||
-        typeof candidate.tickSpacing !== "number"
-    ) {
+    if (typeof candidate.poolAddress !== "string") {
         return false;
     }
 
@@ -41,13 +35,6 @@ export function isOrcaRouteData(value: unknown): value is OrcaSwapRouteData {
         !Array.isArray(swap.tickArrays) ||
         swap.tickArrays.length !== 3 ||
         swap.tickArrays.some((addr) => typeof addr !== "string")
-    ) {
-        return false;
-    }
-
-    if (
-        typeof candidate.tokenMintA !== "string" ||
-        typeof candidate.tokenMintB !== "string"
     ) {
         return false;
     }

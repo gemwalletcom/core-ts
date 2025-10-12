@@ -93,7 +93,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
         const context = this.createContext(PublicKey.default);
         const client = buildWhirlpoolClient(context);
 
-        const { whirlpool, data, tickSpacing } = await this.findBestPool(
+        const whirlpool = await this.findBestPool(
             client,
             fromMint,
             toMint,
@@ -114,9 +114,6 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const routeData: OrcaSwapRouteData = {
             poolAddress: whirlpool.getAddress().toBase58(),
-            tickSpacing,
-            tokenMintA: data.tokenMintA.toBase58(),
-            tokenMintB: data.tokenMintB.toBase58(),
             swap: {
                 amount: quote.amount.toString(),
                 otherAmountThreshold: quote.otherAmountThreshold.toString(),
@@ -258,7 +255,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
         client: WhirlpoolClient,
         mintA: PublicKey,
         mintB: PublicKey,
-    ): Promise<{ whirlpool: Whirlpool; data: WhirlpoolData; tickSpacing: number }> {
+    ): Promise<Whirlpool> {
         const [canonicalA, canonicalB] = PoolUtil.orderMints(
             mintA.toBase58(),
             mintB.toBase58(),
@@ -276,11 +273,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
                 client.getPool(cachedAddress, PREFER_CACHE),
             ]);
             if (cachedData && cachedData.liquidity.gt(new BN(0))) {
-                return {
-                    whirlpool: cachedWhirlpool,
-                    data: cachedData,
-                    tickSpacing: cached.tickSpacing,
-                };
+                return cachedWhirlpool;
             }
             this.poolCache.delete(cacheKey);
         }
@@ -334,11 +327,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
             tickSpacing: bestCandidate.info.tickSpacing,
         });
 
-        return {
-            whirlpool,
-            data: bestCandidate.data,
-            tickSpacing: bestCandidate.info.tickSpacing,
-        };
+        return whirlpool;
     }
 
     private parseAmount(value: string): BN {
