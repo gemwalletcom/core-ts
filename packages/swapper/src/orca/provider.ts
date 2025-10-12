@@ -58,13 +58,12 @@ export class OrcaWhirlpoolProvider implements Protocol {
             commitment: DEFAULT_COMMITMENT,
         });
         // Create a custom fetcher with caching enabled
-        const simpleFetcher = new SimpleAccountFetcher(
-            this.connection,
-            DEFAULT_WHIRLPOOL_RETENTION_POLICY,
-        );
         this.fetcher = new WhirlpoolAccountFetcher(
             this.connection,
-            simpleFetcher,
+            new SimpleAccountFetcher(
+                this.connection,
+                DEFAULT_WHIRLPOOL_RETENTION_POLICY,
+            ),
         );
     }
 
@@ -166,27 +165,27 @@ export class OrcaWhirlpoolProvider implements Protocol {
             const fromAsset = AssetId.fromString(quote.quote.from_asset.id);
             const referralInstruction = fromAsset.isNative()
                 ? SystemProgram.transfer({
-                      fromPubkey: userPublicKey,
-                      toPubkey: new PublicKey(referrer),
-                      lamports: bnToNumberSafe(referralFeeLamports),
-                  })
+                    fromPubkey: userPublicKey,
+                    toPubkey: new PublicKey(referrer),
+                    lamports: bnToNumberSafe(referralFeeLamports),
+                })
                 : (() => {
-                      const fromMint = this.getMintPublicKey(fromAsset);
-                      const userTokenAccount = getAssociatedTokenAddressSync(
-                          fromMint,
-                          userPublicKey,
-                      );
-                      const referrerTokenAccount = getAssociatedTokenAddressSync(
-                          fromMint,
-                          new PublicKey(referrer),
-                      );
-                      return createTransferInstruction(
-                          userTokenAccount,
-                          referrerTokenAccount,
-                          userPublicKey,
-                          bnToNumberSafe(referralFeeLamports),
-                      );
-                  })();
+                    const fromMint = this.getMintPublicKey(fromAsset);
+                    const userTokenAccount = getAssociatedTokenAddressSync(
+                        fromMint,
+                        userPublicKey,
+                    );
+                    const referrerTokenAccount = getAssociatedTokenAddressSync(
+                        fromMint,
+                        new PublicKey(referrer),
+                    );
+                    return createTransferInstruction(
+                        userTokenAccount,
+                        referrerTokenAccount,
+                        userPublicKey,
+                        bnToNumberSafe(referralFeeLamports),
+                    );
+                })();
 
             // Pay the referral before executing the swap.
             txBuilder.prependInstruction({
@@ -196,15 +195,28 @@ export class OrcaWhirlpoolProvider implements Protocol {
             });
         }
 
-        const payload = await txBuilder.build();
+        // Build transaction and fetch blockhash in parallel
+        const [payload, { blockhash, lastValidBlockHeight }] = await Promise.all([
+            txBuilder.build(),
+            this.connection.getLatestBlockhash(DEFAULT_COMMITMENT),
+        ]);
+
         const transaction = payload.transaction;
+
+        // Set the recent blockhash for the transaction
+        if (transaction instanceof VersionedTransaction) {
+            transaction.message.recentBlockhash = blockhash;
+        } else {
+            transaction.recentBlockhash = blockhash;
+            transaction.lastValidBlockHeight = lastValidBlockHeight;
+        }
 
         const serialized =
             transaction instanceof VersionedTransaction
                 ? transaction.serialize()
                 : transaction.serialize({
-                      requireAllSignatures: false,
-                  });
+                    requireAllSignatures: false,
+                });
 
         return {
             to: "",
@@ -244,15 +256,12 @@ export class OrcaWhirlpoolProvider implements Protocol {
         const cached = this.poolCache.get(cacheKey);
         if (cached) {
             const cachedAddress = new PublicKey(cached.poolAddress);
-            const cachedData = await fetcher.getPool(
-                cachedAddress,
-                PREFER_CACHE,
-            );
+            // Fetch pool data and whirlpool in parallel
+            const [cachedData, cachedWhirlpool] = await Promise.all([
+                fetcher.getPool(cachedAddress, PREFER_CACHE),
+                client.getPool(cachedAddress, PREFER_CACHE),
+            ]);
             if (cachedData && cachedData.liquidity.gt(new BN(0))) {
-                const cachedWhirlpool = await client.getPool(
-                    cachedAddress,
-                    PREFER_CACHE,
-                );
                 return {
                     whirlpool: cachedWhirlpool,
                     data: cachedData,
