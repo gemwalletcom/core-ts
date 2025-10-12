@@ -86,6 +86,12 @@ export class OrcaWhirlpoolProvider implements Protocol {
         const fromMint = this.getMintPublicKey(fromAsset);
         const toMint = this.getMintPublicKey(toAsset);
         const amountIn = this.parseAmount(quoteRequest.from_value);
+
+        // Calculate referral fee and deduct it from swap amount
+        const referralBps = quoteRequest.referral_bps ?? 0;
+        const referralFee = amountIn.muln(referralBps).divn(10_000);
+        const swapAmount = amountIn.sub(referralFee);
+
         const context = this.createContext(PublicKey.default);
         const client = buildWhirlpoolClient(context);
 
@@ -102,7 +108,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
         const quote = await swapQuoteByInputTokenWithFallback(
             whirlpool,
             fromMint,
-            amountIn,
+            swapAmount,
             slippage,
             this.programId,
             client.getFetcher(),
@@ -173,6 +179,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
             signers: [],
         });
 
+        // Add referral fee transfer AFTER the swap (so fee is only charged if swap succeeds)
         const referralFeeLamports = calculateReferralFeeAmount(quote);
         if (!referralFeeLamports.isZero()) {
             const referrer = getReferrerAddresses().solana;
@@ -205,8 +212,8 @@ export class OrcaWhirlpoolProvider implements Protocol {
                     );
                 })();
 
-            // Pay the referral before executing the swap.
-            txBuilder.prependInstruction({
+            // Append the referral transfer after the swap
+            txBuilder.addInstruction({
                 instructions: [referralInstruction],
                 cleanupInstructions: [],
                 signers: [],
