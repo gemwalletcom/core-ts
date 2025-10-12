@@ -6,7 +6,7 @@ const runIntegration = process.env.ORCA_INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
 
 const SOLANA_MAINNET_RPC =
-    process.env.ORCA_SOLANA_RPC || "https://solana-rpc.publicnode.com";
+    process.env.SOLANA_RPC || "https://solana-rpc.publicnode.com";
 
 const WALLET_ADDRESS = "A21o4asMbFHYadqXdLusT9Bvx9xaC5YV9gcaidjqtdXC";
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";

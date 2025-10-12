@@ -1,16 +1,17 @@
 import { AnchorProvider, BN } from "@coral-xyz/anchor";
-import { Percentage, ReadOnlyWallet } from "@orca-so/common-sdk";
+import { Percentage, ReadOnlyWallet, SimpleAccountFetcher } from "@orca-so/common-sdk";
 import {
-    buildDefaultAccountFetcher,
     buildWhirlpoolClient,
-    IGNORE_CACHE,
+    DEFAULT_WHIRLPOOL_RETENTION_POLICY,
     ORCA_SUPPORTED_TICK_SPACINGS,
     ORCA_WHIRLPOOL_PROGRAM_ID,
     ORCA_WHIRLPOOLS_CONFIG,
     PDAUtil,
     PoolUtil,
+    PREFER_CACHE,
     UseFallbackTickArray,
     Whirlpool,
+    WhirlpoolAccountFetcher,
     WhirlpoolAccountFetcherInterface,
     WhirlpoolClient,
     WhirlpoolContext,
@@ -21,7 +22,6 @@ import {
     Connection,
     PublicKey,
     SystemProgram,
-    TransactionInstruction,
     VersionedTransaction,
 } from "@solana/web3.js";
 import { NATIVE_MINT, createTransferInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
@@ -57,7 +57,15 @@ export class OrcaWhirlpoolProvider implements Protocol {
         this.connection = new Connection(this.solanaRpcEndpoint, {
             commitment: DEFAULT_COMMITMENT,
         });
-        this.fetcher = buildDefaultAccountFetcher(this.connection);
+        // Create a custom fetcher with caching enabled
+        const simpleFetcher = new SimpleAccountFetcher(
+            this.connection,
+            DEFAULT_WHIRLPOOL_RETENTION_POLICY,
+        );
+        this.fetcher = new WhirlpoolAccountFetcher(
+            this.connection,
+            simpleFetcher,
+        );
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
@@ -143,7 +151,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
         const context = this.createContext(userPublicKey);
         const client = buildWhirlpoolClient(context);
         const poolAddress = new PublicKey(route.poolAddress);
-        const whirlpool = await client.getPool(poolAddress, IGNORE_CACHE);
+        const whirlpool = await client.getPool(poolAddress, PREFER_CACHE);
 
         const swapInput = this.buildSwapInput(route);
         const txBuilder = await whirlpool.swap(swapInput, userPublicKey);
@@ -238,12 +246,12 @@ export class OrcaWhirlpoolProvider implements Protocol {
             const cachedAddress = new PublicKey(cached.poolAddress);
             const cachedData = await fetcher.getPool(
                 cachedAddress,
-                IGNORE_CACHE,
+                PREFER_CACHE,
             );
             if (cachedData && cachedData.liquidity.gt(new BN(0))) {
                 const cachedWhirlpool = await client.getPool(
                     cachedAddress,
-                    IGNORE_CACHE,
+                    PREFER_CACHE,
                 );
                 return {
                     whirlpool: cachedWhirlpool,
@@ -274,7 +282,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const poolsMap = await fetcher.getPools(
             candidateInfos.map((candidate) => candidate.address),
-            IGNORE_CACHE,
+            PREFER_CACHE,
         );
 
         for (const candidate of candidateInfos) {
@@ -295,7 +303,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const whirlpool = await client.getPool(
             bestCandidate.info.address,
-            IGNORE_CACHE,
+            PREFER_CACHE,
         );
 
         this.poolCache.set(cacheKey, {
@@ -382,7 +390,7 @@ async function swapQuoteByInputTokenWithFallback(
             slippageTolerance,
             programId,
             fetcher,
-            IGNORE_CACHE,
+            PREFER_CACHE,
             UseFallbackTickArray.Situational,
         );
     } catch (error) {
