@@ -2,6 +2,13 @@ import { QuoteRequest, QuoteData } from "@gemwallet/types";
 import { Quote as MayanQuote, ReferrerAddresses, createSwapFromSolanaInstructions } from "@mayanfinance/swap-sdk";
 import { Connection, MessageV0, PublicKey, VersionedTransaction } from "@solana/web3.js";
 import { getReferrerAddresses } from "../referrer";
+import {
+    getRecentBlockhash,
+    serializeTransaction,
+    addComputeBudgetInstructions,
+    getRecentPriorityFee,
+} from "../chain/solana/tx_builder";
+import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 
 export async function buildSolanaQuoteData(request: QuoteRequest, routeData: MayanQuote, rpcEndpoint: string): Promise<QuoteData> {
     const connection = new Connection(rpcEndpoint);
@@ -17,7 +24,7 @@ export async function buildSolanaQuoteData(request: QuoteRequest, routeData: May
     return {
         to: "",
         value: "0",
-        data: Buffer.from(serializedTrx).toString("base64"),
+        data: serializedTrx,
     };
 }
 
@@ -28,7 +35,7 @@ async function prepareSolanaSwapTransaction(
     referrerAddresses: ReferrerAddresses,
     connection: Connection,
 ): Promise<{
-    serializedTrx: Uint8Array,
+    serializedTrx: string,
     additionalInfo: {
         blockhash: string,
         lastValidBlockHeight: number,
@@ -36,17 +43,18 @@ async function prepareSolanaSwapTransaction(
         feePayer: string,
     }
 }> {
-    // Fetch instructions and blockhash in parallel
-    const [swapData, { blockhash, lastValidBlockHeight }] = await Promise.all([
+    // Fetch instructions, blockhash, and priority fee in parallel
+    const [swapData, { blockhash, lastValidBlockHeight }, priorityFee] = await Promise.all([
         createSwapFromSolanaInstructions(
             quote, swapperWalletAddress, destinationAddress,
             referrerAddresses, connection, {
             separateSwapTx: false,
         }),
-        connection.getLatestBlockhash(),
+        getRecentBlockhash(connection, DEFAULT_COMMITMENT),
+        getRecentPriorityFee(connection),
     ]);
 
-    const { instructions, signers, lookupTables } = swapData;
+    let { instructions, signers, lookupTables } = swapData;
 
     if (quote.gasless) {
         throw new Error("Gasless swaps are not currently supported");
@@ -65,7 +73,7 @@ async function prepareSolanaSwapTransaction(
     const transaction = new VersionedTransaction(message);
     transaction.sign(signers);
 
-    const serializedTrx = transaction.serialize();
+    const serializedTrx = serializeTransaction(transaction);
 
     return {
         serializedTrx,

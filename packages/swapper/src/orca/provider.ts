@@ -22,9 +22,9 @@ import {
     Connection,
     PublicKey,
     SystemProgram,
-    VersionedTransaction,
+    Transaction,
 } from "@solana/web3.js";
-import { NATIVE_MINT, createTransferInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { createTransferInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
 
 import {
     AssetId,
@@ -37,14 +37,19 @@ import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
 import { OrcaSwapRouteData, isOrcaRouteData } from "./model";
 import { calculateReferralFeeAmount, bnToNumberSafe } from "./fee";
+import {
+    getRecentBlockhash,
+    setTransactionBlockhash,
+    serializeTransaction,
+    addComputeBudgetInstructions,
+    getRecentPriorityFee,
+} from "../chain/solana/tx_builder";
+import { DEFAULT_COMMITMENT, WSOL_MINT } from "../chain/solana/constants";
 
 type CachedPool = {
     poolAddress: string;
     tickSpacing: number;
 };
-
-const DEFAULT_COMMITMENT: "confirmed" = "confirmed";
-const WSOL_MINT = NATIVE_MINT;
 
 export class OrcaWhirlpoolProvider implements Protocol {
     private readonly connection: Connection;
@@ -153,7 +158,20 @@ export class OrcaWhirlpoolProvider implements Protocol {
         const whirlpool = await client.getPool(poolAddress, PREFER_CACHE);
 
         const swapInput = this.buildSwapInput(route);
-        const txBuilder = await whirlpool.swap(swapInput, userPublicKey);
+
+        // Fetch swap transaction builder and priority fee in parallel
+        const [txBuilder, priorityFee] = await Promise.all([
+            whirlpool.swap(swapInput, userPublicKey),
+            getRecentPriorityFee(this.connection),
+        ]);
+
+        // Add compute budget instructions with dynamic priority fee
+        const computeBudgetInstructions = addComputeBudgetInstructions([], undefined, priorityFee);
+        txBuilder.prependInstruction({
+            instructions: computeBudgetInstructions,
+            cleanupInstructions: [],
+            signers: [],
+        });
 
         const referralFeeLamports = calculateReferralFeeAmount(quote);
         if (!referralFeeLamports.isZero()) {
@@ -198,30 +216,30 @@ export class OrcaWhirlpoolProvider implements Protocol {
         // Build transaction and fetch blockhash in parallel
         const [payload, { blockhash, lastValidBlockHeight }] = await Promise.all([
             txBuilder.build(),
-            this.connection.getLatestBlockhash(DEFAULT_COMMITMENT),
+            getRecentBlockhash(this.connection, DEFAULT_COMMITMENT),
         ]);
 
         const transaction = payload.transaction;
 
         // Set the recent blockhash for the transaction
-        if (transaction instanceof VersionedTransaction) {
-            transaction.message.recentBlockhash = blockhash;
-        } else {
-            transaction.recentBlockhash = blockhash;
-            transaction.lastValidBlockHeight = lastValidBlockHeight;
+        setTransactionBlockhash(transaction, blockhash, lastValidBlockHeight);
+
+        // Sign with any signers returned by the builder (e.g., for token account creation)
+        if (payload.signers && payload.signers.length > 0) {
+            if (transaction instanceof Transaction) {
+                transaction.partialSign(...payload.signers);
+            } else {
+                transaction.sign(payload.signers);
+            }
         }
 
-        const serialized =
-            transaction instanceof VersionedTransaction
-                ? transaction.serialize()
-                : transaction.serialize({
-                    requireAllSignatures: false,
-                });
+        // Serialize transaction
+        const serialized = serializeTransaction(transaction);
 
         return {
             to: "",
             value: "0",
-            data: Buffer.from(serialized).toString("base64"),
+            data: serialized,
         };
     }
 
