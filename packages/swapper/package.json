@@ -12,10 +12,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@cetusprotocol/aggregator-sdk": "1.2.0",
+    "@cetusprotocol/aggregator-sdk": "1.2.1",
     "@coral-xyz/anchor": "0.29.0",
     "@gemwallet/types": "workspace:*",
-    "@mayanfinance/swap-sdk": "10.9.2",
+    "@mayanfinance/swap-sdk": "11.2.0",
     "@mysten/sui": "1.35.0",
     "@orca-so/common-sdk": "0.6.11",
     "@orca-so/whirlpools-sdk": "0.16.0",
