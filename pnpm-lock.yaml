@@ -52,8 +52,8 @@ importers:
   packages/swapper:
     dependencies:
       '@cetusprotocol/aggregator-sdk':
-        specifier: 1.2.0
-        version: 1.2.0(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)
+        specifier: 1.2.1
+        version: 1.2.1(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)
       '@coral-xyz/anchor':
         specifier: 0.29.0
         version: 0.29.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -61,8 +61,8 @@ importers:
         specifier: workspace:*
         version: link:../types
       '@mayanfinance/swap-sdk':
-        specifier: 10.9.2
-        version: 10.9.2(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)
+        specifier: 11.2.0
+        version: 11.2.0(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)
       '@mysten/sui':
         specifier: 1.35.0
         version: 1.35.0(typescript@5.9.2)
@@ -291,8 +291,8 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@cetusprotocol/aggregator-sdk@1.2.0':
-    resolution: {integrity: sha512-Z1fy9rgXYgaO6jShUSivIjkDjcJSx7UVBEhJsZSTBSQ96hLhbXNwo/Tglq3FOArO4NrES/zTbwnCnQyxWNu8ig==}
+  '@cetusprotocol/aggregator-sdk@1.2.1':
+    resolution: {integrity: sha512-jfFNO2kF5Y9gDP4QT75GJ5qTOMIVkOMzm/XA5kPRGXr83FyQLDzehgFt8M7TjRD6Y1/50kGpG9dMibA+XBJwuw==}
     peerDependencies:
       typescript: ^5.8.2
 
@@ -431,8 +431,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@mayanfinance/swap-sdk@10.9.2':
-    resolution: {integrity: sha512-h7FpLOnZ4qlJPnz1CZkzTtfe0Y1tcNjU62M1Y9h/uDwAHJBlnORzjVo48kMMrNLE7MySttK1Cc2YQj3+8o4H/Q==}
+  '@mayanfinance/swap-sdk@11.2.0':
+    resolution: {integrity: sha512-LYcTTUJgNJtLcRvc2zUy6SCiJl1QmYlCQIo/nYo6ecfFpFJKneQx/7r/LNeimozdS5RZAdcFFmwA6VjrxCFywQ==}
 
   '@mysten/bcs@1.6.3':
     resolution: {integrity: sha512-QQ6u0U7a4+/o6rZ9tALTeGYMdf6V5z/HkRI/mhD5/fSr80DJoGzOWpFszcN/fhJpKb36vBaSQUMpS7yNQ10xBQ==}
@@ -1588,9 +1588,6 @@ packages:
       node-notifier:
         optional: true
 
-  js-sha256@0.9.0:
-    resolution: {integrity: sha512-sga3MHh9sgQN2+pJ9VYZ+1LPwXOxuBJBA5nrR5/ofPfuiJBE2hnjsaN8se8JznOmGLN2p49Pe5U/ttafcs/apA==}
-
   js-sha3@0.8.0:
     resolution: {integrity: sha512-gF1cRrHhIzNfToc802P800N8PpXS+evLLXfsVpowqmAFR9uwbi89WvXg2QspOmXL8QL86J4T1EpFu+yUkwJY3Q==}
 
@@ -2572,7 +2569,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@cetusprotocol/aggregator-sdk@1.2.0(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)':
+  '@cetusprotocol/aggregator-sdk@1.2.1(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)':
     dependencies:
       '@mysten/sui': 1.35.0(typescript@5.9.2)
       '@pythnetwork/pyth-sui-js': 2.2.0(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)
@@ -2834,15 +2831,15 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@mayanfinance/swap-sdk@10.9.2(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)':
+  '@mayanfinance/swap-sdk@11.2.0(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)':
     dependencies:
       '@mysten/sui': 1.35.0(typescript@5.9.2)
+      '@noble/hashes': 1.8.0
       '@solana/buffer-layout': 4.0.1
       '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       bs58: 6.0.0
       cross-fetch: 3.2.0
       ethers: 6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      js-sha256: 0.9.0
       js-sha3: 0.8.0
     transitivePeerDependencies:
       - '@gql.tada/svelte-support'
@@ -4373,8 +4370,6 @@ snapshots:
       - babel-plugin-macros
       - supports-color
       - ts-node
-
-  js-sha256@0.9.0: {}
 
   js-sha3@0.8.0: {}
 
