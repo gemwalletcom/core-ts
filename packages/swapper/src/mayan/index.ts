@@ -33,6 +33,8 @@ export class MayanProvider implements Protocol {
                 return "bsc";
             case Chain.AvalancheC:
                 return "avalanche" as ChainName;
+            case Chain.Hyperliquid:
+                return "hyperevm" as ChainName;
             default:
                 return chain as ChainName;
         }
