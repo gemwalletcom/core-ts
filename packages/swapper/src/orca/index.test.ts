@@ -1,7 +1,7 @@
 import { Chain, Quote } from "@gemwallet/types";
 
 import { calculateReferralFeeAmount } from "./index";
-import { buildQuoteFixture } from "./test-utils";
+import { buildQuoteFixture } from "./testkit";
 
 describe("calculateReferralFeeAmount", () => {
     const baseQuote = buildQuoteFixture({

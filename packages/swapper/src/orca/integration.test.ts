@@ -1,7 +1,7 @@
 import { Chain, QuoteRequest } from "@gemwallet/types";
 
 import { OrcaWhirlpoolProvider } from "./provider";
-import { createQuoteRequest } from "./test-utils";
+import { createQuoteRequest } from "./testkit";
 
 const runIntegration = process.env.ORCA_INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;

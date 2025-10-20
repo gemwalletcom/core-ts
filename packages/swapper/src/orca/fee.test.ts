@@ -7,7 +7,7 @@ import {
     BASIS_POINTS_DENOMINATOR,
     MAX_SAFE_NUMBER_BN,
 } from "./fee";
-import { buildQuoteFixture } from "./test-utils";
+import { buildQuoteFixture } from "./testkit";
 
 const buildQuote = (fromValue: string, referralBps: number): Quote =>
     buildQuoteFixture({ from_value: fromValue, referral_bps: referralBps });
