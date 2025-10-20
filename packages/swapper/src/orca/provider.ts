@@ -26,13 +26,7 @@ import {
 } from "@solana/web3.js";
 import { createTransferInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
 
-import {
-    AssetId,
-    Chain,
-    Quote,
-    QuoteData,
-    QuoteRequest,
-} from "@gemwallet/types";
+import { AssetId, Chain, Quote, SwapQuoteData, QuoteRequest, SwapQuoteDataType } from "@gemwallet/types";
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
 import { OrcaSwapRouteData, isOrcaRouteData } from "./model";
@@ -140,7 +134,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
         };
     }
 
-    async get_quote_data(quote: Quote): Promise<QuoteData> {
+    async get_quote_data(quote: Quote): Promise<SwapQuoteData> {
         if (!isOrcaRouteData(quote.route_data)) {
             throw new Error("Invalid Orca route data");
         }
@@ -234,6 +228,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
             to: "",
             value: "0",
             data: serialized,
+            dataType: SwapQuoteDataType.Contract,
         };
     }
 

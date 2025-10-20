@@ -30,10 +30,20 @@ docker-run:
 
 generate:
     #!/bin/bash
-    # check if core folder exists
+    set -euo pipefail
     if [ ! -d "../core" ]; then
         echo "core folder not found"
         exit 1
     fi
-    typeshare --lang=typescript --output-file=packages/types/src/primitives.ts --config-file=../core/typeshare.toml ../core/crates/primitives 1>/dev/null 2>&1
-    
+
+    TMP_DIR="$(mktemp -d)"
+    cleanup() {
+        rm -rf "${TMP_DIR}"
+    }
+    trap cleanup EXIT
+
+    (cd ../core && cargo run --package generate --bin generate web "${TMP_DIR}" 1>/dev/null)
+
+    OUTPUT_DIR="packages/types/src/primitives"
+    rm -f packages/types/src/primitives.ts
+    python3 scripts/prepare_typeshare.py "${TMP_DIR}" "${OUTPUT_DIR}"

@@ -1,6 +1,7 @@
 import { Chain, QuoteRequest } from "@gemwallet/types";
 
 import { OrcaWhirlpoolProvider } from "./provider";
+import { createQuoteRequest } from "./testkit";
 
 const runIntegration = process.env.ORCA_INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
@@ -11,7 +12,7 @@ const SOLANA_MAINNET_RPC =
 const WALLET_ADDRESS = "A21o4asMbFHYadqXdLusT9Bvx9xaC5YV9gcaidjqtdXC";
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 
-const REQUEST_TEMPLATE: QuoteRequest = {
+const REQUEST_TEMPLATE: QuoteRequest = createQuoteRequest({
     from_address: WALLET_ADDRESS,
     to_address: WALLET_ADDRESS,
     from_asset: {
@@ -27,7 +28,7 @@ const REQUEST_TEMPLATE: QuoteRequest = {
     from_value: "1000000000",
     referral_bps: 50,
     slippage_bps: 100,
-};
+});
 
 describeIntegration("Orca live integration", () => {
     jest.setTimeout(60_000);

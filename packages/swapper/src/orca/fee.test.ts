@@ -1,4 +1,4 @@
-import { Chain, Quote } from "@gemwallet/types";
+import { Quote } from "@gemwallet/types";
 import { BN } from "@coral-xyz/anchor";
 
 import {
@@ -7,32 +7,10 @@ import {
     BASIS_POINTS_DENOMINATOR,
     MAX_SAFE_NUMBER_BN,
 } from "./fee";
+import { buildQuoteFixture } from "./testkit";
 
-function buildQuote(fromValue: string, referralBps: number): Quote {
-    return {
-        quote: {
-            from_address: "ref-test-from",
-            to_address: "ref-test-to",
-            from_asset: {
-                id: Chain.Solana,
-                symbol: "SOL",
-                decimals: 9,
-            },
-            to_asset: {
-                id: Chain.Solana,
-                symbol: "USDC",
-                decimals: 6,
-            },
-            from_value: fromValue,
-            referral_bps: referralBps,
-            slippage_bps: 100,
-        },
-        output_value: "0",
-        output_min_value: "0",
-        eta_in_seconds: 0,
-        route_data: {},
-    };
-}
+const buildQuote = (fromValue: string, referralBps: number): Quote =>
+    buildQuoteFixture({ from_value: fromValue, referral_bps: referralBps });
 
 describe("fee helpers", () => {
     it("computes referral fee using basis points", () => {

@@ -1,4 +1,4 @@
-import { QuoteRequest, QuoteData } from "@gemwallet/types";
+import { QuoteRequest, SwapQuoteData, SwapQuoteDataType } from "@gemwallet/types";
 import { Quote as MayanQuote, ReferrerAddresses, createSwapFromSolanaInstructions } from "@mayanfinance/swap-sdk";
 import { Connection, MessageV0, PublicKey, VersionedTransaction } from "@solana/web3.js";
 import { getReferrerAddresses } from "../referrer";
@@ -10,7 +10,7 @@ import {
 } from "../chain/solana/tx_builder";
 import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 
-export async function buildSolanaQuoteData(request: QuoteRequest, routeData: MayanQuote, rpcEndpoint: string): Promise<QuoteData> {
+export async function buildSolanaQuoteData(request: QuoteRequest, routeData: MayanQuote, rpcEndpoint: string): Promise<SwapQuoteData> {
     const connection = new Connection(rpcEndpoint);
     const referrerAddresses = getReferrerAddresses() as ReferrerAddresses;
     const { serializedTrx } = await prepareSolanaSwapTransaction(
@@ -25,6 +25,7 @@ export async function buildSolanaQuoteData(request: QuoteRequest, routeData: May
         to: "",
         value: "0",
         data: serializedTrx,
+        dataType: SwapQuoteDataType.Contract,
     };
 }
 
