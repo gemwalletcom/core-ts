@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@cetusprotocol/aggregator-sdk": "1.2.1",
+    "@cetusprotocol/aggregator-sdk": "1.4.0",
     "@coral-xyz/anchor": "0.29.0",
     "@gemwallet/types": "workspace:*",
     "@mayanfinance/swap-sdk": "11.2.0",
