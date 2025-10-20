@@ -24,7 +24,6 @@ export function createQuoteRequest(overrides: Partial<QuoteRequest> = {}): Quote
         from_value: "1",
         referral_bps: 0,
         slippage_bps: 100,
-        use_max_amount: false,
     };
 
     return {
