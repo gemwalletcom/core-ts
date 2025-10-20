@@ -1,11 +1,11 @@
-import { QuoteData, QuoteRequest } from "@gemwallet/types";
+import { SwapQuoteData, QuoteRequest, SwapQuoteDataType } from "@gemwallet/types";
 import { Quote as MayanQuote, ReferrerAddresses, createSwapFromSuiMoveCalls } from "@mayanfinance/swap-sdk";
 import { SuiClient } from "@mysten/sui/client";
 import { getReferrerAddresses } from "../referrer";
 import { SUI_COIN_TYPE } from "../chain/sui/constants";
 import { calculateGasBudget, prefillTransaction, getGasPriceAndCoinRefs } from "../chain/sui/tx_builder";
 
-export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQuote, suiRpc: string): Promise<QuoteData> {
+export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQuote, suiRpc: string): Promise<SwapQuoteData> {
     const referrerAddresses = getReferrerAddresses() as ReferrerAddresses;
     const suiClient = new SuiClient({ url: suiRpc });
 
@@ -43,6 +43,7 @@ export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQ
             to: "",
             value: "0",
             data: Buffer.from(serializedTx).toString("base64"),
+            dataType: SwapQuoteDataType.Contract,
             gasLimit: gasBudget.toString(10)
         };
     } catch (error) {

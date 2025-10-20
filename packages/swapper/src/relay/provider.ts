@@ -1,8 +1,7 @@
 import { Protocol } from '../protocol';
-import { QuoteRequest, Quote, QuoteData, AssetId } from '@gemwallet/types';
+import { QuoteRequest, Quote, SwapQuoteData, AssetId, Chain, SwapQuoteDataType } from '@gemwallet/types';
 import { fetchQuote } from './client';
 import { RelayQuotePostBodyParams, RelayQuoteResponse, Step } from './model';
-import { Chain } from '@gemwallet/types';
 import { getReferrerAddresses } from '../referrer';
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -108,7 +107,7 @@ export class RelayProvider implements Protocol {
     };
   }
 
-  async get_quote_data(quote: Quote): Promise<QuoteData> {
+  async get_quote_data(quote: Quote): Promise<SwapQuoteData> {
     if (!quote.route_data || !Array.isArray(quote.route_data)) {
       throw new Error('RelayProvider: Invalid route_data structure');
     }
@@ -127,6 +126,7 @@ export class RelayProvider implements Protocol {
       to: txData.to,
       value: txData.value,
       data: txData.data,
+      dataType: SwapQuoteDataType.Contract,
     };
   }
 }

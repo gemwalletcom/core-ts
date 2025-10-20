@@ -1,15 +1,12 @@
-import { Chain, Quote, QuoteRequest } from "@gemwallet/types";
+import { Chain, Quote } from "@gemwallet/types";
 
-import { OrcaWhirlpoolProvider, calculateReferralFeeAmount } from "./index";
+import { calculateReferralFeeAmount } from "./index";
+import { buildQuoteFixture } from "./test-utils";
 
-const RPC_ENDPOINT = "https://example.invalid";
-
-function createRequest(chain: Chain): QuoteRequest {
-    return {
-        from_address: "A1testfromAddress1111111111111111111111111",
-        to_address: "A1testtoAddress11111111111111111111111111",
+describe("calculateReferralFeeAmount", () => {
+    const baseQuote = buildQuoteFixture({
         from_asset: {
-            id: chain,
+            id: Chain.Solana,
             symbol: "AAA",
             decimals: 9,
         },
@@ -18,20 +15,7 @@ function createRequest(chain: Chain): QuoteRequest {
             symbol: "SOL",
             decimals: 9,
         },
-        from_value: "1",
-        referral_bps: 0,
-        slippage_bps: 100,
-    };
-}
-
-describe("calculateReferralFeeAmount", () => {
-    const baseQuote: Quote = {
-        quote: createRequest(Chain.Solana),
-        output_value: "0",
-        output_min_value: "0",
-        eta_in_seconds: 0,
-        route_data: {},
-    };
+    });
 
     it("returns zero when referral_bps is zero", () => {
         const result = calculateReferralFeeAmount(baseQuote);
@@ -39,14 +23,12 @@ describe("calculateReferralFeeAmount", () => {
     });
 
     it("calculates fee amount using basis points", () => {
-        const quote: Quote = {
-            ...baseQuote,
-            quote: {
-                ...baseQuote.quote,
-                from_value: "1000000",
-                referral_bps: 50,
-            },
-        };
+        const quote = buildQuoteFixture({
+            from_asset: baseQuote.quote.from_asset,
+            to_asset: baseQuote.quote.to_asset,
+            from_value: "1000000",
+            referral_bps: 50,
+        });
 
         const result = calculateReferralFeeAmount(quote);
         expect(result.toString()).toBe("5000");

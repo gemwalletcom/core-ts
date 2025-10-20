@@ -1,4 +1,4 @@
-import { QuoteRequest, Quote, QuoteData, AssetId } from "@gemwallet/types";
+import { QuoteRequest, Quote, SwapQuoteData, AssetId, SwapQuoteDataType } from "@gemwallet/types";
 import { Protocol } from "../protocol";
 import { AggregatorClient, Env, RouterDataV3, BuildFastRouterSwapParamsV3, CETUS, DEEPBOOKV2, DEEPBOOKV3, BLUEFIN } from "@cetusprotocol/aggregator-sdk";
 import { SuiClient } from "@mysten/sui/client";
@@ -86,7 +86,7 @@ export class CetusAggregatorProvider implements Protocol {
         }
     }
 
-    async get_quote_data(quote: Quote): Promise<QuoteData> {
+    async get_quote_data(quote: Quote): Promise<SwapQuoteData> {
         const slippage_bps = quote.quote.slippage_bps;
         const routeDataString = (quote.route_data as { data: string }).data;
 
@@ -135,10 +135,11 @@ export class CetusAggregatorProvider implements Protocol {
             const serializedTx = await txb.build({ client: this.suiClient });
 
             // build quote data
-            const quoteData: QuoteData = {
+            const quoteData: SwapQuoteData = {
                 to: "",
                 value: "0",
                 data: Buffer.from(serializedTx).toString("base64"),
+                dataType: SwapQuoteDataType.Contract,
                 gasLimit: gasBudget.toString(10)
             };
 

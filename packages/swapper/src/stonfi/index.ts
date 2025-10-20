@@ -1,7 +1,7 @@
 import { TonClient } from "@ton/ton";
 import { DEX, pTON } from "@ston-fi/sdk";
 import { StonApiClient } from '@ston-fi/api';
-import { QuoteRequest, Quote, QuoteData, AssetId, Chain } from "@gemwallet/types";
+import { QuoteRequest, Quote, SwapQuoteData, AssetId, Chain, SwapQuoteDataType } from "@gemwallet/types";
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
 
@@ -51,7 +51,7 @@ export class StonfiProvider implements Protocol {
         }
     }
 
-    async get_quote_data(quote: Quote): Promise<QuoteData> {
+    async get_quote_data(quote: Quote): Promise<SwapQuoteData> {
         const fromAsset = AssetId.fromString(quote.quote.from_asset.id)
         const toAsset = AssetId.fromString(quote.quote.to_asset.id)
         const fromTokenAdddress = getTokenAddress(fromAsset)
@@ -121,7 +121,8 @@ export class StonfiProvider implements Protocol {
             return {
                 to: params.to.toString(),
                 value: params.value.toString(),
-                data: params.body.toBoc().toString('base64')
+                data: params.body.toBoc().toString('base64'),
+                dataType: SwapQuoteDataType.Contract,
             };
         } else if (toAsset.isNative()) {
             const params = await routerClient.getSwapJettonToTonTxParams({
@@ -141,7 +142,8 @@ export class StonfiProvider implements Protocol {
             return {
                 to: params.to.toString(),
                 value: params.value.toString(),
-                data: params.body.toBoc().toString('base64')
+                data: params.body.toBoc().toString('base64'),
+                dataType: SwapQuoteDataType.Contract,
             };
         } else {
             const params = await routerClient.getSwapJettonToJettonTxParams({
@@ -161,7 +163,8 @@ export class StonfiProvider implements Protocol {
             return {
                 to: params.to.toString(),
                 value: params.value.toString(),
-                data: params.body.toBoc().toString('base64')
+                data: params.body.toBoc().toString('base64'),
+                dataType: SwapQuoteDataType.Contract,
             };
         }
     }

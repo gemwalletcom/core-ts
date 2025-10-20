@@ -1,5 +1,5 @@
 import { fetchQuote, ChainName, QuoteParams, QuoteOptions, Quote as MayanQuote, ReferrerAddresses } from "@mayanfinance/swap-sdk";
-import { QuoteRequest, Quote, QuoteData, AssetId, Chain } from "@gemwallet/types";
+import { QuoteRequest, Quote, SwapQuoteData, AssetId, Chain } from "@gemwallet/types";
 import { Protocol } from "../protocol";
 import { buildEvmQuoteData, EMPTY_ADDRESS } from "./evm";
 import { buildSolanaQuoteData } from "./solana";
@@ -88,7 +88,7 @@ export class MayanProvider implements Protocol {
         };
     }
 
-    async get_quote_data(quote: Quote): Promise<QuoteData> {
+    async get_quote_data(quote: Quote): Promise<SwapQuoteData> {
         const fromAsset = AssetId.fromString(quote.quote.from_asset.id);
 
         if (fromAsset.chain === Chain.Solana) {
