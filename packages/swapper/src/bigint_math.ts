@@ -58,4 +58,16 @@ export class BigIntMath {
         const multiplier = BigInt(100 + percentage);
         return (value * multiplier) / BigInt(100);
     }
+
+    static parseString(value: string): bigint {
+        try {
+            const parsed = BigInt(value);
+            if (parsed <= BigInt(0)) {
+                throw new Error();
+            }
+            return parsed;
+        } catch {
+            throw new Error("Invalid amount");
+        }
+    }
 }
