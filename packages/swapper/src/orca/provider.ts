@@ -1,226 +1,219 @@
-import { AnchorProvider, BN } from "@coral-xyz/anchor";
-import { Percentage, ReadOnlyWallet, SimpleAccountFetcher } from "@orca-so/common-sdk";
+import { AssetId, Quote, QuoteRequest, SwapQuoteData, SwapQuoteDataType } from "@gemwallet/types";
 import {
-    buildWhirlpoolClient,
-    DEFAULT_WHIRLPOOL_RETENTION_POLICY,
-    ORCA_SUPPORTED_TICK_SPACINGS,
-    ORCA_WHIRLPOOL_PROGRAM_ID,
-    ORCA_WHIRLPOOLS_CONFIG,
-    PDAUtil,
-    PoolUtil,
-    PREFER_CACHE,
-    UseFallbackTickArray,
-    Whirlpool,
-    WhirlpoolAccountFetcher,
-    WhirlpoolAccountFetcherInterface,
-    WhirlpoolClient,
-    WhirlpoolContext,
-    WhirlpoolData,
-    swapQuoteByInputToken,
-} from "@orca-so/whirlpools-sdk";
+    addComputeBudgetInstructions,
+    getRecentBlockhash,
+    getRecentPriorityFee,
+    serializeTransaction,
+    setTransactionBlockhash,
+} from "../chain/solana/tx_builder";
+import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
+import { Protocol } from "../protocol";
+import { getReferrerAddresses } from "../referrer";
+import { calculateReferralFeeAmount, bnToNumberSafe, applyReferralFee } from "./fee";
+import { OrcaRouteData } from "./model";
+import { BigIntMath } from "../bigint_math";
+import { getMintAddress, parsePublicKey, resolveTokenProgram } from "../chain/solana/account";
+
 import {
     Connection,
     PublicKey,
     SystemProgram,
     Transaction,
+    TransactionInstruction,
 } from "@solana/web3.js";
-import { createTransferInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { createTransferInstruction, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
-import { AssetId, Chain, Quote, SwapQuoteData, QuoteRequest, SwapQuoteDataType } from "@gemwallet/types";
-import { Protocol } from "../protocol";
-import { getReferrerAddresses } from "../referrer";
-import { OrcaSwapRouteData, isOrcaRouteData } from "./model";
-import { calculateReferralFeeAmount, bnToNumberSafe } from "./fee";
 import {
-    getRecentBlockhash,
-    setTransactionBlockhash,
-    serializeTransaction,
-    addComputeBudgetInstructions,
-    getRecentPriorityFee,
-} from "../chain/solana/tx_builder";
-import { DEFAULT_COMMITMENT, WSOL_MINT } from "../chain/solana/constants";
+    createSolanaRpc,
+    address as toAddress,
+    type Account,
+    type Address,
+    type TransactionSigner,
+} from "@solana/kit";
+import {
+    orderMints,
+    setNativeMintWrappingStrategy,
+    setWhirlpoolsConfig,
+    swapInstructions,
+    WHIRLPOOLS_CONFIG_ADDRESS,
+} from "@orca-so/whirlpools";
+import {
+    fetchAllMaybeTickArray,
+    fetchAllMaybeWhirlpool,
+    fetchOracle,
+    fetchWhirlpool,
+    getOracleAddress,
+    getTickArrayAddress,
+    getWhirlpoolAddress,
+    type Whirlpool,
+} from "@orca-so/whirlpools-client";
+import {
+    _TICK_ARRAY_SIZE,
+    getTickArrayStartTickIndex,
+    swapQuoteByInputToken,
+    type ExactInSwapQuote,
+} from "@orca-so/whirlpools-core";
+import {
+    AccountRole,
+    type IAccountLookupMeta,
+    type IAccountMeta,
+    type IInstruction,
+} from "@solana/instructions";
+
+const POOL_CACHE_TTL_MS = 30_000;
+const SUPPORTED_TICK_SPACINGS = [1, 2, 4, 8, 16, 64, 96, 128, 256, 32896];
 
 type CachedPool = {
-    poolAddress: string;
+    account: Account<Whirlpool>;
     tickSpacing: number;
+    lastUpdated: number;
+};
+
+type TickArrayData = {
+    address: string;
+    data: {
+        startTickIndex: number;
+        ticks: {
+            initialized: boolean;
+            liquidityNet: bigint;
+            liquidityGross: bigint;
+            feeGrowthOutsideA: bigint;
+            feeGrowthOutsideB: bigint;
+            rewardGrowthsOutside: [bigint, bigint, bigint];
+        }[];
+    };
 };
 
 export class OrcaWhirlpoolProvider implements Protocol {
     private readonly connection: Connection;
-    private readonly fetcher: WhirlpoolAccountFetcherInterface;
-    private readonly programId = ORCA_WHIRLPOOL_PROGRAM_ID;
-    private readonly whirlpoolsConfig = ORCA_WHIRLPOOLS_CONFIG;
+    private readonly rpc: ReturnType<typeof createSolanaRpc>;
     private readonly poolCache: Map<string, CachedPool> = new Map();
+    private readonly tokenProgramCache: Map<string, PublicKey> = new Map();
+    private readonly initPromise: Promise<void>;
+    private priorityFeeCache: { value: number; expiresAt: number } | null = null;
+    private supportedTickSpacings: number[] = [...SUPPORTED_TICK_SPACINGS];
 
     constructor(private readonly solanaRpcEndpoint: string) {
         this.connection = new Connection(this.solanaRpcEndpoint, {
             commitment: DEFAULT_COMMITMENT,
         });
-        this.fetcher = new WhirlpoolAccountFetcher(
-            this.connection,
-            new SimpleAccountFetcher(
-                this.connection,
-                DEFAULT_WHIRLPOOL_RETENTION_POLICY,
-            ),
-        );
+        this.rpc = createSolanaRpc(this.solanaRpcEndpoint);
+        this.initPromise = this.initialize();
+    }
+
+    private async getTokenProgram(mint: PublicKey): Promise<PublicKey> {
+        const cacheKey = mint.toBase58();
+        const cached = this.tokenProgramCache.get(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
+        const programId = await resolveTokenProgram(this.rpc, mint);
+        this.tokenProgramCache.set(cacheKey, programId);
+        return programId;
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
         const fromAsset = AssetId.fromString(quoteRequest.from_asset.id);
         const toAsset = AssetId.fromString(quoteRequest.to_asset.id);
 
-        if (
-            fromAsset.chain !== Chain.Solana ||
-            toAsset.chain !== Chain.Solana
-        ) {
-            throw new Error("Only Solana assets are supported by Orca");
+        await this.initPromise;
+
+        const fromMintAddress = getMintAddress(fromAsset);
+        const toMintAddress = getMintAddress(toAsset);
+
+        const amountIn = BigIntMath.parseString(quoteRequest.from_value);
+        const referralBps = BigInt(quoteRequest.referral_bps ?? 0);
+        const swapAmount = await applyReferralFee(fromAsset, amountIn, referralBps, (mint) =>
+            this.getTokenProgram(mint),
+        );
+
+        if (swapAmount <= BigInt(0)) {
+            throw new Error("Swap amount must be greater than zero");
         }
 
-        const fromMint = this.getMintPublicKey(fromAsset);
-        const toMint = this.getMintPublicKey(toAsset);
-        const amountIn = this.parseAmount(quoteRequest.from_value);
+        const slippageBps = quoteRequest.slippage_bps ?? 100;
 
-        const referralBps = quoteRequest.referral_bps ?? 0;
-        const referralFee = amountIn.muln(referralBps).divn(10_000);
-        const swapAmount = amountIn.sub(referralFee);
-
-        const context = this.createContext(PublicKey.default);
-        const client = buildWhirlpoolClient(context);
-
-        const whirlpool = await this.findBestPool(
-            client,
-            fromMint,
-            toMint,
-        );
-
-        const slippage = Percentage.fromFraction(
-            quoteRequest.slippage_bps,
-            10_000,
-        );
-        const quote = await swapQuoteByInputTokenWithFallback(
-            whirlpool,
-            fromMint,
+        const pool = await this.findBestPool(fromMintAddress, toMintAddress);
+        const quoteResult = await this.buildExactInQuote(
+            pool.account,
+            fromMintAddress,
             swapAmount,
-            slippage,
-            this.programId,
-            client.getFetcher(),
+            slippageBps,
         );
 
-        const routeData: OrcaSwapRouteData = {
-            poolAddress: whirlpool.getAddress().toBase58(),
-            swap: {
-                amount: quote.amount.toString(),
-                otherAmountThreshold: quote.otherAmountThreshold.toString(),
-                sqrtPriceLimit: quote.sqrtPriceLimit.toString(),
-                amountSpecifiedIsInput: quote.amountSpecifiedIsInput,
-                aToB: quote.aToB,
-                tickArrays: [
-                    quote.tickArray0.toBase58(),
-                    quote.tickArray1.toBase58(),
-                    quote.tickArray2.toBase58(),
-                ],
-                supplementalTickArrays: quote.supplementalTickArrays?.map(
-                    (addr) => addr.toBase58(),
-                ),
-            },
-        };
+        const routeData = OrcaRouteData.create({
+            poolAddress: String(pool.account.address),
+            inputMint: String(fromMintAddress),
+            outputMint: String(toMintAddress),
+            amount: swapAmount.toString(),
+            slippageBps,
+        });
 
         return {
             quote: quoteRequest,
-            output_value: quote.estimatedAmountOut.toString(),
-            output_min_value: quote.otherAmountThreshold.toString(),
+            output_value: quoteResult.quote.tokenEstOut.toString(),
+            output_min_value: quoteResult.quote.tokenMinOut.toString(),
             eta_in_seconds: 5,
-            route_data: routeData,
+            route_data: routeData.toJSON(),
         };
     }
 
     async get_quote_data(quote: Quote): Promise<SwapQuoteData> {
-        if (!isOrcaRouteData(quote.route_data)) {
-            throw new Error("Invalid Orca route data");
-        }
+        await this.initPromise;
 
-        const route = quote.route_data;
-        let userPublicKey: PublicKey;
-        try {
-            userPublicKey = new PublicKey(quote.quote.from_address);
-        } catch {
-            throw new Error("Invalid Solana address for from_address");
-        }
+        const route = OrcaRouteData.from(quote.route_data);
+        const userPublicKey = parsePublicKey(quote.quote.from_address);
 
-        const context = this.createContext(userPublicKey);
-        const client = buildWhirlpoolClient(context);
-        const poolAddress = new PublicKey(route.poolAddress);
-        const whirlpool = await client.getPool(poolAddress, PREFER_CACHE);
+        const inputMintAddress = toAddress(route.inputMint);
+        const poolAddress = toAddress(route.poolAddress);
+        const amount = BigIntMath.parseString(route.amount);
+        const slippageBps = route.slippageBps;
 
-        const swapInput = this.buildSwapInput(route);
+        const signer = this.createPassthroughSigner(userPublicKey);
 
-        const [txBuilder, priorityFee] = await Promise.all([
-            whirlpool.swap(swapInput, userPublicKey),
-            getRecentPriorityFee(this.connection),
+        const swapPromise = swapInstructions(
+            this.rpc,
+            { inputAmount: amount, mint: inputMintAddress },
+            poolAddress,
+            slippageBps,
+            signer,
+        );
+        const priorityFeePromise = this.getPriorityFee();
+        const blockhashPromise = getRecentBlockhash(
+            this.connection,
+            DEFAULT_COMMITMENT,
+        );
+
+        const [{ instructions }, priorityFee] = await Promise.all([
+            swapPromise,
+            priorityFeePromise,
         ]);
 
-        const computeBudgetInstructions = addComputeBudgetInstructions([], undefined, priorityFee);
-        txBuilder.prependInstruction({
-            instructions: computeBudgetInstructions,
-            cleanupInstructions: [],
-            signers: [],
-        });
+        const legacyInstructions = instructions.map((instruction) =>
+            this.toLegacyInstruction(instruction),
+        );
 
-        const referralFeeLamports = calculateReferralFeeAmount(quote);
-        if (!referralFeeLamports.isZero()) {
-            const referrer = getReferrerAddresses().solana;
-            if (!referrer) {
-                throw new Error("Missing Solana referral address");
-            }
+        const computeBudgetInstructions = addComputeBudgetInstructions(
+            [],
+            undefined,
+            priorityFee,
+        );
 
-            const fromAsset = AssetId.fromString(quote.quote.from_asset.id);
-            const referralInstruction = fromAsset.isNative()
-                ? SystemProgram.transfer({
-                    fromPubkey: userPublicKey,
-                    toPubkey: new PublicKey(referrer),
-                    lamports: bnToNumberSafe(referralFeeLamports),
-                })
-                : (() => {
-                    const fromMint = this.getMintPublicKey(fromAsset);
-                    const userTokenAccount = getAssociatedTokenAddressSync(
-                        fromMint,
-                        userPublicKey,
-                    );
-                    const referrerTokenAccount = getAssociatedTokenAddressSync(
-                        fromMint,
-                        new PublicKey(referrer),
-                    );
-                    return createTransferInstruction(
-                        userTokenAccount,
-                        referrerTokenAccount,
-                        userPublicKey,
-                        bnToNumberSafe(referralFeeLamports),
-                    );
-                })();
+        const referralInstruction = await this.buildReferralInstruction(quote, userPublicKey);
 
-            txBuilder.addInstruction({
-                instructions: [referralInstruction],
-                cleanupInstructions: [],
-                signers: [],
-            });
+        const transaction = new Transaction();
+        transaction.add(...computeBudgetInstructions, ...legacyInstructions);
+
+        if (referralInstruction) {
+            transaction.add(referralInstruction);
         }
 
-        const [payload, { blockhash, lastValidBlockHeight }] = await Promise.all([
-            txBuilder.build(),
-            getRecentBlockhash(this.connection, DEFAULT_COMMITMENT),
-        ]);
+        transaction.feePayer = userPublicKey;
 
-        const transaction = payload.transaction;
+        const { blockhash, lastValidBlockHeight } = await blockhashPromise;
 
         setTransactionBlockhash(transaction, blockhash, lastValidBlockHeight);
-
-        if (payload.signers && payload.signers.length > 0) {
-            if (transaction instanceof Transaction) {
-                transaction.partialSign(...payload.signers);
-            } else {
-                transaction.sign(payload.signers);
-            }
-        }
 
         const serialized = serializeTransaction(transaction);
 
@@ -232,179 +225,332 @@ export class OrcaWhirlpoolProvider implements Protocol {
         };
     }
 
-    private createContext(walletPublicKey: PublicKey): WhirlpoolContext {
-        const wallet = new ReadOnlyWallet(walletPublicKey);
-        const provider = new AnchorProvider(this.connection, wallet, {
-            commitment: DEFAULT_COMMITMENT,
-            preflightCommitment: DEFAULT_COMMITMENT,
-        });
+    private async initialize(): Promise<void> {
+        await setWhirlpoolsConfig("solanaMainnet");
+        setNativeMintWrappingStrategy("ata");
+    }
 
-        return WhirlpoolContext.withProvider(
-            provider,
-            this.programId,
-            this.fetcher,
-        );
+    private async getPriorityFee(): Promise<number> {
+        const now = Date.now();
+        if (this.priorityFeeCache && now < this.priorityFeeCache.expiresAt) {
+            return this.priorityFeeCache.value;
+        }
+
+        const value = await getRecentPriorityFee(this.connection);
+        this.priorityFeeCache = {
+            value,
+            expiresAt: now + 3_000,
+        };
+        return value;
     }
 
     private async findBestPool(
-        client: WhirlpoolClient,
-        mintA: PublicKey,
-        mintB: PublicKey,
-    ): Promise<Whirlpool> {
-        const [canonicalA, canonicalB] = PoolUtil.orderMints(
-            mintA.toBase58(),
-            mintB.toBase58(),
-        );
-        const canonicalMintA = new PublicKey(canonicalA);
-        const canonicalMintB = new PublicKey(canonicalB);
-        const cacheKey = `${canonicalA}-${canonicalB}`;
+        mintA: Address<string>,
+        mintB: Address<string>,
+    ): Promise<CachedPool> {
+        const [orderedA, orderedB] = orderMints(mintA, mintB);
+        const cacheKey = `${String(orderedA)}-${String(orderedB)}`;
 
-        const fetcher = client.getFetcher();
-        const cached = this.poolCache.get(cacheKey);
+        const cached = await this.validateCachedPool(cacheKey);
         if (cached) {
-            const cachedAddress = new PublicKey(cached.poolAddress);
-            const [cachedData, cachedWhirlpool] = await Promise.all([
-                fetcher.getPool(cachedAddress, PREFER_CACHE),
-                client.getPool(cachedAddress, PREFER_CACHE),
-            ]);
-            if (cachedData && cachedData.liquidity.gt(new BN(0))) {
-                return cachedWhirlpool;
-            }
-            this.poolCache.delete(cacheKey);
+            return cached;
         }
 
-        const candidateInfos = ORCA_SUPPORTED_TICK_SPACINGS.map(
-            (tickSpacing) => ({
-                tickSpacing,
-                address: PDAUtil.getWhirlpool(
-                    this.programId,
-                    this.whirlpoolsConfig,
-                    canonicalMintA,
-                    canonicalMintB,
+        const candidateInfos = await Promise.all(
+            this.supportedTickSpacings.map(async (tickSpacing) => {
+                const [address] = await getWhirlpoolAddress(
+                    WHIRLPOOLS_CONFIG_ADDRESS,
+                    orderedA,
+                    orderedB,
                     tickSpacing,
-                ).publicKey,
+                );
+                return { tickSpacing, address };
             }),
         );
 
-        let bestCandidate: {
-            info: (typeof candidateInfos)[number];
-            data: WhirlpoolData;
-        } | null = null;
-
-        const poolsMap = await fetcher.getPools(
+        const poolAccounts = await fetchAllMaybeWhirlpool(
+            this.rpc,
             candidateInfos.map((candidate) => candidate.address),
-            PREFER_CACHE,
         );
 
-        for (const candidate of candidateInfos) {
-            const poolData = poolsMap.get(candidate.address.toBase58());
-            if (poolData && poolData.liquidity.gt(new BN(0))) {
-                if (
-                    !bestCandidate ||
-                    poolData.liquidity.gt(bestCandidate.data.liquidity)
-                ) {
-                    bestCandidate = { info: candidate, data: poolData };
-                }
+        let best: { info: (typeof candidateInfos)[number]; account: Account<Whirlpool> } | null = null;
+
+        for (let i = 0; i < poolAccounts.length; i++) {
+            const account = poolAccounts[i];
+            if ("exists" in account && !account.exists) {
+                continue;
+            }
+
+            const existingAccount = account as Account<Whirlpool>;
+            if (existingAccount.data.liquidity <= BigInt(0)) {
+                continue;
+            }
+
+            if (!best || existingAccount.data.liquidity > best.account.data.liquidity) {
+                best = {
+                    info: candidateInfos[i],
+                    account: existingAccount,
+                };
             }
         }
 
-        if (!bestCandidate) {
+        if (!best) {
             throw new Error("No Orca whirlpool found for the provided assets");
         }
 
-        const whirlpool = await client.getPool(
-            bestCandidate.info.address,
-            PREFER_CACHE,
-        );
+        const result: CachedPool = {
+            account: best.account,
+            tickSpacing: best.info.tickSpacing,
+            lastUpdated: Date.now(),
+        };
 
-        this.poolCache.set(cacheKey, {
-            poolAddress: bestCandidate.info.address.toBase58(),
-            tickSpacing: bestCandidate.info.tickSpacing,
-        });
-
-        return whirlpool;
+        this.poolCache.set(cacheKey, result);
+        return result;
     }
 
-    private parseAmount(value: string): BN {
+    private async validateCachedPool(cacheKey: string): Promise<CachedPool | null> {
+        const cached = this.poolCache.get(cacheKey);
+        if (!cached) {
+            return null;
+        }
+
+        const isFresh = Date.now() - cached.lastUpdated < POOL_CACHE_TTL_MS;
+        if (isFresh && cached.account.data.liquidity > BigInt(0)) {
+            return cached;
+        }
+
         try {
-            const amount = new BN(value);
-            if (amount.lte(new BN(0))) {
-                throw new Error("Amount must be greater than zero");
+            const refreshed = await fetchWhirlpool(this.rpc, cached.account.address);
+            if (refreshed.data.liquidity > BigInt(0)) {
+                const updated: CachedPool = {
+                    account: refreshed,
+                    tickSpacing: cached.tickSpacing,
+                    lastUpdated: Date.now(),
+                };
+                this.poolCache.set(cacheKey, updated);
+                return updated;
             }
-            return amount;
         } catch {
-            throw new Error("Invalid amount");
+            // ignore failures and fall through to invalidate cache entry
         }
+
+        this.poolCache.delete(cacheKey);
+        return null;
     }
 
-    private getMintPublicKey(asset: AssetId): PublicKey {
-        if (asset.chain !== Chain.Solana) {
-            throw new Error("Only Solana assets are supported by Orca");
-        }
+    private async buildExactInQuote(
+        whirlpool: Account<Whirlpool>,
+        inputMint: Address<string>,
+        amount: bigint,
+        slippageBps: number,
+    ): Promise<{ quote: ExactInSwapQuote }> {
+        const [tickArrays, oracle] = await Promise.all([
+            this.fetchTickArrays(whirlpool),
+            this.fetchOracleData(whirlpool),
+        ]);
+        const transferFees = { tokenA: null, tokenB: null };
+        const specifiedTokenA = inputMint === whirlpool.data.tokenMintA;
 
-        if (asset.isNative()) {
-            return WSOL_MINT;
-        }
-
-        if (!asset.tokenId) {
-            throw new Error("Invalid token identifier for Solana asset");
-        }
-
-        try {
-            return new PublicKey(asset.tokenId);
-        } catch {
-            throw new Error("Invalid SPL token address");
-        }
-    }
-
-    private buildSwapInput(route: OrcaSwapRouteData) {
-        const tickArrays = route.swap.tickArrays.map(
-            (addr) => new PublicKey(addr),
-        ) as [PublicKey, PublicKey, PublicKey];
-        const supplementalTickArrays = route.swap.supplementalTickArrays?.map(
-            (addr) => new PublicKey(addr),
+        const timestamp = BigInt(Math.floor(Date.now() / 1_000));
+        const quote = swapQuoteByInputToken(
+            amount,
+            specifiedTokenA,
+            slippageBps,
+            whirlpool.data,
+            oracle ?? undefined,
+            tickArrays.map((array) => array.data),
+            timestamp,
+            transferFees.tokenA ?? undefined,
+            transferFees.tokenB ?? undefined,
         );
+
+        return { quote };
+    }
+
+    private async fetchTickArrays(
+        whirlpool: Account<Whirlpool>,
+    ): Promise<TickArrayData[]> {
+        const tickArrayStartIndex = getTickArrayStartTickIndex(
+            whirlpool.data.tickCurrentIndex,
+            whirlpool.data.tickSpacing,
+        );
+        const offset = whirlpool.data.tickSpacing * _TICK_ARRAY_SIZE();
+        const indexes = [
+            tickArrayStartIndex,
+            tickArrayStartIndex + offset,
+            tickArrayStartIndex + offset * 2,
+            tickArrayStartIndex - offset,
+            tickArrayStartIndex - offset * 2,
+        ];
+
+        const addresses = await Promise.all(
+            indexes.map(async (startIndex) => {
+                const [address] = await getTickArrayAddress(
+                    whirlpool.address,
+                    startIndex,
+                );
+                return String(address);
+            }),
+        );
+
+        const accounts = await fetchAllMaybeTickArray(this.rpc, addresses.map((addr) => toAddress(addr)));
+
+        return accounts.map((account, index): TickArrayData => {
+            if ("exists" in account && account.exists) {
+                const existingAccount = account;
+                return {
+                    address: String(existingAccount.address),
+                    data: {
+                        startTickIndex: existingAccount.data.startTickIndex,
+                        ticks: existingAccount.data.ticks.map((tick) => ({
+                            initialized: tick.initialized,
+                            liquidityNet: tick.liquidityNet,
+                            liquidityGross: tick.liquidityGross,
+                            feeGrowthOutsideA: tick.feeGrowthOutsideA,
+                            feeGrowthOutsideB: tick.feeGrowthOutsideB,
+                            rewardGrowthsOutside: [
+                                tick.rewardGrowthsOutside[0],
+                                tick.rewardGrowthsOutside[1],
+                                tick.rewardGrowthsOutside[2],
+                            ],
+                        })),
+                    },
+                };
+            }
+
+            return {
+                address: addresses[index],
+                data: this.createEmptyTickArrayData(indexes[index]),
+            };
+        });
+    }
+
+    private createEmptyTickArrayData(startTickIndex: number): TickArrayData["data"] {
+        const ticks = Array.from({ length: _TICK_ARRAY_SIZE() }, () => ({
+            initialized: false,
+            liquidityNet: BigInt(0),
+            liquidityGross: BigInt(0),
+            feeGrowthOutsideA: BigInt(0),
+            feeGrowthOutsideB: BigInt(0),
+            rewardGrowthsOutside: [BigInt(0), BigInt(0), BigInt(0)] as [bigint, bigint, bigint],
+        }));
 
         return {
-            amount: new BN(route.swap.amount),
-            otherAmountThreshold: new BN(route.swap.otherAmountThreshold),
-            sqrtPriceLimit: new BN(route.swap.sqrtPriceLimit),
-            amountSpecifiedIsInput: route.swap.amountSpecifiedIsInput,
-            aToB: route.swap.aToB,
-            tickArray0: tickArrays[0],
-            tickArray1: tickArrays[1],
-            tickArray2: tickArrays[2],
-            ...(supplementalTickArrays
-                ? { supplementalTickArrays }
-                : undefined),
+            startTickIndex,
+            ticks,
         };
     }
-}
 
-async function swapQuoteByInputTokenWithFallback(
-    whirlpool: Whirlpool,
-    inputTokenMint: PublicKey,
-    tokenAmount: BN,
-    slippageTolerance: Percentage,
-    programId: PublicKey,
-    fetcher: WhirlpoolAccountFetcherInterface,
-) {
-    try {
-        return await swapQuoteByInputToken(
-            whirlpool,
-            inputTokenMint,
-            tokenAmount,
-            slippageTolerance,
+    private async fetchOracleData(
+        whirlpool: Account<Whirlpool>,
+    ): Promise<Awaited<ReturnType<typeof fetchOracle>>["data"] | null> {
+        try {
+            const feeTierIndex =
+                whirlpool.data.feeTierIndexSeed[0] +
+                whirlpool.data.feeTierIndexSeed[1] * 256;
+            if (whirlpool.data.tickSpacing === feeTierIndex) {
+                return null;
+            }
+
+            const [oracleAddress] = await getOracleAddress(whirlpool.address);
+            const oracleAccount = await fetchOracle(this.rpc, oracleAddress);
+            return oracleAccount.data;
+        } catch {
+            return null;
+        }
+    }
+
+    private createPassthroughSigner(userPublicKey: PublicKey): TransactionSigner {
+        const address = toAddress(userPublicKey.toBase58());
+        return {
+            address,
+            async signTransactions<T extends readonly unknown[]>(transactions: T): Promise<T> {
+                return transactions;
+            },
+        };
+    }
+
+    private toLegacyInstruction(instruction: IInstruction): TransactionInstruction {
+        const keys =
+            instruction.accounts?.map((account) =>
+                this.toAccountMeta(account),
+            ) ?? [];
+        const data = instruction.data ? Buffer.from(instruction.data) : Buffer.alloc(0);
+
+        return new TransactionInstruction({
+            programId: new PublicKey(instruction.programAddress),
+            keys,
+            data,
+        });
+    }
+
+    private toAccountMeta(
+        account: IAccountMeta | IAccountLookupMeta,
+    ): { pubkey: PublicKey; isSigner: boolean; isWritable: boolean } {
+        const isSigner =
+            account.role === AccountRole.READONLY_SIGNER ||
+            account.role === AccountRole.WRITABLE_SIGNER;
+        const isWritable =
+            account.role === AccountRole.WRITABLE ||
+            account.role === AccountRole.WRITABLE_SIGNER;
+
+        return {
+            pubkey: new PublicKey(account.address),
+            isSigner,
+            isWritable,
+        };
+    }
+
+    private async buildReferralInstruction(
+        quote: Quote,
+        userPublicKey: PublicKey,
+    ): Promise<TransactionInstruction | null> {
+        const referralAmount = calculateReferralFeeAmount(quote);
+        if (referralAmount.isZero()) {
+            return null;
+        }
+
+        const referrer = getReferrerAddresses().solana;
+        if (!referrer) {
+            throw new Error("Missing Solana referral address");
+        }
+
+        const fromAsset = AssetId.fromString(quote.quote.from_asset.id);
+        if (fromAsset.isNative()) {
+            return SystemProgram.transfer({
+                fromPubkey: userPublicKey,
+                toPubkey: new PublicKey(referrer),
+                lamports: bnToNumberSafe(referralAmount),
+            });
+        }
+
+        const tokenId = fromAsset.getTokenId();
+        const fromMintKey = parsePublicKey(tokenId);
+        const programId = await this.getTokenProgram(fromMintKey);
+        if (!programId.equals(TOKEN_PROGRAM_ID)) {
+            return null;
+        }
+        const userTokenAccount = getAssociatedTokenAddressSync(
+            fromMintKey,
+            userPublicKey,
+            false,
             programId,
-            fetcher,
-            PREFER_CACHE,
-            UseFallbackTickArray.Situational,
         );
-    } catch (error) {
-        throw new Error(
-            error instanceof Error
-                ? error.message
-                : "Unable to calculate Orca swap quote",
+        const referrerTokenAccount = getAssociatedTokenAddressSync(
+            fromMintKey,
+            new PublicKey(referrer),
+            false,
+            programId,
+        );
+
+        return createTransferInstruction(
+            userTokenAccount,
+            referrerTokenAccount,
+            userPublicKey,
+            bnToNumberSafe(referralAmount),
+            [],
+            programId,
         );
     }
+
 }

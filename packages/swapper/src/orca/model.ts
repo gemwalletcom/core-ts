@@ -1,53 +1,65 @@
-export type OrcaSwapRouteData = {
+export type OrcaRouteDataType = {
     poolAddress: string;
-    swap: {
-        amount: string;
-        otherAmountThreshold: string;
-        sqrtPriceLimit: string;
-        amountSpecifiedIsInput: boolean;
-        aToB: boolean;
-        tickArrays: [string, string, string];
-        supplementalTickArrays?: string[];
-    };
+    inputMint: string;
+    outputMint: string;
+    amount: string;
+    slippageBps: number;
 };
 
-export function isOrcaRouteData(value: unknown): value is OrcaSwapRouteData {
-    if (!value || typeof value !== "object") {
-        return false;
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null;
+}
+
+export class OrcaRouteData {
+    private constructor(
+        public readonly poolAddress: string,
+        public readonly inputMint: string,
+        public readonly outputMint: string,
+        public readonly amount: string,
+        public readonly slippageBps: number,
+    ) { }
+
+    static create(fields: OrcaRouteDataType): OrcaRouteData {
+        return new OrcaRouteData(
+            fields.poolAddress,
+            fields.inputMint,
+            fields.outputMint,
+            fields.amount,
+            fields.slippageBps,
+        );
     }
 
-    const candidate = value as Partial<OrcaSwapRouteData>;
-    if (typeof candidate.poolAddress !== "string") {
-        return false;
+    static from(value: unknown): OrcaRouteData {
+        if (value instanceof OrcaRouteData) {
+            return value;
+        }
+
+        if (!isRecord(value)) {
+            throw new Error("Invalid Orca route data");
+        }
+
+        const fields = value as OrcaRouteDataType;
+
+        return new OrcaRouteData(
+            fields.poolAddress,
+            fields.inputMint,
+            fields.outputMint,
+            fields.amount,
+            fields.slippageBps,
+        );
     }
 
-    const swap = candidate.swap as OrcaSwapRouteData["swap"] | undefined;
-    if (!swap) {
-        return false;
+    toObject(): OrcaRouteDataType {
+        return {
+            poolAddress: this.poolAddress,
+            inputMint: this.inputMint,
+            outputMint: this.outputMint,
+            amount: this.amount,
+            slippageBps: this.slippageBps,
+        };
     }
 
-    if (
-        typeof swap.amount !== "string" ||
-        typeof swap.otherAmountThreshold !== "string" ||
-        typeof swap.sqrtPriceLimit !== "string" ||
-        typeof swap.amountSpecifiedIsInput !== "boolean" ||
-        typeof swap.aToB !== "boolean" ||
-        !Array.isArray(swap.tickArrays) ||
-        swap.tickArrays.length !== 3 ||
-        swap.tickArrays.some((addr) => typeof addr !== "string")
-    ) {
-        return false;
+    toJSON(): OrcaRouteDataType {
+        return this.toObject();
     }
-
-    if (
-        swap.supplementalTickArrays &&
-        (!Array.isArray(swap.supplementalTickArrays) ||
-            swap.supplementalTickArrays.some(
-                (addr) => typeof addr !== "string",
-            ))
-    ) {
-        return false;
-    }
-
-    return true;
 }

@@ -24,6 +24,13 @@ export class AssetId {
         return !!this.tokenId;
     }
 
+    getTokenId(): string {
+        if (!this.tokenId) {
+            throw new Error(`Invalid token identifier for ${this.chain} asset`);
+        }
+        return this.tokenId;
+    }
+
     toJSON(): string {
         return this.toString();
     }

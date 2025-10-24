@@ -58,4 +58,24 @@ export class BigIntMath {
         const multiplier = BigInt(100 + percentage);
         return (value * multiplier) / BigInt(100);
     }
+
+    static parseString(value: string): bigint {
+        const normalized = value.trim();
+        if (normalized.length === 0) {
+            throw new Error("Amount must be a valid integer string");
+        }
+
+        let parsed: bigint;
+        try {
+            parsed = BigInt(normalized);
+        } catch {
+            throw new Error("Amount must be a valid integer string");
+        }
+
+        if (parsed <= BigInt(0)) {
+            throw new Error("Amount must be greater than zero");
+        }
+
+        return parsed;
+    }
 }
