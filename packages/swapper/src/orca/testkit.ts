@@ -3,13 +3,13 @@ import { Chain, Quote, QuoteRequest } from "@gemwallet/types";
 const DEFAULT_FROM_ADDRESS = "A1testfromAddress1111111111111111111111111";
 const DEFAULT_TO_ADDRESS = "A1testtoAddress11111111111111111111111111";
 
-const DEFAULT_FROM_ASSET = {
+export const SOL_ASSET = {
     id: Chain.Solana,
     symbol: "SOL",
     decimals: 9,
 };
 
-const DEFAULT_TO_ASSET = {
+export const USDC_SOL_ASSET = {
     id: Chain.Solana,
     symbol: "USDC",
     decimals: 6,
@@ -19,8 +19,8 @@ export function createQuoteRequest(overrides: Partial<QuoteRequest> = {}): Quote
     const base: QuoteRequest = {
         from_address: DEFAULT_FROM_ADDRESS,
         to_address: DEFAULT_TO_ADDRESS,
-        from_asset: DEFAULT_FROM_ASSET,
-        to_asset: DEFAULT_TO_ASSET,
+        from_asset: SOL_ASSET,
+        to_asset: USDC_SOL_ASSET,
         from_value: "1",
         referral_bps: 0,
         slippage_bps: 100,

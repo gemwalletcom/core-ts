@@ -9,7 +9,7 @@ import {
 import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
-import { calculateReferralFeeAmount, bnToNumberSafe } from "./fee";
+import { calculateReferralFeeAmount, bnToNumberSafe, applyReferralFee } from "./fee";
 import { OrcaSwapRouteData } from "./model";
 import { BigIntMath } from "../bigint_math";
 import { getMintAddress, parsePublicKey, resolveTokenProgram } from "../chain/solana/account";
@@ -21,7 +21,7 @@ import {
     Transaction,
     TransactionInstruction,
 } from "@solana/web3.js";
-import { createTransferInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { createTransferInstruction, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 import {
     createSolanaRpc,
@@ -88,6 +88,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
     private readonly connection: Connection;
     private readonly rpc: ReturnType<typeof createSolanaRpc>;
     private readonly poolCache: Map<string, CachedPool> = new Map();
+    private readonly tokenProgramCache: Map<string, PublicKey> = new Map();
     private readonly initPromise: Promise<void>;
     private priorityFeeCache: { value: number; expiresAt: number } | null = null;
     private supportedTickSpacings: number[] = [...SUPPORTED_TICK_SPACINGS];
@@ -98,6 +99,18 @@ export class OrcaWhirlpoolProvider implements Protocol {
         });
         this.rpc = createSolanaRpc(this.solanaRpcEndpoint);
         this.initPromise = this.initialize();
+    }
+
+    private async getTokenProgram(mint: PublicKey): Promise<PublicKey> {
+        const cacheKey = mint.toBase58();
+        const cached = this.tokenProgramCache.get(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
+        const programId = await resolveTokenProgram(this.rpc, mint);
+        this.tokenProgramCache.set(cacheKey, programId);
+        return programId;
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
@@ -111,8 +124,10 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const amountIn = BigIntMath.parseString(quoteRequest.from_value);
         const referralBps = BigInt(quoteRequest.referral_bps ?? 0);
-        const referralFee = amountIn * referralBps / BigInt(10000);
-        const swapAmount = amountIn - referralFee;
+        const swapAmount = await applyReferralFee(fromAsset, amountIn, referralBps, (mint) =>
+            this.getTokenProgram(mint),
+        );
+
         if (swapAmount <= BigInt(0)) {
             throw new Error("Swap amount must be greater than zero");
         }
@@ -511,7 +526,10 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const tokenId = fromAsset.getTokenId();
         const fromMintKey = parsePublicKey(tokenId);
-        const programId = await resolveTokenProgram(this.rpc, fromMintKey);
+        const programId = await this.getTokenProgram(fromMintKey);
+        if (!programId.equals(TOKEN_PROGRAM_ID)) {
+            return null;
+        }
         const userTokenAccount = getAssociatedTokenAddressSync(
             fromMintKey,
             userPublicKey,
