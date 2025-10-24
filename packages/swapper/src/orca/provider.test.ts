@@ -98,8 +98,10 @@ describe("OrcaWhirlpoolProvider.get_quote referral handling", () => {
         capturedAmount = null;
         mockFetchAllMint.fetchAllMint.mockReset();
 
-        jest.spyOn(provider as any, "buildExactInQuote").mockImplementation(
-            async (_pool, _mint, amount: bigint) => {
+        jest
+            .spyOn(provider as any, "buildExactInQuote")
+            .mockImplementation(async (...args: unknown[]) => {
+                const amount = args[2] as bigint;
                 capturedAmount = amount;
                 return {
                     quote: {
@@ -107,8 +109,7 @@ describe("OrcaWhirlpoolProvider.get_quote referral handling", () => {
                         tokenMinOut: BigInt(4000),
                     },
                 };
-            },
-        );
+            });
     });
 
     afterEach(() => {
