@@ -26,7 +26,7 @@ export class AssetId {
 
     getTokenId(): string {
         if (!this.tokenId) {
-            throw new Error("Invalid token identifier for Solana asset");
+            throw new Error(`Invalid token identifier for ${this.chain} asset`);
         }
         return this.tokenId;
     }

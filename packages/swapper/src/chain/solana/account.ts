@@ -33,9 +33,16 @@ export async function resolveTokenProgram(
     const mintAccount = await fetchAllMint(rpc, [toAddress(mint.toBase58())]);
     const account = mintAccount[0];
 
-    if (account && "exists" in account && account.exists) {
+    if (!account) {
+        return TOKEN_PROGRAM_ID;
+    }
+
+    if ("exists" in account) {
+        if (!account.exists) {
+            return TOKEN_PROGRAM_ID;
+        }
         return new PublicKey(account.programAddress);
     }
 
-    return TOKEN_PROGRAM_ID;
+    return new PublicKey(account.programAddress);
 }

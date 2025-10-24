@@ -1,4 +1,4 @@
-import { AssetId, Chain, Quote, QuoteRequest, SwapQuoteData, SwapQuoteDataType } from "@gemwallet/types";
+import { AssetId, Quote, QuoteRequest, SwapQuoteData, SwapQuoteDataType } from "@gemwallet/types";
 import {
     addComputeBudgetInstructions,
     getRecentBlockhash,
@@ -53,7 +53,6 @@ import {
     swapQuoteByInputToken,
     type ExactInSwapQuote,
 } from "@orca-so/whirlpools-core";
-import { fetchAllMint } from "@solana-program/token-2022";
 import {
     AccountRole,
     type IAccountLookupMeta,
@@ -83,11 +82,6 @@ type TickArrayData = {
             rewardGrowthsOutside: [bigint, bigint, bigint];
         }[];
     };
-};
-
-type TransferFeeConfig = {
-    feeBps: number;
-    maxFee: bigint;
 };
 
 export class OrcaWhirlpoolProvider implements Protocol {
@@ -272,18 +266,19 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         for (let i = 0; i < poolAccounts.length; i++) {
             const account = poolAccounts[i];
-            if (!account.exists) {
+            if ("exists" in account && !account.exists) {
                 continue;
             }
 
-            if (account.data.liquidity <= BigInt(0)) {
+            const existingAccount = account as Account<Whirlpool>;
+            if (existingAccount.data.liquidity <= BigInt(0)) {
                 continue;
             }
 
-            if (!best || account.data.liquidity > best.account.data.liquidity) {
+            if (!best || existingAccount.data.liquidity > best.account.data.liquidity) {
                 best = {
                     info: candidateInfos[i],
-                    account,
+                    account: existingAccount,
                 };
             }
         }
@@ -338,11 +333,11 @@ export class OrcaWhirlpoolProvider implements Protocol {
         amount: bigint,
         slippageBps: number,
     ): Promise<{ quote: ExactInSwapQuote }> {
-        const [tickArrays, oracle, transferFees] = await Promise.all([
+        const [tickArrays, oracle] = await Promise.all([
             this.fetchTickArrays(whirlpool),
             this.fetchOracleData(whirlpool),
-            this.fetchTransferFees(whirlpool),
         ]);
+        const transferFees = { tokenA: null, tokenB: null };
         const specifiedTokenA = inputMint === whirlpool.data.tokenMintA;
 
         const timestamp = BigInt(Math.floor(Date.now() / 1_000));
@@ -390,12 +385,13 @@ export class OrcaWhirlpoolProvider implements Protocol {
         const accounts = await fetchAllMaybeTickArray(this.rpc, addresses.map((addr) => toAddress(addr)));
 
         return accounts.map((account, index): TickArrayData => {
-            if (account.exists) {
+            if ("exists" in account && account.exists) {
+                const existingAccount = account;
                 return {
-                    address: String(account.address),
+                    address: String(existingAccount.address),
                     data: {
-                        startTickIndex: account.data.startTickIndex,
-                        ticks: account.data.ticks.map((tick) => ({
+                        startTickIndex: existingAccount.data.startTickIndex,
+                        ticks: existingAccount.data.ticks.map((tick) => ({
                             initialized: tick.initialized,
                             liquidityNet: tick.liquidityNet,
                             liquidityGross: tick.liquidityGross,
@@ -451,63 +447,6 @@ export class OrcaWhirlpoolProvider implements Protocol {
         } catch {
             return null;
         }
-    }
-
-    private async fetchTransferFees(whirlpool: Account<Whirlpool>): Promise<{
-        tokenA: TransferFeeConfig | null;
-        tokenB: TransferFeeConfig | null;
-    }> {
-        const [mintA, mintB] = await fetchAllMint(this.rpc, [
-            whirlpool.data.tokenMintA,
-            whirlpool.data.tokenMintB,
-        ]);
-        const epochInfo = await this.rpc.getEpochInfo().send();
-
-        return {
-            tokenA: this.extractTransferFee(mintA, Number(epochInfo.epoch)),
-            tokenB: this.extractTransferFee(mintB, Number(epochInfo.epoch)),
-        };
-    }
-
-    private extractTransferFee(
-        mint: Awaited<ReturnType<typeof fetchAllMint>>[number],
-        currentEpoch: number,
-    ): TransferFeeConfig | null {
-        if (!mint) {
-            return null;
-        }
-
-        if ("exists" in mint && !mint.exists) {
-            return null;
-        }
-
-        const extensions = mint.data.extensions;
-        if (!extensions || extensions.__option === "None") {
-            return null;
-        }
-
-        const feeConfig = extensions.value.find(
-            (extension: { __kind: string }) =>
-                extension.__kind === "TransferFeeConfig",
-        );
-        if (!feeConfig) {
-            return null;
-        }
-
-        const feeConfigData = feeConfig as unknown as {
-            newerTransferFee: { epoch: number; transferFeeBasisPoints: number; maximumFee: bigint };
-            olderTransferFee: { epoch: number; transferFeeBasisPoints: number; maximumFee: bigint };
-        };
-
-        const transferFee =
-            currentEpoch >= feeConfigData.newerTransferFee.epoch
-                ? feeConfigData.newerTransferFee
-                : feeConfigData.olderTransferFee;
-
-        return {
-            feeBps: transferFee.transferFeeBasisPoints,
-            maxFee: transferFee.maximumFee,
-        };
     }
 
     private createPassthroughSigner(userPublicKey: PublicKey): TransactionSigner {
@@ -574,11 +513,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
             });
         }
 
-        const tokenId = fromAsset.tokenId;
-        if (!tokenId) {
-            throw new Error("Invalid token identifier for Solana asset");
-        }
-
+        const tokenId = fromAsset.getTokenId();
         const fromMintKey = parsePublicKey(tokenId);
         const programId = await resolveTokenProgram(this.rpc, fromMintKey);
         const userTokenAccount = getAssociatedTokenAddressSync(
