@@ -47,9 +47,9 @@ describe("BigIntMath.parseDecimals", () => {
 
 describe("BigIntMath.parseString", () => {
     it.each([
-        { value: "1", expected: 1n },
-        { value: "0010", expected: 10n },
-        { value: "  5000  ", expected: 5000n },
+        { value: "1", expected: BigInt(1) },
+        { value: "0010", expected: BigInt(10) },
+        { value: "  5000  ", expected: BigInt(5000) },
     ])("parses valid value $value to bigint $expected", ({ value, expected }) => {
         expect(BigIntMath.parseString(value)).toBe(expected);
     });
