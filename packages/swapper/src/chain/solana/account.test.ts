@@ -31,4 +31,17 @@ describe("resolveTokenProgram", () => {
             "Failed to fetch mint account data",
         );
     });
+
+    it("returns the mint program when account exists", async () => {
+        fetchAllMint.mockResolvedValue([
+            {
+                exists: true,
+                programAddress: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            },
+        ]);
+
+        const program = await resolveTokenProgram(rpc, mint);
+
+        expect(program.toBase58()).toBe("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+    });
 });

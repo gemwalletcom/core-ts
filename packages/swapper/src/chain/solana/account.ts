@@ -36,7 +36,13 @@ export async function resolveTokenProgram(
     const account = mintAccount[0];
 
     if ("exists" in account) {
-        throw new Error("Mint account does not exist");
+        if (!account.exists) {
+            throw new Error("Mint account does not exist");
+        }
+        if (!account.programAddress) {
+            throw new Error("Mint account missing program address");
+        }
+        return new PublicKey(account.programAddress);
     }
 
     return new PublicKey(account.programAddress);
