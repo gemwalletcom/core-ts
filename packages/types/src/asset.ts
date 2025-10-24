@@ -24,6 +24,13 @@ export class AssetId {
         return !!this.tokenId;
     }
 
+    getTokenId(): string {
+        if (!this.tokenId) {
+            throw new Error("Invalid token identifier for Solana asset");
+        }
+        return this.tokenId;
+    }
+
     toJSON(): string {
         return this.toString();
     }

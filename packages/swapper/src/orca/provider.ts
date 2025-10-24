@@ -110,10 +110,6 @@ export class OrcaWhirlpoolProvider implements Protocol {
         const fromAsset = AssetId.fromString(quoteRequest.from_asset.id);
         const toAsset = AssetId.fromString(quoteRequest.to_asset.id);
 
-        if (fromAsset.chain !== Chain.Solana || toAsset.chain !== Chain.Solana) {
-            throw new Error("Only Solana assets are supported by Orca");
-        }
-
         await this.initPromise;
 
         const fromMintAddress = getMintAddress(fromAsset);

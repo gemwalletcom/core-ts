@@ -1,4 +1,4 @@
-import { AssetId, Chain } from "@gemwallet/types";
+import { AssetId } from "@gemwallet/types";
 import { WSOL_MINT } from "./constants";
 import { PublicKey } from "@solana/web3.js";
 import { address as toAddress, type Address, type createSolanaRpc } from "@solana/kit";
@@ -16,18 +16,11 @@ export function parsePublicKey(value: string): PublicKey {
 }
 
 export function getMintAddress(asset: AssetId): Address<string> {
-    if (asset.chain !== Chain.Solana) {
-        throw new Error("Only Solana assets are supported");
-    }
-
     if (asset.isNative()) {
         return toAddress(WSOL_MINT.toBase58());
     }
 
-    const tokenId = asset.tokenId;
-    if (!tokenId) {
-        throw new Error("Invalid token identifier for Solana asset");
-    }
+    const tokenId = asset.getTokenId();
 
     parsePublicKey(tokenId);
     return toAddress(tokenId);
