@@ -1,4 +1,4 @@
-import { OrcaSwapRouteData, type OrcaRouteDataType } from "./model";
+import { OrcaRouteData, type OrcaRouteDataType } from "./model";
 
 describe("OrcaSwapRouteData", () => {
     const payload: OrcaRouteDataType = {
@@ -10,18 +10,18 @@ describe("OrcaSwapRouteData", () => {
     };
 
     it("creates an instance from plain object", () => {
-        const route = OrcaSwapRouteData.from(payload);
+        const route = OrcaRouteData.from(payload);
         expect(route.poolAddress).toBe(payload.poolAddress);
         expect(route.toObject()).toEqual(payload);
     });
 
     it("returns same instance when passing OrcaSwapRouteData to from()", () => {
-        const original = OrcaSwapRouteData.create(payload);
-        const result = OrcaSwapRouteData.from(original);
+        const original = OrcaRouteData.create(payload);
+        const result = OrcaRouteData.from(original);
         expect(result).toBe(original);
     });
 
     it("throws when input is not an object", () => {
-        expect(() => OrcaSwapRouteData.from(null)).toThrow("Invalid Orca route data");
+        expect(() => OrcaRouteData.from(null)).toThrow("Invalid Orca route data");
     });
 });

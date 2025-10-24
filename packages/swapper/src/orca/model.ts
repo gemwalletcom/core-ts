@@ -10,17 +10,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null;
 }
 
-export class OrcaSwapRouteData {
+export class OrcaRouteData {
     private constructor(
         public readonly poolAddress: string,
         public readonly inputMint: string,
         public readonly outputMint: string,
         public readonly amount: string,
         public readonly slippageBps: number,
-    ) {}
+    ) { }
 
-    static create(fields: OrcaRouteDataType): OrcaSwapRouteData {
-        return new OrcaSwapRouteData(
+    static create(fields: OrcaRouteDataType): OrcaRouteData {
+        return new OrcaRouteData(
             fields.poolAddress,
             fields.inputMint,
             fields.outputMint,
@@ -29,8 +29,8 @@ export class OrcaSwapRouteData {
         );
     }
 
-    static from(value: unknown): OrcaSwapRouteData {
-        if (value instanceof OrcaSwapRouteData) {
+    static from(value: unknown): OrcaRouteData {
+        if (value instanceof OrcaRouteData) {
             return value;
         }
 
@@ -40,7 +40,7 @@ export class OrcaSwapRouteData {
 
         const fields = value as OrcaRouteDataType;
 
-        return new OrcaSwapRouteData(
+        return new OrcaRouteData(
             fields.poolAddress,
             fields.inputMint,
             fields.outputMint,

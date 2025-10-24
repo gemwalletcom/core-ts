@@ -10,7 +10,7 @@ import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
 import { calculateReferralFeeAmount, bnToNumberSafe, applyReferralFee } from "./fee";
-import { OrcaSwapRouteData } from "./model";
+import { OrcaRouteData } from "./model";
 import { BigIntMath } from "../bigint_math";
 import { getMintAddress, parsePublicKey, resolveTokenProgram } from "../chain/solana/account";
 
@@ -142,7 +142,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
             slippageBps,
         );
 
-        const routeData = OrcaSwapRouteData.create({
+        const routeData = OrcaRouteData.create({
             poolAddress: String(pool.account.address),
             inputMint: String(fromMintAddress),
             outputMint: String(toMintAddress),
@@ -162,7 +162,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
     async get_quote_data(quote: Quote): Promise<SwapQuoteData> {
         await this.initPromise;
 
-        const route = OrcaSwapRouteData.from(quote.route_data);
+        const route = OrcaRouteData.from(quote.route_data);
         const userPublicKey = parsePublicKey(quote.quote.from_address);
 
         const inputMintAddress = toAddress(route.inputMint);
