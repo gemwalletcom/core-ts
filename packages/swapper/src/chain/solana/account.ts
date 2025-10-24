@@ -3,7 +3,6 @@ import { WSOL_MINT } from "./constants";
 import { PublicKey } from "@solana/web3.js";
 import { address as toAddress, type Address, type createSolanaRpc } from "@solana/kit";
 import { fetchAllMint } from "@solana-program/token-2022";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 type SolanaRpc = ReturnType<typeof createSolanaRpc>;
 
@@ -31,17 +30,13 @@ export async function resolveTokenProgram(
     mint: PublicKey,
 ): Promise<PublicKey> {
     const mintAccount = await fetchAllMint(rpc, [toAddress(mint.toBase58())]);
+    if (mintAccount.length === 0) {
+        throw new Error("Failed to fetch mint account data");
+    }
     const account = mintAccount[0];
 
-    if (!account) {
-        return TOKEN_PROGRAM_ID;
-    }
-
     if ("exists" in account) {
-        if (!account.exists) {
-            return TOKEN_PROGRAM_ID;
-        }
-        return new PublicKey(account.programAddress);
+        throw new Error("Mint account does not exist");
     }
 
     return new PublicKey(account.programAddress);

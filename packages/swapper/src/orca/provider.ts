@@ -10,7 +10,7 @@ import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
 import { calculateReferralFeeAmount, bnToNumberSafe } from "./fee";
-import { OrcaSwapRouteData, isOrcaRouteData } from "./model";
+import { OrcaSwapRouteData } from "./model";
 import { BigIntMath } from "../bigint_math";
 import { getMintAddress, parsePublicKey, resolveTokenProgram } from "../chain/solana/account";
 
@@ -127,37 +127,33 @@ export class OrcaWhirlpoolProvider implements Protocol {
             slippageBps,
         );
 
-        const routeData: OrcaSwapRouteData = {
+        const routeData = OrcaSwapRouteData.create({
             poolAddress: String(pool.account.address),
             inputMint: String(fromMintAddress),
             outputMint: String(toMintAddress),
             amount: swapAmount.toString(),
             slippageBps,
-        };
+        });
 
         return {
             quote: quoteRequest,
             output_value: quoteResult.quote.tokenEstOut.toString(),
             output_min_value: quoteResult.quote.tokenMinOut.toString(),
             eta_in_seconds: 5,
-            route_data: routeData,
+            route_data: routeData.toJSON(),
         };
     }
 
     async get_quote_data(quote: Quote): Promise<SwapQuoteData> {
-        if (!isOrcaRouteData(quote.route_data)) {
-            throw new Error("Invalid Orca route data");
-        }
-
         await this.initPromise;
 
-        const route = quote.route_data;
+        const route = OrcaSwapRouteData.from(quote.route_data);
         const userPublicKey = parsePublicKey(quote.quote.from_address);
 
         const inputMintAddress = toAddress(route.inputMint);
         const poolAddress = toAddress(route.poolAddress);
         const amount = BigIntMath.parseString(route.amount);
-        const slippageBps = route.slippageBps ?? quote.quote.slippage_bps ?? 100;
+        const slippageBps = route.slippageBps;
 
         const signer = this.createPassthroughSigner(userPublicKey);
 

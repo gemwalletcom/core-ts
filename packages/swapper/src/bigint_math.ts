@@ -60,14 +60,22 @@ export class BigIntMath {
     }
 
     static parseString(value: string): bigint {
-        try {
-            const parsed = BigInt(value);
-            if (parsed <= BigInt(0)) {
-                throw new Error();
-            }
-            return parsed;
-        } catch {
-            throw new Error("Invalid amount");
+        const normalized = value.trim();
+        if (normalized.length === 0) {
+            throw new Error("Amount must be a valid integer string");
         }
+
+        let parsed: bigint;
+        try {
+            parsed = BigInt(normalized);
+        } catch {
+            throw new Error("Amount must be a valid integer string");
+        }
+
+        if (parsed <= BigInt(0)) {
+            throw new Error("Amount must be greater than zero");
+        }
+
+        return parsed;
     }
 }
