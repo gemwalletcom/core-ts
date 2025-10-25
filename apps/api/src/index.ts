@@ -1,7 +1,14 @@
+import path from "node:path";
+import dotenv from "dotenv";
 import express from "express";
 
 import { Quote, QuoteRequest } from "@gemwallet/types";
 import { StonfiProvider, Protocol, MayanProvider, CetusAggregatorProvider, RelayProvider, OrcaWhirlpoolProvider } from "@gemwallet/swapper";
+
+if (process.env.NODE_ENV !== "production") {
+    const rootEnvPath = path.resolve(__dirname, "../../..", ".env");
+    dotenv.config({ path: rootEnvPath, override: false });
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
