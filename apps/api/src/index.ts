@@ -12,6 +12,7 @@ if (process.env.NODE_ENV !== "production") {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const isProduction = process.env.NODE_ENV === "production";
 
 app.use(express.json());
 
@@ -50,8 +51,10 @@ app.post('/:providerId/quote', async (req, res) => {
         const quote = await provider.get_quote(request);
         res.json(quote);
     } catch (error) {
-        console.log("Error fetching quote via POST:", error);
-        console.log("Request body:", req.body);
+        if (!isProduction) {
+            console.error("Error fetching quote via POST:", error);
+            console.debug("Request metadata:", { providerId, hasBody: Boolean(req.body) });
+        }
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
         } else {
@@ -75,7 +78,10 @@ app.post('/:providerId/quote_data', async (req, res) => {
         const quote = await provider.get_quote_data(quote_request);
         res.json(quote);
     } catch (error) {
-        console.log("quote_request", quote_request);
+        if (!isProduction) {
+            console.error("Error fetching quote data:", error);
+            console.debug("Quote metadata:", { providerId, hasQuote: Boolean(quote_request) });
+        }
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
         } else {
