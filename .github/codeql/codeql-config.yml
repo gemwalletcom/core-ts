@@ -1,0 +1,7 @@
+name: "core-ts CodeQL configuration"
+paths:
+  - apps
+  - packages
+paths-ignore:
+  - "**/dist/**"
+  - "**/node_modules/**"
