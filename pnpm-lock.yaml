@@ -55,8 +55,8 @@ importers:
   packages/swapper:
     dependencies:
       '@cetusprotocol/aggregator-sdk':
-        specifier: 1.4.1
-        version: 1.4.1(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)
+        specifier: 1.4.2
+        version: 1.4.2(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)
       '@coral-xyz/anchor':
         specifier: 0.32.1
         version: 0.32.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -306,8 +306,8 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@cetusprotocol/aggregator-sdk@1.4.1':
-    resolution: {integrity: sha512-chFLcIL3IM6VRgkfmrIswrHr7Mt2dMEoHMa/QO1E3WTxt53vgSx9MFsF/55Z+kBz92wUzkQ468hZ6Lb/Xdj9OQ==}
+  '@cetusprotocol/aggregator-sdk@1.4.2':
+    resolution: {integrity: sha512-GhsiwY3IAvIgjqacQtIGn60AlvK3IguaP5YapE5u0LhXbG6Nsyho0MEpki19N68QYUct1GUWwpOfLVCzUpKKrQ==}
     peerDependencies:
       typescript: ^5.8.2
 
@@ -3124,7 +3124,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@cetusprotocol/aggregator-sdk@1.4.1(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)':
+  '@cetusprotocol/aggregator-sdk@1.4.2(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)':
     dependencies:
       '@mysten/sui': 1.35.0(typescript@5.9.2)
       '@pythnetwork/pyth-sui-js': 2.2.0(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)
