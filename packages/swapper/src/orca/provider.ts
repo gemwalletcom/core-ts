@@ -55,9 +55,9 @@ import {
 } from "@orca-so/whirlpools-core";
 import {
     AccountRole,
-    type IAccountLookupMeta,
-    type IAccountMeta,
-    type IInstruction,
+    type AccountLookupMeta,
+    type AccountMeta,
+    type Instruction,
 } from "@solana/instructions";
 
 const POOL_CACHE_TTL_MS = 30_000;
@@ -470,7 +470,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
         };
     }
 
-    private toLegacyInstruction(instruction: IInstruction): TransactionInstruction {
+    private toLegacyInstruction(instruction: Instruction): TransactionInstruction {
         const keys =
             instruction.accounts?.map((account) =>
                 this.toAccountMeta(account),
@@ -485,7 +485,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
     }
 
     private toAccountMeta(
-        account: IAccountMeta | IAccountLookupMeta,
+        account: AccountMeta | AccountLookupMeta,
     ): { pubkey: PublicKey; isSigner: boolean; isWritable: boolean } {
         const isSigner =
             account.role === AccountRole.READONLY_SIGNER ||

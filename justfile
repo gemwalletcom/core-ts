@@ -16,6 +16,9 @@ dev:
 test:
     pnpm run test
 
+bench PROVIDER="orca" ITERATIONS="2":
+    pnpm exec ts-node -P packages/swapper/tsconfig.json scripts/provider-bench.ts --provider {{PROVIDER}} --iterations {{ITERATIONS}}
+
 clean:
     pnpm run clean
     rm -rf packages/swapper/dist packages/swapper/tsconfig.tsbuildinfo
