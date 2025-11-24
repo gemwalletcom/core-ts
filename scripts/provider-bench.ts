@@ -12,19 +12,20 @@ import {
     StonfiProvider,
 } from "../packages/swapper/src";
 
-type ProviderId = "orca" | "cetus" | "mayan" | "relay" | "stonfi_v2";
-
 const SOLANA_RPC = process.env.SOLANA_URL || "https://solana-rpc.publicnode.com";
 const SUI_RPC = process.env.SUI_URL || "https://fullnode.mainnet.sui.io";
 const TON_RPC = process.env.TON_URL || "https://toncenter.com";
 
-const PROVIDER_FACTORY: Record<ProviderId, () => Protocol> = {
+const PROVIDER_FACTORY = {
     orca: () => new OrcaWhirlpoolProvider(SOLANA_RPC),
     cetus: () => new CetusAggregatorProvider(SUI_RPC),
     mayan: () => new MayanProvider(SOLANA_RPC, SUI_RPC),
     relay: () => new RelayProvider(),
     stonfi_v2: () => new StonfiProvider(TON_RPC),
-};
+} satisfies Record<string, () => Protocol>;
+
+type ProviderId = keyof typeof PROVIDER_FACTORY;
+const SUPPORTED_PROVIDERS = Object.keys(PROVIDER_FACTORY) as ProviderId[];
 
 const DEFAULT_REQUESTS: Partial<Record<ProviderId, QuoteRequest>> = {
     orca: {
@@ -64,17 +65,22 @@ function parseArgs(argv: string[]): CliOptions {
         return undefined;
     };
 
-    const providerId = (getValue("--provider") as ProviderId | undefined) ?? "orca";
+    const rawProvider = getValue("--provider") ?? "orca";
     const iterations = Number(getValue("--iterations") ?? "2");
     const includeQuoteData = !args.includes("--skip-quote-data");
     const requestPath = getValue("--request");
 
-    if (!["orca", "cetus", "mayan", "relay", "stonfi_v2"].includes(providerId)) {
-        throw new Error(`Unsupported provider: ${providerId}`);
+    const providerId = SUPPORTED_PROVIDERS.find(
+        (value) => value === rawProvider,
+    );
+    if (!providerId) {
+        throw new Error(
+            `Unsupported provider "${rawProvider}". Supported: ${SUPPORTED_PROVIDERS.join(", ")}`,
+        );
     }
 
     return {
-        providerId: providerId as ProviderId,
+        providerId,
         iterations: Number.isFinite(iterations) && iterations > 0 ? iterations : 2,
         includeQuoteData,
         requestPath,
