@@ -52,5 +52,6 @@ export enum Chain {
 	Hyperliquid = "hyperliquid",
 	HyperCore = "hypercore",
 	Monad = "monad",
+	XLayer = "xlayer",
 }
 
