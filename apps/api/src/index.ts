@@ -60,7 +60,7 @@ app.post("/:providerId/quote", async (req, res) => {
       console.error("Error fetching quote via POST:", error);
       console.debug("Request metadata:", { providerId, hasBody: Boolean(req.body) });
     }
-    res.status(500).json(errorResponse({ type: "compute_quote_error" }, error, errorObject));
+    res.status(500).json(errorResponse({ type: "compute_quote_error", message: "" }, error, errorObject));
   }
 });
 
@@ -85,7 +85,7 @@ app.post("/:providerId/quote_data", async (req, res) => {
       console.error("Error fetching quote data:", error);
       console.debug("Quote metadata:", { providerId, hasQuote: Boolean(quote_request) });
     }
-    res.status(500).json(errorResponse({ type: "transaction_error" }, error, errorObject));
+    res.status(500).json(errorResponse({ type: "transaction_error", message: "" }, error, errorObject));
   }
 });
 
