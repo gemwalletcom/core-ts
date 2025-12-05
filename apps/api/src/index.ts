@@ -43,10 +43,10 @@ app.post("/:providerId/quote", async (req, res) => {
   const providerId = req.params.providerId;
   const provider = providers[providerId];
   const version = parseVersion(req.query.v);
-  const errorObject = version >= API_VERSION;
+  const objectResponse = version >= API_VERSION;
 
   if (!provider) {
-    res.status(404).json(errorResponse({ type: "no_available_provider" }, `Provider ${providerId} not found`, errorObject));
+    res.status(404).json(errorResponse({ type: "no_available_provider" }, `Provider ${providerId} not found`, objectResponse));
     return;
   }
 
@@ -54,13 +54,17 @@ app.post("/:providerId/quote", async (req, res) => {
     const request: QuoteRequest = req.body;
 
     const quote = await provider.get_quote(request);
-    res.json({ ok: quote } satisfies ProxyResponse<Quote>);
+    if (objectResponse) {
+      res.json({ ok: quote } satisfies ProxyResponse<Quote>);
+    } else {
+      res.json(quote);
+    }
   } catch (error) {
     if (!isProduction) {
       console.error("Error fetching quote via POST:", error);
       console.debug("Request metadata:", { providerId, hasBody: Boolean(req.body) });
     }
-    res.status(500).json(errorResponse({ type: "compute_quote_error", message: "" }, error, errorObject));
+    res.status(500).json(errorResponse({ type: "compute_quote_error", message: "" }, error, objectResponse));
   }
 });
 
@@ -68,10 +72,10 @@ app.post("/:providerId/quote_data", async (req, res) => {
   const providerId = req.params.providerId;
   const provider = providers[providerId];
   const version = parseVersion(req.query.v);
-  const errorObject = version >= API_VERSION;
+  const objectResponse = version >= API_VERSION;
 
   if (!provider) {
-    res.status(404).json(errorResponse({ type: "no_available_provider" }, `Provider ${providerId} not found`, errorObject));
+    res.status(404).json(errorResponse({ type: "no_available_provider" }, `Provider ${providerId} not found`, objectResponse));
     return;
   }
   const quote_request = req.body as Quote;
@@ -79,13 +83,17 @@ app.post("/:providerId/quote_data", async (req, res) => {
   try {
 
     const quote = await provider.get_quote_data(quote_request);
-    res.json({ ok: quote } satisfies ProxyResponse<SwapQuoteData>);
+    if (objectResponse) {
+      res.json({ ok: quote } satisfies ProxyResponse<SwapQuoteData>);
+    } else {
+      res.json(quote);
+    }
   } catch (error) {
     if (!isProduction) {
       console.error("Error fetching quote data:", error);
       console.debug("Quote metadata:", { providerId, hasQuote: Boolean(quote_request) });
     }
-    res.status(500).json(errorResponse({ type: "transaction_error", message: "" }, error, errorObject));
+    res.status(500).json(errorResponse({ type: "transaction_error", message: "" }, error, objectResponse));
   }
 });
 
@@ -98,8 +106,8 @@ function errorResponse(err: SwapperError, rawError: unknown, structured: boolean
   if (!structured) {
     return { error: message ?? "Unknown error occurred" };
   }
-  if (err.type === "compute_quote_error" || err.type === "transaction_error") {
-    return { err: { type: err.type, message: message ?? "" } };
+  if (isMessageError(err)) {
+    return { err: { ...err, message: message ?? err.message ?? "" } };
   }
   return { err };
 }
@@ -113,4 +121,8 @@ function extractMessage(error: unknown): string | undefined {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
   return undefined;
+}
+
+function isMessageError(err: SwapperError): err is Extract<SwapperError, { message: string }> {
+  return err.type === "compute_quote_error" || err.type === "transaction_error";
 }
