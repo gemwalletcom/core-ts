@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import shutil
+import subprocess
 from pathlib import Path
 
 REQUIRED_FILES = [
@@ -31,15 +32,34 @@ def copy_required_files(source_root: Path, target_root: Path) -> None:
 
     for relative_path in REQUIRED_FILES:
         source = primitives_root / relative_path
-        if not source.exists():
-            raise FileNotFoundError(f"Expected generated file missing: {source}")
         destination = target_root / relative_path
         destination.parent.mkdir(parents=True, exist_ok=True)
+
+        if not source.exists():
+            raise FileNotFoundError(f"Expected generated file missing: {source}")
         shutil.copy2(source, destination)
         apply_import_patch(destination, IMPORT_PATCHES.get(relative_path))
 
     index_path = target_root / "index.ts"
     index_path.write_text(INDEX_TEMPLATE.read_text())
+
+    # Generate SwapperError directly from the swapper crate to avoid duplicate definitions.
+    generate_swapper_error(target_root / "swap" / "Error.ts")
+
+
+def generate_swapper_error(output_path: Path) -> None:
+    project_root = Path(__file__).resolve().parents[1]
+    swapper_error = project_root.parent / "core" / "crates" / "swapper" / "src" / "error.rs"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [
+            "typeshare",
+            str(swapper_error),
+            "--lang=typescript",
+            f"--output-file={output_path}",
+        ],
+        check=True,
+    )
 
 
 def apply_import_patch(file_path: Path, patch: str | None) -> None:
