@@ -108,7 +108,7 @@ export class MayanProvider implements Protocol {
 }
 
 function toMayanError(error: unknown): Error {
-    const message = extractMayanErrorMessage(error);
+    const message = extractErrorMessage(error);
     if (message) {
         return new Error(message);
     }
@@ -118,7 +118,7 @@ function toMayanError(error: unknown): Error {
     return new Error("Unknown Mayan error");
 }
 
-function extractMayanErrorMessage(error: unknown): string | undefined {
+function extractErrorMessage(error: unknown): string | undefined {
     if (error instanceof Error && error.message) return error.message;
     if (typeof error === "string" && error) return error;
 
