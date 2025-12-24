@@ -125,12 +125,10 @@ function extractErrorMessage(error: unknown): string | undefined {
     const payload = getErrorPayload(error);
     if (!payload) return undefined;
 
-    const msg = payload.msg;
-    const message = payload.message;
+    const message = payload.msg;
     const code = payload.code;
 
-    if (msg) return code ? `${code}: ${msg}` : msg;
-    if (message) return code && !message.includes(code) ? `${code}: ${message}` : message;
+    if (message) return message;
     return code;
 }
 
