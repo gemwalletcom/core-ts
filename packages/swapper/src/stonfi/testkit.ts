@@ -23,16 +23,18 @@ export function createQuoteRequest(overrides: Partial<QuoteRequest> = {}): Quote
         slippage_bps: 100,
     };
 
+    const { from_asset, to_asset, ...restOverrides } = overrides;
+
     return {
         ...base,
-        ...overrides,
+        ...restOverrides,
         from_asset: {
             ...base.from_asset,
-            ...(overrides.from_asset ?? {}),
+            ...(from_asset ?? {}),
         },
         to_asset: {
             ...base.to_asset,
-            ...(overrides.to_asset ?? {}),
+            ...(to_asset ?? {}),
         },
     };
 }
