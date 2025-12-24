@@ -7,7 +7,7 @@ import { buildSuiQuoteData } from "./sui";
 import { BigIntMath } from "../bigint_math";
 import { getReferrerAddresses } from "../referrer";
 import { SUI_COIN_TYPE } from "../chain/sui/constants";
-import { ErrorData, isErrorData } from "./models";
+import { toMayanError } from "./error";
 
 export class MayanProvider implements Protocol {
     private solanaRpc: string;
@@ -105,48 +105,4 @@ export class MayanProvider implements Protocol {
             return buildEvmQuoteData(quote.quote, quote.route_data as MayanQuote);
         }
     }
-}
-
-function toMayanError(error: unknown): Error {
-    const message = extractErrorMessage(error);
-    if (message) {
-        return new Error(message);
-    }
-    if (error instanceof Error) {
-        return error;
-    }
-    return new Error("Unknown Mayan error");
-}
-
-function extractErrorMessage(error: unknown): string | undefined {
-    if (error instanceof Error && error.message) return error.message;
-    if (typeof error === "string" && error) return error;
-
-    const payload = getErrorPayload(error);
-    if (!payload) return undefined;
-
-    const message = payload.msg;
-    const code = payload.code;
-
-    if (message) return message;
-    return code;
-}
-
-function getErrorPayload(error: unknown): ErrorData | undefined {
-    if (!error || typeof error !== "object") return undefined;
-    if (isErrorData(error)) return error;
-
-    const obj = error as Record<string, unknown>;
-    const response = obj.response;
-    if (response && typeof response === "object") {
-        const data = (response as Record<string, unknown>).data;
-        if (isErrorData(data)) return data;
-    }
-
-    const nested = obj.error;
-    if (nested && typeof nested === "object") {
-        return getErrorPayload(nested);
-    }
-
-    return undefined;
 }
