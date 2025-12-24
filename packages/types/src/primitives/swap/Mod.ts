@@ -12,6 +12,7 @@ export interface ProxyQuoteRequest {
 	from_value: string;
 	referral_bps: number;
 	slippage_bps: number;
+	use_max_amount?: boolean;
 }
 
 export interface ProxyQuote {
@@ -21,4 +22,3 @@ export interface ProxyQuote {
 	route_data: object;
 	eta_in_seconds: number;
 }
-
