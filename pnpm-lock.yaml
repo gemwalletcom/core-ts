@@ -71,8 +71,6 @@ importers:
         specifier: 1.35.0
         version: 1.35.0(typescript@5.9.2)
       '@orca-so/whirlpools':
-        specifier: 5.0.0
-        version: 5.0.0(@solana/kit@5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)
         specifier: 6.0.0
         version: 6.0.0(@solana/kit@5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(@solana/rpc@5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)
       '@orca-so/whirlpools-client':
