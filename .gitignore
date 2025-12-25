@@ -21,12 +21,16 @@ dist-ssr/
 *.tsbuildinfo
 coverage/
 .npm/
+apps/api/src/version.json
 
 # Compiled TypeScript files (if target is same as source)
 *.js
 *.js.map
 *.d.ts
 *.d.ts.map
+
+# Keep scripts directory
+!scripts/*.js
 
 # Editor directories and files
 .idea/
