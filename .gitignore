@@ -21,6 +21,7 @@ dist-ssr/
 *.tsbuildinfo
 coverage/
 .npm/
+apps/api/src/version.json
 
 # Compiled TypeScript files (if target is same as source)
 *.js
