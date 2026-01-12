@@ -4,6 +4,7 @@ import express from "express";
 
 import { Quote, QuoteRequest, SwapperError, SwapQuoteData } from "@gemwallet/types";
 import { StonfiProvider, Protocol, MayanProvider, CetusAggregatorProvider, RelayProvider, OrcaWhirlpoolProvider } from "@gemwallet/swapper";
+import versionInfo from "./version.json";
 
 if (process.env.NODE_ENV !== "production") {
     const rootEnvPath = path.resolve(__dirname, "../../..", ".env");
@@ -36,7 +37,8 @@ const providers: Record<string, Protocol> = {
 app.get("/", (_, res) => {
   res.json({
     providers: Object.keys(providers),
-    version: process.env.npm_package_version,
+    version: versionInfo.version,
+    commit: versionInfo.commit,
   });
 });
 
