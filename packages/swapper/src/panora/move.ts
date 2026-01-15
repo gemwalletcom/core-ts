@@ -99,10 +99,10 @@ function coerceUnsigned(value: unknown): string {
     if (typeof value === "bigint") {
         return value.toString();
     }
-    return String(value);
+    throw new Error(`Cannot coerce value of type ${typeof value} to an unsigned integer string.`);
 }
 
-function coerceU8(value: unknown): number | string {
+function coerceU8(value: unknown): number {
     if (typeof value === "number") {
         return Math.trunc(value);
     }
@@ -111,14 +111,15 @@ function coerceU8(value: unknown): number | string {
     }
     if (typeof value === "string") {
         const trimmed = value.trim();
+        if (trimmed === "") {
+            throw new Error("Cannot coerce empty string to u8.");
+        }
         const parsed = trimmed.startsWith("0x") ? Number.parseInt(trimmed, 16) : Number.parseInt(trimmed, 10);
         if (Number.isFinite(parsed)) {
             return parsed;
         }
-        return trimmed;
     }
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? Math.trunc(parsed) : String(value);
+    throw new Error(`Cannot coerce value of type ${typeof value} to u8.`);
 }
 
 function normalizeU8Vector(value: unknown[]): unknown {

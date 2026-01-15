@@ -2,7 +2,7 @@ import Panora, { type PanoraConfig } from "@panoraexchange/swap-sdk";
 import { QuoteRequest, Quote, SwapQuoteData, AssetId, Chain, SwapQuoteDataType } from "@gemwallet/types";
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
-import { type PanoraQuoteResponse, getPanoraQuoteEntry } from "./model";
+import { type PanoraQuoteResponse, isPanoraQuoteResponse, getPanoraQuoteEntry } from "./model";
 import { formatBpsAsPercent, normalizeAmount, formatAmountForPanora } from "./format";
 import { normalizePanoraArguments } from "./move";
 
@@ -72,17 +72,21 @@ export class PanoraProvider implements Protocol {
         };
 
         const routeData = await this.client.getQuote({ params });
-        const quoteEntry = getPanoraQuoteEntry(routeData);
 
-        const outputValue = quoteEntry.toTokenAmount ?? (routeData as PanoraQuoteResponse).toTokenAmount;
+        if (!isPanoraQuoteResponse(routeData)) {
+            throw new Error("Invalid Panora quote response");
+        }
+
+        const validatedRouteData = routeData as PanoraQuoteResponse;
+        const quoteEntry = getPanoraQuoteEntry(validatedRouteData);
+        const outputValue = quoteEntry.toTokenAmount ?? validatedRouteData.toTokenAmount;
         const outputMinValue = quoteEntry.minToTokenAmount ?? outputValue;
 
         if (!outputValue) {
             throw new Error("Panora quote response missing output amount");
         }
 
-        const tokenDecimals =
-            (routeData as PanoraQuoteResponse).toToken?.decimals ?? request.to_asset.decimals;
+        const tokenDecimals = validatedRouteData.toToken?.decimals ?? request.to_asset.decimals;
         const normalizedOutputValue = normalizeAmount(outputValue, tokenDecimals);
         const normalizedOutputMinValue = outputMinValue
             ? normalizeAmount(outputMinValue, tokenDecimals)

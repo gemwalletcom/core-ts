@@ -32,6 +32,16 @@ const REQUEST_TEMPLATE: QuoteRequest = {
 describeIntegration("Panora live integration", () => {
     jest.setTimeout(60_000);
 
+    let provider: import("./provider").PanoraProvider;
+
+    beforeAll(async () => {
+        const { PanoraProvider } = await import("./provider");
+        provider = new PanoraProvider({
+            panoraApiKey: process.env.PANORA_API_KEY,
+            rpcUrl: process.env.APTOS_RPC,
+        });
+    });
+
     function formatAmount(value: string, decimals: number): string {
         const raw = BigInt(value);
         if (decimals <= 0) {
@@ -48,12 +58,6 @@ describeIntegration("Panora live integration", () => {
     }
 
     it("fetches a live quote and wraps tx data (10 APT -> USDC)", async () => {
-        const { PanoraProvider } = await import("./provider");
-        const provider = new PanoraProvider({
-            panoraApiKey: process.env.PANORA_API_KEY,
-            rpcUrl: process.env.APTOS_RPC,
-        });
-
         const quote = await provider.get_quote(REQUEST_TEMPLATE);
 
         expect(BigInt(quote.output_value) > 0).toBe(true);
@@ -82,12 +86,6 @@ describeIntegration("Panora live integration", () => {
     });
 
     it("fetches a live quote for USDT -> APT", async () => {
-        const { PanoraProvider } = await import("./provider");
-        const provider = new PanoraProvider({
-            panoraApiKey: process.env.PANORA_API_KEY,
-            rpcUrl: process.env.APTOS_RPC,
-        });
-
         const request: QuoteRequest = {
             ...REQUEST_TEMPLATE,
             from_asset: {

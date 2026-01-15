@@ -24,6 +24,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null;
 }
 
+export function isPanoraQuoteResponse(value: unknown): value is PanoraQuoteResponse {
+    if (!isRecord(value)) {
+        return false;
+    }
+    const quotes = value.quotes;
+    if (!Array.isArray(quotes) || quotes.length === 0) {
+        return false;
+    }
+    return true;
+}
+
 export function getPanoraQuoteEntry(value: unknown): PanoraQuoteEntry {
     if (!isRecord(value)) {
         throw new Error("Invalid Panora quote data");
