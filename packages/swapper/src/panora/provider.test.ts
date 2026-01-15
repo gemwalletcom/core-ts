@@ -1,4 +1,5 @@
 import { Chain, QuoteRequest } from "@gemwallet/types";
+import { BigIntMath } from "../bigint_math";
 
 const runIntegration = process.env.PANORA_INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
@@ -42,21 +43,6 @@ describeIntegration("Panora live integration", () => {
         });
     });
 
-    function formatAmount(value: string, decimals: number): string {
-        const raw = BigInt(value);
-        if (decimals <= 0) {
-            return raw.toString();
-        }
-        const divisor = BigInt(10) ** BigInt(decimals);
-        const whole = raw / divisor;
-        const fraction = raw % divisor;
-        const fractionStr = fraction.toString().padStart(decimals, "0").replace(/0+$/, "");
-        if (!fractionStr) {
-            return whole.toString();
-        }
-        return `${whole.toString()}.${fractionStr}`;
-    }
-
     it("fetches a live quote and wraps tx data (10 APT -> USDC)", async () => {
         const quote = await provider.get_quote(REQUEST_TEMPLATE);
 
@@ -73,8 +59,8 @@ describeIntegration("Panora live integration", () => {
             arguments: unknown[];
         };
 
-        const outputValue = formatAmount(quote.output_value, USDC_DECIMALS);
-        const outputMinValue = formatAmount(quote.output_min_value, USDC_DECIMALS);
+        const outputValue = BigIntMath.formatDecimals(quote.output_value, USDC_DECIMALS);
+        const outputMinValue = BigIntMath.formatDecimals(quote.output_min_value, USDC_DECIMALS);
         console.log("Panora 10 APT -> USDC output:", outputValue);
         console.log("Panora 10 APT -> USDC min:", outputMinValue);
         expect(Number(outputValue)).toBeGreaterThan(10);
@@ -107,8 +93,8 @@ describeIntegration("Panora live integration", () => {
         expect(quote.output_value).toMatch(/^\d+$/);
         expect(quote.output_min_value).toMatch(/^\d+$/);
 
-        const outputValue = formatAmount(quote.output_value, APT_DECIMALS);
-        const outputMinValue = formatAmount(quote.output_min_value, APT_DECIMALS);
+        const outputValue = BigIntMath.formatDecimals(quote.output_value, APT_DECIMALS);
+        const outputMinValue = BigIntMath.formatDecimals(quote.output_min_value, APT_DECIMALS);
         console.log("Panora 4 USDT -> APT output:", outputValue);
         console.log("Panora 4 USDT -> APT min:", outputMinValue);
         expect(Number(outputValue)).toBeGreaterThan(1);
