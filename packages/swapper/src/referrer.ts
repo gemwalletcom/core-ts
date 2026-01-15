@@ -18,7 +18,7 @@ export function getReferrerAddresses(): Referrers {
         sui: "0x9d6b98b18fd26b5efeec68d020dcf1be7a94c2c315353779bc6b3aed44188ddf",
         ton: "UQDxJKarPSp0bCta9DFgp81Mpt5hpGbuVcSxwfeza0Bin201",
         tron: "TYeyZXywpA921LEtw2PF3obK4B8Jjgpp32",
-        aptos: "0x4eb20e735591a85bb58921ef2e6b55c385bba10e817ffe1e02e50deb6c594aef",
+        aptos: "0xc09d385527743bb03ed7847bb9180b5ff2263d38d5a93f1c9b3068f8505f6488",
     };
 }
 
