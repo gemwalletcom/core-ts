@@ -23,10 +23,6 @@ export class PanoraProvider implements Protocol {
     }
 
     private mapAssetToTokenAddress(asset: AssetId): string {
-        if (asset.chain !== Chain.Aptos) {
-            throw new Error(`Unsupported chain: ${asset.chain}`);
-        }
-
         if (asset.isNative()) {
             return APTOS_NATIVE_COIN;
         }
@@ -57,10 +53,6 @@ export class PanoraProvider implements Protocol {
     async get_quote(request: QuoteRequest): Promise<Quote> {
         const fromAsset = AssetId.fromString(request.from_asset.id);
         const toAsset = AssetId.fromString(request.to_asset.id);
-
-        if (fromAsset.chain !== Chain.Aptos || toAsset.chain !== Chain.Aptos) {
-            throw new Error("Panora only supports Aptos swaps");
-        }
 
         const params = {
             fromTokenAddress: this.mapAssetToTokenAddress(fromAsset) as `0x${string}`,

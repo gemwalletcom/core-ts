@@ -32,7 +32,7 @@ const providers: Record<string, Protocol> = {
     cetus: new CetusAggregatorProvider(process.env.SUI_URL || "https://fullnode.mainnet.sui.io"),
     relay: new RelayProvider(),
     orca: new OrcaWhirlpoolProvider(solanaRpc),
-    panora: new PanoraProvider(),
+    panora: new PanoraProvider({ rpcUrl: process.env.APTOS_URL }),
 };
 
 app.get("/", (_, res) => {
