@@ -8,6 +8,7 @@ export enum SwapProvider {
 	PancakeswapV3 = "pancakeswap_v3",
 	Aerodrome = "aerodrome",
 	PancakeswapAptosV2 = "pancakeswap_aptos_v2",
+	Panora = "panora",
 	Thorchain = "thorchain",
 	Jupiter = "jupiter",
 	Across = "across",
@@ -24,4 +25,3 @@ export enum SwapProvider {
 	Hyperliquid = "hyperliquid",
 	Orca = "orca",
 }
-

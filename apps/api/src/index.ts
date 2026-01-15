@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import express from "express";
 
 import { Quote, QuoteRequest, SwapperError, SwapQuoteData } from "@gemwallet/types";
-import { StonfiProvider, Protocol, MayanProvider, CetusAggregatorProvider, RelayProvider, OrcaWhirlpoolProvider } from "@gemwallet/swapper";
+import { StonfiProvider, Protocol, MayanProvider, CetusAggregatorProvider, RelayProvider, OrcaWhirlpoolProvider, PanoraProvider } from "@gemwallet/swapper";
 import versionInfo from "./version.json";
 
 if (process.env.NODE_ENV !== "production") {
@@ -32,6 +32,7 @@ const providers: Record<string, Protocol> = {
     cetus: new CetusAggregatorProvider(process.env.SUI_URL || "https://fullnode.mainnet.sui.io"),
     relay: new RelayProvider(),
     orca: new OrcaWhirlpoolProvider(solanaRpc),
+    panora: new PanoraProvider({ rpcUrl: process.env.APTOS_URL }),
 };
 
 app.get("/", (_, res) => {
