@@ -1,3 +1,5 @@
+import { isRecord } from "../guards";
+
 export type OrcaRouteDataType = {
     poolAddress: string;
     inputMint: string;
@@ -5,10 +7,6 @@ export type OrcaRouteDataType = {
     amount: string;
     slippageBps: number;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null;
-}
 
 export class OrcaRouteData {
     private constructor(

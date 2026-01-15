@@ -1,3 +1,5 @@
+import { isRecord } from "../guards";
+
 export type PanoraTxData = {
     function: string;
     type_arguments: unknown[];
@@ -19,10 +21,6 @@ export type PanoraQuoteResponse = {
     toTokenAmount?: string;
     quotes: PanoraQuoteEntry[];
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null;
-}
 
 export function isPanoraQuoteResponse(value: unknown): value is PanoraQuoteResponse {
     if (!isRecord(value)) {

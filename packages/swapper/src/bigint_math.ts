@@ -59,6 +59,38 @@ export class BigIntMath {
         return (value * multiplier) / BigInt(100);
     }
 
+    /**
+     * Converts a raw integer value to a decimal string representation
+     * @param value The raw integer value (as string or bigint)
+     * @param decimals The number of decimal places
+     * @returns A decimal string (e.g., "10.5" for value=10500000, decimals=6)
+     */
+    static formatDecimals(value: string | bigint, decimals: number): string {
+        const raw = typeof value === "string" ? BigInt(value) : value;
+        if (decimals <= 0) {
+            return raw.toString();
+        }
+
+        const divisor = BigInt(10) ** BigInt(decimals);
+        const whole = raw / divisor;
+        const fraction = raw % divisor;
+        if (fraction === BigInt(0)) {
+            return whole.toString();
+        }
+
+        const fractionStr = fraction.toString().padStart(decimals, "0").replace(/0+$/, "");
+        return `${whole.toString()}.${fractionStr}`;
+    }
+
+    /**
+     * Converts basis points to a percentage string
+     * @param bps Basis points (100 bps = 1%)
+     * @returns Percentage string (e.g., 150 bps -> "1.5")
+     */
+    static bpsToPercent(bps: number): string {
+        return (bps / 100).toString();
+    }
+
     static parseString(value: string): bigint {
         const normalized = value.trim();
         if (normalized.length === 0) {

@@ -3,8 +3,8 @@ import { QuoteRequest, Quote, SwapQuoteData, AssetId, Chain, SwapQuoteDataType }
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
 import { type PanoraQuoteResponse, isPanoraQuoteResponse, getPanoraQuoteEntry } from "./model";
-import { formatBpsAsPercent, normalizeAmount, formatAmountForPanora } from "./format";
 import { normalizePanoraArguments } from "./move";
+import { BigIntMath } from "../bigint_math";
 
 const APTOS_NATIVE_COIN = "0x1::aptos_coin::AptosCoin";
 
@@ -34,19 +34,13 @@ export class PanoraProvider implements Protocol {
         integratorFeePercentage?: string;
         integratorFeeAddress?: `0x${string}`;
     } {
-        if (!this.integratorFeeAddress || referralBps <= 0) {
-            return {};
-        }
-
-        const integratorFeePercentage = formatBpsAsPercent(referralBps);
-        const integratorFeeValue = Number(integratorFeePercentage);
-        if (!Number.isFinite(integratorFeeValue) || integratorFeeValue <= 0 || integratorFeeValue > 2) {
+        if (!this.integratorFeeAddress || referralBps <= 0 || referralBps > 200) {
             return {};
         }
 
         return {
             integratorFeeAddress: this.integratorFeeAddress,
-            integratorFeePercentage,
+            integratorFeePercentage: BigIntMath.bpsToPercent(referralBps),
         };
     }
 
@@ -57,9 +51,9 @@ export class PanoraProvider implements Protocol {
         const params = {
             fromTokenAddress: this.mapAssetToTokenAddress(fromAsset) as `0x${string}`,
             toTokenAddress: this.mapAssetToTokenAddress(toAsset) as `0x${string}`,
-            fromTokenAmount: formatAmountForPanora(request.from_value, request.from_asset.decimals),
+            fromTokenAmount: BigIntMath.formatDecimals(request.from_value, request.from_asset.decimals),
             toWalletAddress: request.to_address as `0x${string}`,
-            slippagePercentage: formatBpsAsPercent(request.slippage_bps),
+            slippagePercentage: BigIntMath.bpsToPercent(request.slippage_bps),
             ...this.buildIntegratorFeeParams(request.referral_bps),
         };
 
@@ -71,23 +65,23 @@ export class PanoraProvider implements Protocol {
 
         const validatedRouteData = routeData as PanoraQuoteResponse;
         const quoteEntry = getPanoraQuoteEntry(validatedRouteData);
-        const outputValue = quoteEntry.toTokenAmount ?? validatedRouteData.toTokenAmount;
-        const outputMinValue = quoteEntry.minToTokenAmount ?? outputValue;
+        const outputAmount = quoteEntry.toTokenAmount ?? validatedRouteData.toTokenAmount;
+        const outputMinAmount = quoteEntry.minToTokenAmount ?? outputAmount;
 
-        if (!outputValue) {
+        if (!outputAmount) {
             throw new Error("Panora quote response missing output amount");
         }
 
         const tokenDecimals = validatedRouteData.toToken?.decimals ?? request.to_asset.decimals;
-        const normalizedOutputValue = normalizeAmount(outputValue, tokenDecimals);
-        const normalizedOutputMinValue = outputMinValue
-            ? normalizeAmount(outputMinValue, tokenDecimals)
-            : normalizedOutputValue;
+        const outputValue = BigIntMath.parseDecimals(outputAmount, tokenDecimals);
+        const outputMinValue = outputMinAmount
+            ? BigIntMath.parseDecimals(outputMinAmount, tokenDecimals)
+            : outputValue;
 
         return {
             quote: request,
-            output_value: normalizedOutputValue,
-            output_min_value: normalizedOutputMinValue,
+            output_value: outputValue.toString(),
+            output_min_value: outputMinValue.toString(),
             route_data: routeData,
             eta_in_seconds: 0,
         };
