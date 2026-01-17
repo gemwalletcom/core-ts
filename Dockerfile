@@ -1,6 +1,10 @@
 # Stage 1: Build the application
 FROM node:22-slim AS builder
 
+# Build argument for git commit SHA
+ARG GIT_COMMIT=unknown
+ENV GIT_COMMIT=${GIT_COMMIT}
+
 # Install pnpm
 RUN npm install -g pnpm
 

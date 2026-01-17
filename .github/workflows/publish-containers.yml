@@ -47,6 +47,8 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
           cache-from: type=gha,scope=swapper
           cache-to: type=gha,scope=swapper,mode=max
           labels: |

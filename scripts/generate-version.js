@@ -6,6 +6,9 @@ const path = require("path");
 const rootPackageJson = require("../package.json");
 
 function getGitCommit() {
+    if (process.env.GIT_COMMIT && process.env.GIT_COMMIT !== "unknown") {
+        return process.env.GIT_COMMIT.substring(0, 7);
+    }
     try {
         return execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
     } catch {
