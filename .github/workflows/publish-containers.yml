@@ -4,15 +4,6 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
-    inputs:
-      target:
-        description: "Container to build"
-        required: false
-        default: all
-        type: choice
-        options:
-          - all
-          - swapper
 
 permissions:
   contents: read
@@ -41,12 +32,13 @@ jobs:
           password: ${{ secrets.PACKAGES_GITHUB_TOKEN }}
 
       - name: Build and push swapper image
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.target == 'all' || github.event.inputs.target == 'swapper' }}
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: true
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
           cache-from: type=gha,scope=swapper
           cache-to: type=gha,scope=swapper,mode=max
           labels: |
