@@ -117,7 +117,7 @@ function isMessageError(err: SwapperError): err is Extract<SwapperError, { messa
 }
 
 function withProvider(req: ProviderRequest, res: express.Response, next: express.NextFunction) {
-  const providerId = req.params.providerId;
+  const providerId = req.params.providerId as string;
   const provider = providers[providerId];
   const version = parseVersion(req.query.v);
   const objectResponse = version >= API_VERSION;
