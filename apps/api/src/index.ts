@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import express from "express";
 
 import { Quote, QuoteRequest, SwapperError, SwapQuoteData } from "@gemwallet/types";
-import { StonfiProvider, Protocol, MayanProvider, CetusAggregatorProvider, RelayProvider, OrcaWhirlpoolProvider, PanoraProvider } from "@gemwallet/swapper";
+import { StonfiProvider, Protocol, MayanProvider, CetusAggregatorProvider, RelayProvider, OrcaWhirlpoolProvider, PanoraProvider, SwapperException } from "@gemwallet/swapper";
 import versionInfo from "./version.json";
 
 if (process.env.NODE_ENV !== "production") {
@@ -60,7 +60,10 @@ app.post("/:providerId/quote", withProvider, async (req: ProviderRequest, res) =
       console.error("Error fetching quote via POST:", error);
       console.debug("Request metadata:", { providerId: req.params.providerId, hasBody: Boolean(req.body) });
     }
-    res.status(500).json(errorResponse({ type: "compute_quote_error", message: "" }, error, objectResponse));
+    const swapperError = SwapperException.isSwapperException(error)
+      ? error.swapperError
+      : { type: "compute_quote_error" as const, message: "" };
+    res.status(httpStatus(swapperError)).json(errorResponse(swapperError, error, objectResponse));
   }
 });
 
@@ -82,7 +85,10 @@ app.post("/:providerId/quote_data", withProvider, async (req: ProviderRequest, r
       console.error("Error fetching quote data:", error);
       console.debug("Quote metadata:", { providerId: req.params.providerId, hasQuote: Boolean(quote_request) });
     }
-    res.status(500).json(errorResponse({ type: "transaction_error", message: "" }, error, objectResponse));
+    const swapperError = SwapperException.isSwapperException(error)
+      ? error.swapperError
+      : { type: "transaction_error" as const, message: "" };
+    res.status(httpStatus(swapperError)).json(errorResponse(swapperError, error, objectResponse));
   }
 });
 
@@ -114,6 +120,22 @@ function extractMessage(error: unknown): string | undefined {
 
 function isMessageError(err: SwapperError): err is Extract<SwapperError, { message: string }> {
   return err.type === "compute_quote_error" || err.type === "transaction_error";
+}
+
+function httpStatus(err: SwapperError): number {
+  switch (err.type) {
+    case "input_amount_error":
+    case "not_supported_chain":
+    case "not_supported_asset":
+    case "invalid_route":
+      return 400;
+    case "no_available_provider":
+    case "no_quote_available":
+      return 404;
+    case "compute_quote_error":
+    case "transaction_error":
+      return 500;
+  }
 }
 
 function withProvider(req: ProviderRequest, res: express.Response, next: express.NextFunction) {
