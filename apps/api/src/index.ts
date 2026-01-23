@@ -2,17 +2,17 @@ import path from "node:path";
 import dotenv from "dotenv";
 import express from "express";
 
-import { Quote, QuoteRequest, SwapperError, SwapQuoteData } from "@gemwallet/types";
+import { Quote, QuoteRequest, SwapQuoteData } from "@gemwallet/types";
 import { StonfiProvider, Protocol, MayanProvider, CetusAggregatorProvider, RelayProvider, OrcaWhirlpoolProvider, PanoraProvider, SwapperException } from "@gemwallet/swapper";
 import versionInfo from "./version.json";
+import { errorResponse, httpStatus, ProxyErrorResponse } from "./error";
 
 if (process.env.NODE_ENV !== "production") {
     const rootEnvPath = path.resolve(__dirname, "../../..", ".env");
     dotenv.config({ path: rootEnvPath, override: false });
 }
 
-type ErrorResponse = { type: string; message: string | object };
-type ProxyResponse<T> = { ok: T } | { err: ErrorResponse } | { error: string };
+type ProxyResponse<T> = { ok: T } | ProxyErrorResponse;
 type ProviderRequest = express.Request & { provider?: Protocol; objectResponse?: boolean };
 
 const app = express();
@@ -74,7 +74,6 @@ app.post("/:providerId/quote_data", withProvider, async (req: ProviderRequest, r
   const quote_request = req.body as Quote;
 
   try {
-
     const quote = await provider.get_quote_data(quote_request);
     if (objectResponse) {
       res.json({ ok: quote } satisfies ProxyResponse<SwapQuoteData>);
@@ -97,47 +96,9 @@ app.listen(PORT, () => {
   console.log(`swapper api is running on port ${PORT}.`);
 });
 
-function errorResponse(err: SwapperError, rawError: unknown, structured: boolean): ProxyResponse<never> {
-  const rawMessage = extractMessage(rawError);
-  if (!structured) {
-    return { error: rawMessage ?? ("message" in err ? err.message : undefined) ?? "Unknown error occurred" };
-  }
-  if (isMessageError(err)) {
-    return { err: { type: err.type, message: rawMessage ?? err.message ?? "" } };
-  }
-  const { type, ...rest } = err;
-  return { err: { type, message: rest } };
-}
-
 function parseVersion(raw: unknown): number {
   const num = typeof raw === "string" ? Number(raw) : Array.isArray(raw) ? Number(raw[0]) : NaN;
   return Number.isFinite(num) ? num : 0;
-}
-
-function extractMessage(error: unknown): string | undefined {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return undefined;
-}
-
-function isMessageError(err: SwapperError): err is Extract<SwapperError, { message: string }> {
-  return err.type === "compute_quote_error" || err.type === "transaction_error";
-}
-
-function httpStatus(err: SwapperError): number {
-  switch (err.type) {
-    case "input_amount_error":
-    case "not_supported_chain":
-    case "not_supported_asset":
-    case "invalid_route":
-      return 400;
-    case "no_available_provider":
-    case "no_quote_available":
-      return 404;
-    case "compute_quote_error":
-    case "transaction_error":
-      return 500;
-  }
 }
 
 function withProvider(req: ProviderRequest, res: express.Response, next: express.NextFunction) {

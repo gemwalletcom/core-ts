@@ -33,16 +33,9 @@ function extractMinAmount(message: string, decimals: number): string | null | un
 }
 
 function extractErrorMessage(error: unknown): string | undefined {
-    const payloadMessage = extractPayloadMessage(error);
-    if (payloadMessage) return payloadMessage;
-
-    if (error instanceof Error && error.message) return error.message;
+    if (error instanceof Error) return error.message;
+    if (error && typeof error === "object" && "message" in error) {
+        return typeof error.message === "string" ? error.message : undefined;
+    }
     return undefined;
-}
-
-function extractPayloadMessage(error: unknown): string | undefined {
-    if (!error || typeof error !== "object") return undefined;
-
-    const obj = error as Record<string, unknown>;
-    return typeof obj.message === "string" ? obj.message : undefined;
 }
