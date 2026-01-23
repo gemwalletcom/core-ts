@@ -73,7 +73,7 @@ export class MayanProvider implements Protocol {
         try {
             quotes = await fetchQuote(params, options);
         } catch (error) {
-            throw toMayanError(error);
+            throw toMayanError(error, quoteRequest.from_asset.decimals);
         }
 
         if (!quotes || quotes.length === 0) {

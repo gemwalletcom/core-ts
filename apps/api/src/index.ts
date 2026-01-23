@@ -2,16 +2,17 @@ import path from "node:path";
 import dotenv from "dotenv";
 import express from "express";
 
-import { Quote, QuoteRequest, SwapperError, SwapQuoteData } from "@gemwallet/types";
-import { StonfiProvider, Protocol, MayanProvider, CetusAggregatorProvider, RelayProvider, OrcaWhirlpoolProvider, PanoraProvider } from "@gemwallet/swapper";
+import { Quote, QuoteRequest, SwapQuoteData } from "@gemwallet/types";
+import { StonfiProvider, Protocol, MayanProvider, CetusAggregatorProvider, RelayProvider, OrcaWhirlpoolProvider, PanoraProvider, SwapperException } from "@gemwallet/swapper";
 import versionInfo from "./version.json";
+import { errorResponse, sendErrorResponse, ProxyErrorResponse } from "./error";
 
 if (process.env.NODE_ENV !== "production") {
     const rootEnvPath = path.resolve(__dirname, "../../..", ".env");
     dotenv.config({ path: rootEnvPath, override: false });
 }
 
-type ProxyResponse<T> = { ok: T } | { err: SwapperError } | { error: string };
+type ProxyResponse<T> = { ok: T } | ProxyErrorResponse;
 type ProviderRequest = express.Request & { provider?: Protocol; objectResponse?: boolean };
 
 const app = express();
@@ -60,7 +61,10 @@ app.post("/:providerId/quote", withProvider, async (req: ProviderRequest, res) =
       console.error("Error fetching quote via POST:", error);
       console.debug("Request metadata:", { providerId: req.params.providerId, hasBody: Boolean(req.body) });
     }
-    res.status(500).json(errorResponse({ type: "compute_quote_error", message: "" }, error, objectResponse));
+    const swapperError = SwapperException.isSwapperException(error)
+      ? error.swapperError
+      : { type: "compute_quote_error" as const, message: "" };
+    sendErrorResponse(res, swapperError, error, objectResponse);
   }
 });
 
@@ -70,7 +74,6 @@ app.post("/:providerId/quote_data", withProvider, async (req: ProviderRequest, r
   const quote_request = req.body as Quote;
 
   try {
-
     const quote = await provider.get_quote_data(quote_request);
     if (objectResponse) {
       res.json({ ok: quote } satisfies ProxyResponse<SwapQuoteData>);
@@ -82,7 +85,10 @@ app.post("/:providerId/quote_data", withProvider, async (req: ProviderRequest, r
       console.error("Error fetching quote data:", error);
       console.debug("Quote metadata:", { providerId: req.params.providerId, hasQuote: Boolean(quote_request) });
     }
-    res.status(500).json(errorResponse({ type: "transaction_error", message: "" }, error, objectResponse));
+    const swapperError = SwapperException.isSwapperException(error)
+      ? error.swapperError
+      : { type: "transaction_error" as const, message: "" };
+    sendErrorResponse(res, swapperError, error, objectResponse);
   }
 });
 
@@ -90,30 +96,9 @@ app.listen(PORT, () => {
   console.log(`swapper api is running on port ${PORT}.`);
 });
 
-function errorResponse(err: SwapperError, rawError: unknown, structured: boolean): ProxyResponse<never> {
-  const message = extractMessage(rawError) ?? ("message" in err ? err.message : undefined);
-  if (!structured) {
-    return { error: message ?? "Unknown error occurred" };
-  }
-  if (isMessageError(err)) {
-    return { err: { ...err, message: message ?? err.message ?? "" } };
-  }
-  return { err };
-}
-
 function parseVersion(raw: unknown): number {
   const num = typeof raw === "string" ? Number(raw) : Array.isArray(raw) ? Number(raw[0]) : NaN;
   return Number.isFinite(num) ? num : 0;
-}
-
-function extractMessage(error: unknown): string | undefined {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return undefined;
-}
-
-function isMessageError(err: SwapperError): err is Extract<SwapperError, { message: string }> {
-  return err.type === "compute_quote_error" || err.type === "transaction_error";
 }
 
 function withProvider(req: ProviderRequest, res: express.Response, next: express.NextFunction) {

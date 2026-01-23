@@ -1,35 +1,41 @@
-export enum MayanErrorCode {
-    AmountTooSmall = "AMOUNT_TOO_SMALL",
-}
+import { SwapperException } from "../error";
+import { BigIntMath } from "../bigint_math";
 
-export type ErrorData = {
-    code?: MayanErrorCode | string;
-    message?: string;
-    data?: unknown;
-};
+export function toMayanError(error: unknown, decimals: number): Error {
+    if (SwapperException.isSwapperException(error)) {
+        return error;
+    }
 
-export function toMayanError(error: unknown): Error {
     const message = extractErrorMessage(error);
     if (message) {
+        const minAmount = extractMinAmount(message, decimals);
+        if (minAmount !== undefined) {
+            return new SwapperException({
+                type: "input_amount_error",
+                min_amount: minAmount,
+            });
+        }
         return new Error(message);
     }
+
     if (error instanceof Error) {
         return error;
     }
     return new Error("Unknown Mayan error");
 }
 
-function extractErrorMessage(error: unknown): string | undefined {
-    const payloadMessage = extractPayloadMessage(error);
-    if (payloadMessage) return payloadMessage;
-
-    if (error instanceof Error && error.message) return error.message;
-    return undefined;
+function extractMinAmount(message: string, decimals: number): string | null | undefined {
+    if (!message.includes("Amount too small")) {
+        return undefined;
+    }
+    const match = message.match(/~?(\d+(?:\.\d+)?)\s*\w+\)/);
+    return match ? BigIntMath.parseDecimals(match[1], decimals).toString() : null;
 }
 
-function extractPayloadMessage(error: unknown): string | undefined {
-    if (!error || typeof error !== "object") return undefined;
-
-    const obj = error as Record<string, unknown>;
-    return typeof obj.message === "string" ? obj.message : undefined;
+function extractErrorMessage(error: unknown): string | undefined {
+    if (error instanceof Error) return error.message;
+    if (error && typeof error === "object" && "message" in error) {
+        return typeof error.message === "string" ? error.message : undefined;
+    }
+    return undefined;
 }
