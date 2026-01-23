@@ -8,7 +8,7 @@ export function errorResponse(err: SwapperError, rawError: unknown, structured: 
   if (!structured) {
     return { error: rawMessage ?? ("message" in err ? err.message : undefined) ?? "Unknown error occurred" };
   }
-  if (isMessageError(err)) {
+  if (hasStringMessage(err)) {
     return { err: { type: err.type, message: rawMessage ?? err.message ?? "" } };
   }
   const { type, ...rest } = err;
@@ -37,6 +37,6 @@ function extractMessage(error: unknown): string | undefined {
   return undefined;
 }
 
-function isMessageError(err: SwapperError): err is Extract<SwapperError, { message: string }> {
+function hasStringMessage(err: SwapperError): err is Extract<SwapperError, { message: string }> {
   return err.type === "compute_quote_error" || err.type === "transaction_error";
 }
