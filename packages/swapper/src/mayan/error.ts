@@ -28,7 +28,7 @@ function extractMinAmount(message: string, decimals: number): string | null | un
     if (!message.includes("Amount too small")) {
         return undefined;
     }
-    const match = message.match(/~?([\d.]+)\s*\w+\)/);
+    const match = message.match(/~?(\d+(?:\.\d+)?)\s*\w+\)/);
     return match ? BigIntMath.parseDecimals(match[1], decimals).toString() : null;
 }
 

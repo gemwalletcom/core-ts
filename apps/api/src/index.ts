@@ -5,7 +5,7 @@ import express from "express";
 import { Quote, QuoteRequest, SwapQuoteData } from "@gemwallet/types";
 import { StonfiProvider, Protocol, MayanProvider, CetusAggregatorProvider, RelayProvider, OrcaWhirlpoolProvider, PanoraProvider, SwapperException } from "@gemwallet/swapper";
 import versionInfo from "./version.json";
-import { errorResponse, httpStatus, ProxyErrorResponse } from "./error";
+import { errorResponse, sendErrorResponse, ProxyErrorResponse } from "./error";
 
 if (process.env.NODE_ENV !== "production") {
     const rootEnvPath = path.resolve(__dirname, "../../..", ".env");
@@ -64,7 +64,7 @@ app.post("/:providerId/quote", withProvider, async (req: ProviderRequest, res) =
     const swapperError = SwapperException.isSwapperException(error)
       ? error.swapperError
       : { type: "compute_quote_error" as const, message: "" };
-    res.status(httpStatus(swapperError)).json(errorResponse(swapperError, error, objectResponse));
+    sendErrorResponse(res, swapperError, error, objectResponse);
   }
 });
 
@@ -88,7 +88,7 @@ app.post("/:providerId/quote_data", withProvider, async (req: ProviderRequest, r
     const swapperError = SwapperException.isSwapperException(error)
       ? error.swapperError
       : { type: "transaction_error" as const, message: "" };
-    res.status(httpStatus(swapperError)).json(errorResponse(swapperError, error, objectResponse));
+    sendErrorResponse(res, swapperError, error, objectResponse);
   }
 });
 
