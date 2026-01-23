@@ -11,7 +11,8 @@ if (process.env.NODE_ENV !== "production") {
     dotenv.config({ path: rootEnvPath, override: false });
 }
 
-type ProxyResponse<T> = { ok: T } | { err: SwapperError } | { error: string };
+type ErrorResponse = { type: string; message: string | object };
+type ProxyResponse<T> = { ok: T } | { err: ErrorResponse } | { error: string };
 type ProviderRequest = express.Request & { provider?: Protocol; objectResponse?: boolean };
 
 const app = express();
@@ -97,14 +98,15 @@ app.listen(PORT, () => {
 });
 
 function errorResponse(err: SwapperError, rawError: unknown, structured: boolean): ProxyResponse<never> {
-  const message = extractMessage(rawError) ?? ("message" in err ? err.message : undefined);
+  const rawMessage = extractMessage(rawError);
   if (!structured) {
-    return { error: message ?? "Unknown error occurred" };
+    return { error: rawMessage ?? ("message" in err ? err.message : undefined) ?? "Unknown error occurred" };
   }
   if (isMessageError(err)) {
-    return { err: { ...err, message: message ?? err.message ?? "" } };
+    return { err: { type: err.type, message: rawMessage ?? err.message ?? "" } };
   }
-  return { err };
+  const { type, ...rest } = err;
+  return { err: { type, message: rest } };
 }
 
 function parseVersion(raw: unknown): number {
