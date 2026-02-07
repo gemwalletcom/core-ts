@@ -5,8 +5,6 @@ import { getReferrerAddresses } from "../referrer";
 import {
     getRecentBlockhash,
     serializeTransaction,
-    addComputeBudgetInstructions,
-    getRecentPriorityFee,
 } from "../chain/solana/tx_builder";
 import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 
@@ -44,15 +42,14 @@ async function prepareSolanaSwapTransaction(
         feePayer: string,
     }
 }> {
-    // Fetch instructions, blockhash, and priority fee in parallel
-    const [swapData, { blockhash, lastValidBlockHeight }, priorityFee] = await Promise.all([
+    // Fetch instructions and blockhash in parallel
+    const [swapData, { blockhash, lastValidBlockHeight }] = await Promise.all([
         createSwapFromSolanaInstructions(
             quote, swapperWalletAddress, destinationAddress,
             referrerAddresses, connection, {
             separateSwapTx: false,
         }),
         getRecentBlockhash(connection, DEFAULT_COMMITMENT),
-        getRecentPriorityFee(connection),
     ]);
 
     let { instructions, signers, lookupTables } = swapData;
