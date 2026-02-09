@@ -6,6 +6,7 @@ import {
     getRecentBlockhash,
     serializeTransaction,
 } from "../chain/solana/tx_builder";
+import { createJitoTipInstruction, fetchTipFloorLamports } from "../chain/solana/jito";
 import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 
 export async function buildSolanaQuoteData(request: QuoteRequest, routeData: MayanQuote, rpcEndpoint: string): Promise<SwapQuoteData> {
@@ -16,7 +17,7 @@ export async function buildSolanaQuoteData(request: QuoteRequest, routeData: May
         request.from_address,
         request.to_address,
         referrerAddresses,
-        connection
+        connection,
     );
 
     return {
@@ -42,29 +43,32 @@ async function prepareSolanaSwapTransaction(
         feePayer: string,
     }
 }> {
-    // Fetch instructions and blockhash in parallel
-    const [swapData, { blockhash, lastValidBlockHeight }] = await Promise.all([
+    const [swapData, tipLamports] = await Promise.all([
         createSwapFromSolanaInstructions(
             quote, swapperWalletAddress, destinationAddress,
             referrerAddresses, connection, {
             separateSwapTx: false,
         }),
-        getRecentBlockhash(connection, DEFAULT_COMMITMENT),
+        fetchTipFloorLamports(),
     ]);
-
-    let { instructions, signers, lookupTables } = swapData;
 
     if (quote.gasless) {
         throw new Error("Gasless swaps are not currently supported");
     }
 
-    const swapper = new PublicKey(swapperWalletAddress);
-    const feePayer = swapper;
+    const { instructions, signers, lookupTables } = swapData;
 
-    // Use MessageV0.compile as per the latest SDK pattern
+    const swapper = new PublicKey(swapperWalletAddress);
+
+    if (tipLamports > 0) {
+        instructions.push(createJitoTipInstruction(swapper, tipLamports));
+    }
+
+    const { blockhash, lastValidBlockHeight } = await getRecentBlockhash(connection, DEFAULT_COMMITMENT);
+
     const message = MessageV0.compile({
         instructions,
-        payerKey: feePayer,
+        payerKey: swapper,
         recentBlockhash: blockhash,
         addressLookupTableAccounts: lookupTables,
     });
@@ -79,7 +83,7 @@ async function prepareSolanaSwapTransaction(
             blockhash,
             lastValidBlockHeight,
             isVersionedTransaction: true,
-            feePayer: feePayer.toBase58(),
+            feePayer: swapper.toBase58(),
         }
     };
 }

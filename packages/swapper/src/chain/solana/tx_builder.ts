@@ -1,6 +1,7 @@
 import {
     Connection,
     ComputeBudgetProgram,
+    PublicKey,
     TransactionInstruction,
     VersionedTransaction,
     Transaction,
@@ -14,9 +15,10 @@ export async function getRecentBlockhash(connection: Connection, commitment?: "c
     return await connection.getLatestBlockhash(commitment || "confirmed");
 }
 
-export async function getRecentPriorityFee(connection: Connection): Promise<number> {
+export async function getRecentPriorityFee(connection: Connection, lockedWritableAccounts?: PublicKey[]): Promise<number> {
     try {
-        const recentFees = await connection.getRecentPrioritizationFees();
+        const config = lockedWritableAccounts ? { lockedWritableAccounts } : undefined;
+        const recentFees = await connection.getRecentPrioritizationFees(config);
 
         if (!recentFees || recentFees.length === 0) {
             return DEFAULT_COMPUTE_UNIT_PRICE_MICRO_LAMPORTS;
@@ -31,11 +33,11 @@ export async function getRecentPriorityFee(connection: Connection): Promise<numb
             return DEFAULT_COMPUTE_UNIT_PRICE_MICRO_LAMPORTS;
         }
 
-        const medianIndex = Math.floor(fees.length * (PRIORITY_FEE_PERCENTILE / 100));
-        const medianFee = fees[medianIndex];
+        const percentileIndex = Math.floor(fees.length * (PRIORITY_FEE_PERCENTILE / 100));
+        const percentileFee = fees[Math.min(percentileIndex, fees.length - 1)];
 
         const recommendedFee = Math.max(
-            Math.ceil(medianFee * 1.2),
+            Math.ceil(percentileFee * 1.2),
             1000
         );
 

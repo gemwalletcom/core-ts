@@ -45,6 +45,7 @@ import {
     getOracleAddress,
     getTickArrayAddress,
     getWhirlpoolAddress,
+    WHIRLPOOL_PROGRAM_ADDRESS,
     type Whirlpool,
 } from "@orca-so/whirlpools-client";
 import {
@@ -236,7 +237,9 @@ export class OrcaWhirlpoolProvider implements Protocol {
             return this.priorityFeeCache.value;
         }
 
-        const value = await getRecentPriorityFee(this.connection);
+        const value = await getRecentPriorityFee(this.connection, [
+            new PublicKey(WHIRLPOOL_PROGRAM_ADDRESS),
+        ]);
         this.priorityFeeCache = {
             value,
             expiresAt: now + 3_000,
