@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { PublicKey, SystemProgram, TransactionInstruction } from "@solana/web3.js";
 
 export const JITO_TIP_ACCOUNTS = [
@@ -11,6 +12,8 @@ export const JITO_TIP_ACCOUNTS = [
     "3AVi9Tg9Uo68tJfuvoKvqKNWKkC5wPdSSdeBnizKZ6jT",
 ];
 
+const JITO_TIP_PUBKEYS = JITO_TIP_ACCOUNTS.map((account) => new PublicKey(account));
+
 const JITO_TIP_FLOOR_URL = "https://bundles.jito.wtf/api/v1/bundles/tip_floor";
 const MIN_JITO_TIP_LAMPORTS = 10_000;
 const LAMPORTS_PER_SOL = 1_000_000_000;
@@ -23,6 +26,10 @@ export interface JitoBudget {
     priorityMicroLamports: number;
 }
 
+interface JitoTipFloorEntry {
+    landed_tips_75th_percentile?: number;
+}
+
 export async function fetchTipFloorLamports(): Promise<number> {
     try {
         const response = await fetch(JITO_TIP_FLOOR_URL);
@@ -30,7 +37,7 @@ export async function fetchTipFloorLamports(): Promise<number> {
             console.warn(`[jito] tip_floor request failed: ${response.status}`);
             return MIN_JITO_TIP_LAMPORTS;
         }
-        const data = await response.json();
+        const data = await response.json() as JitoTipFloorEntry | JitoTipFloorEntry[];
         const entry = Array.isArray(data) ? data[0] : data;
         const tipSol = entry?.landed_tips_75th_percentile;
         if (typeof tipSol !== "number" || !Number.isFinite(tipSol) || tipSol <= 0) {
@@ -54,10 +61,10 @@ export function createJitoTipInstruction(
     fromPubkey: PublicKey,
     lamports: number,
 ): TransactionInstruction {
-    const tipAccount = JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)];
+    const tipPubkey = JITO_TIP_PUBKEYS[randomInt(JITO_TIP_PUBKEYS.length)];
     return SystemProgram.transfer({
         fromPubkey,
-        toPubkey: new PublicKey(tipAccount),
+        toPubkey: tipPubkey,
         lamports,
     });
 }
