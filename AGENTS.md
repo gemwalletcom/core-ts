@@ -19,7 +19,10 @@
 - TypeScript strict mode; ES2020+/ESNext modules.
 - 2‑space indent, double quotes, named exports when practical.
 - Files: kebab‑case; tests end with `.test.ts`; entry files `index.ts`.
-- Follow .windsurf style guide (imports grouped, explicit types for public APIs).
+- Group imports; use explicit types for public APIs.
+- Use `node:crypto` (`randomInt`) instead of `Math.random()` when selecting from security‑relevant sets (e.g. tip accounts, signers).
+- Type all external API responses with explicit interfaces; never leave `fetch` JSON as `any`.
+- Pre‑compute expensive objects (e.g. `PublicKey`) at module level when the inputs are static constants.
 
 ## Testing Guidelines
 - Jest + `ts-jest` (Node env, ESM enabled).
