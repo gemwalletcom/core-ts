@@ -42,7 +42,6 @@ async function prepareSolanaSwapTransaction(
         feePayer: string,
     }
 }> {
-    // Fetch instructions and blockhash in parallel
     const [swapData, { blockhash, lastValidBlockHeight }] = await Promise.all([
         createSwapFromSolanaInstructions(
             quote, swapperWalletAddress, destinationAddress,
@@ -52,19 +51,17 @@ async function prepareSolanaSwapTransaction(
         getRecentBlockhash(connection, DEFAULT_COMMITMENT),
     ]);
 
-    let { instructions, signers, lookupTables } = swapData;
-
     if (quote.gasless) {
         throw new Error("Gasless swaps are not currently supported");
     }
 
-    const swapper = new PublicKey(swapperWalletAddress);
-    const feePayer = swapper;
+    const { instructions, signers, lookupTables } = swapData;
 
-    // Use MessageV0.compile as per the latest SDK pattern
+    const swapper = new PublicKey(swapperWalletAddress);
+
     const message = MessageV0.compile({
         instructions,
-        payerKey: feePayer,
+        payerKey: swapper,
         recentBlockhash: blockhash,
         addressLookupTableAccounts: lookupTables,
     });
@@ -79,7 +76,7 @@ async function prepareSolanaSwapTransaction(
             blockhash,
             lastValidBlockHeight,
             isVersionedTransaction: true,
-            feePayer: feePayer.toBase58(),
+            feePayer: swapper.toBase58(),
         }
     };
 }
