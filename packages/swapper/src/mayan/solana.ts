@@ -6,7 +6,6 @@ import {
     getRecentBlockhash,
     serializeTransaction,
 } from "../chain/solana/tx_builder";
-import { createJitoTipInstruction, fetchTipFloorLamports } from "../chain/solana/jito";
 import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 
 export async function buildSolanaQuoteData(request: QuoteRequest, routeData: MayanQuote, rpcEndpoint: string): Promise<SwapQuoteData> {
@@ -17,7 +16,7 @@ export async function buildSolanaQuoteData(request: QuoteRequest, routeData: May
         request.from_address,
         request.to_address,
         referrerAddresses,
-        connection,
+        connection
     );
 
     return {
@@ -43,13 +42,13 @@ async function prepareSolanaSwapTransaction(
         feePayer: string,
     }
 }> {
-    const [swapData, tipLamports] = await Promise.all([
+    const [swapData, { blockhash, lastValidBlockHeight }] = await Promise.all([
         createSwapFromSolanaInstructions(
             quote, swapperWalletAddress, destinationAddress,
             referrerAddresses, connection, {
             separateSwapTx: false,
         }),
-        fetchTipFloorLamports(),
+        getRecentBlockhash(connection, DEFAULT_COMMITMENT),
     ]);
 
     if (quote.gasless) {
@@ -59,12 +58,6 @@ async function prepareSolanaSwapTransaction(
     const { instructions, signers, lookupTables } = swapData;
 
     const swapper = new PublicKey(swapperWalletAddress);
-
-    if (tipLamports > 0) {
-        instructions.push(createJitoTipInstruction(swapper, tipLamports));
-    }
-
-    const { blockhash, lastValidBlockHeight } = await getRecentBlockhash(connection, DEFAULT_COMMITMENT);
 
     const message = MessageV0.compile({
         instructions,
