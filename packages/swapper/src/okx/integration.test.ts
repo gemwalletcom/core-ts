@@ -44,9 +44,9 @@ const REQUEST_TEMPLATE: QuoteRequest = {
 
 describeIntegration("OKX live integration", () => {
   jest.setTimeout(60_000);
-  const provider = new OkxProvider();
 
   it("fetches a live quote and builds quote data", async () => {
+    const provider = new OkxProvider();
     const quote = await provider.get_quote(REQUEST_TEMPLATE);
 
     expect(BigInt(quote.output_value) > BigInt(0)).toBe(true);
