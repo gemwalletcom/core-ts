@@ -19,7 +19,7 @@ function hasAuthEnv(): boolean {
 
 const hasAuth = hasAuthEnv();
 const runIntegration = process.env.OKX_INTEGRATION_TEST === "1" && hasAuth;
-const describeIntegration = runIntegration ? describe : describe.skip;
+const itIntegration = runIntegration ? it : it.skip;
 
 const WALLET_ADDRESS = "7g2rVN8fAAQdPh1mkajpvELqYa3gWvFXJsBLnKfEQfqy";
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
@@ -42,10 +42,10 @@ const REQUEST_TEMPLATE: QuoteRequest = {
   slippage_bps: 100,
 };
 
-describeIntegration("OKX live integration", () => {
+describe("OKX live integration", () => {
   jest.setTimeout(60_000);
 
-  it("fetches a live quote and builds quote data", async () => {
+  itIntegration("fetches a live quote and builds quote data", async () => {
     const provider = new OkxProvider();
     const quote = await provider.get_quote(REQUEST_TEMPLATE);
 
