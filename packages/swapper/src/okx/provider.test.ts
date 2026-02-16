@@ -58,12 +58,15 @@ describe("OkxProvider", () => {
             to: "JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB",
             data: SOL_MINT,
             slippagePercent: "0.42",
+            minReceiveAmount: "119500000",
           },
         },
       ],
     });
 
     const quote = await provider.get_quote(createRequest());
+    expect(quote.output_value).toBe("120000000");
+    expect(quote.output_min_value).toBe("119500000");
 
     const swapRequest = getSwap.mock.calls[0][0] as Record<string, unknown>;
     expect(swapRequest.autoSlippage).toBe(true);

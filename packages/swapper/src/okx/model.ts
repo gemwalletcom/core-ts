@@ -42,6 +42,7 @@ export interface OkxSwapTx {
   to: string;
   data: string;
   slippagePercent?: string;
+  minReceiveAmount?: string;
 }
 
 export interface OkxSwapResponse {

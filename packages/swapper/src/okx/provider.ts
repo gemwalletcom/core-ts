@@ -43,12 +43,7 @@ function isValidAddress(address: string): boolean {
 }
 
 function bpsToPercent(bps: number): string {
-  const integer = Math.floor(bps / 100);
-  const decimal = bps % 100;
-  if (decimal === 0) {
-    return `${integer}`;
-  }
-  return `${integer}.${decimal.toString().padStart(2, "0")}`.replace(/\.?0+$/, "");
+  return (bps / 100).toString();
 }
 
 function quoteSwapMode(): "exactIn" {
@@ -184,15 +179,17 @@ export class OkxProvider implements Protocol {
       });
     }
 
+    const swapData = swapResponse.data[0];
     const routeData: OkxRouteData = {
       ...route,
-      ...suggestedSlippage(swapResponse.data[0]),
+      ...suggestedSlippage(swapData),
     };
+    const outputMinValue = swapData?.tx?.minReceiveAmount || route.toTokenAmount;
 
     return {
       quote: quoteRequest,
       output_value: route.toTokenAmount,
-      output_min_value: route.toTokenAmount,
+      output_min_value: outputMinValue,
       eta_in_seconds: 0,
       route_data: routeData,
     };
