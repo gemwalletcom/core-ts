@@ -16,7 +16,7 @@
   "dependencies": {
     "@gemwallet/swapper": "workspace:*",
     "@gemwallet/types": "workspace:*",
-    "dotenv": "17.2.4",
+    "dotenv": "17.3.1",
     "express": "5.2.1"
   },
   "devDependencies": {
