@@ -34,6 +34,7 @@
 - Providers implemented today: `stonfi_v2`, `mayan`, `cetus`, `relay`, `orca`.
 - API endpoints: `GET /` (providers, version), `POST /:providerId/quote`, `POST /:providerId/quote_data`.
 - Keep provider interface consistent for quotes and transaction building.
+- OKX Solana provider notes: [`packages/swapper/src/okx/README.md`](packages/swapper/src/okx/README.md).
 
 ## Commit & Pull Request Guidelines
 - Prefer conventional style where helpful: `feat|fix|chore(scope): message`; keep messages imperative.
