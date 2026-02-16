@@ -2,7 +2,7 @@ import { OrcaWhirlpoolProvider } from "./provider";
 import { Quote } from "@gemwallet/types";
 import { TransactionInstruction, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { buildQuoteFixture, createQuoteRequest, SOL_ASSET } from "./testkit";
+import { SOL_ASSET, buildOrcaQuoteFixture, createOrcaQuoteRequest } from "../testkit/mock";
 
 jest.mock("@solana-program/token-2022", () => ({
     fetchAllMint: jest.fn(),
@@ -18,7 +18,7 @@ const TEST_LEGACY_MINT = "So11111111111111111111111111111111111111112";
 const TEST_TOKEN2022_MINT = "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo";
 
 function createQuote(mint: string, referralBps = 100): Quote {
-    return buildQuoteFixture(
+    return buildOrcaQuoteFixture(
         {
             from_address: "9iqKg7nZFkC6xhnoWvyvCSdrgSX1uxPxL4X4fb97aotW",
             to_address: "9iqKg7nZFkC6xhnoWvyvCSdrgSX1uxPxL4X4fb97aotW",
@@ -126,7 +126,7 @@ describe("OrcaWhirlpoolProvider.get_quote referral handling", () => {
             .mockResolvedValueOnce(TOKEN_PROGRAM_ID);
 
         const quote = await provider.get_quote(
-            createQuoteRequest({
+            createOrcaQuoteRequest({
                 from_asset: {
                     id: `solana_${TEST_LEGACY_MINT}`,
                     symbol: "SRC",
@@ -151,7 +151,7 @@ describe("OrcaWhirlpoolProvider.get_quote referral handling", () => {
             .mockResolvedValueOnce(new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"));
 
         const quote = await provider.get_quote(
-            createQuoteRequest({
+            createOrcaQuoteRequest({
                 from_asset: {
                     id: `solana_${TEST_TOKEN2022_MINT}`,
                     symbol: "SRC",

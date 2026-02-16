@@ -29,9 +29,10 @@
 - Co‑locate tests as `*.test.ts`; mock network/services in unit tests.
 - No enforced coverage threshold; cover critical paths (providers, API routes).
 - Run focused tests with `pnpm --filter <pkg> test`.
+- Use shared quote fixtures from `packages/swapper/src/testkit/mock.ts`; for provider-specific scenarios, extend via overrides instead of adding new provider-local `testkit.ts` files.
 
 ## Architecture Overview
-- Providers implemented today: `stonfi_v2`, `mayan`, `cetus`, `relay`, `orca`.
+- Providers implemented today: `stonfi_v2`, `mayan`, `cetus`, `relay`, `orca`, `okx`.
 - API endpoints: `GET /` (providers, version), `POST /:providerId/quote`, `POST /:providerId/quote_data`.
 - Keep provider interface consistent for quotes and transaction building.
 - OKX Solana provider notes: [`packages/swapper/src/okx/README.md`](packages/swapper/src/okx/README.md).

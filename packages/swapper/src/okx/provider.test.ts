@@ -1,30 +1,14 @@
-import { Chain, Quote, QuoteRequest } from "@gemwallet/types";
+import { Quote } from "@gemwallet/types";
 
 import { OkxClient } from "./client";
 import { OkxProvider } from "./provider";
+import { createSolanaUsdcQuoteRequest } from "../testkit/mock";
 
-const WALLET_ADDRESS = "7g2rVN8fAAQdPh1mkajpvELqYa3gWvFXJsBLnKfEQfqy";
 const SOL_MINT = "11111111111111111111111111111111";
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 
-function createRequest(slippageBps = 100): QuoteRequest {
-  return {
-    from_address: WALLET_ADDRESS,
-    to_address: WALLET_ADDRESS,
-    from_asset: {
-      id: Chain.Solana,
-      symbol: "SOL",
-      decimals: 9,
-    },
-    to_asset: {
-      id: `${Chain.Solana}_${USDC_MINT}`,
-      symbol: "USDC",
-      decimals: 6,
-    },
-    from_value: "1000000",
-    referral_bps: 50,
-    slippage_bps: slippageBps,
-  };
+function createRequest(slippageBps = 100) {
+  return createSolanaUsdcQuoteRequest({ slippage_bps: slippageBps });
 }
 
 function createProvider() {

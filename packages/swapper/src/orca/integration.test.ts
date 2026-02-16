@@ -1,7 +1,7 @@
 import { Chain, QuoteRequest } from "@gemwallet/types";
 
 import { OrcaWhirlpoolProvider } from "./provider";
-import { createQuoteRequest } from "./testkit";
+import { createOrcaQuoteRequest } from "../testkit/mock";
 
 const runIntegration = process.env.ORCA_INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
@@ -13,7 +13,7 @@ const WALLET_ADDRESS = "A21o4asMbFHYadqXdLusT9Bvx9xaC5YV9gcaidjqtdXC";
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const PYUSD_MINT = "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo";
 
-const REQUEST_TEMPLATE: QuoteRequest = createQuoteRequest({
+const REQUEST_TEMPLATE: QuoteRequest = createOrcaQuoteRequest({
     from_address: WALLET_ADDRESS,
     to_address: WALLET_ADDRESS,
     from_asset: {
@@ -52,7 +52,7 @@ describeIntegration("Orca live integration", () => {
     });
 
     it("builds quote data for a Token-2022 mint", async () => {
-        const token2022Request = createQuoteRequest({
+        const token2022Request = createOrcaQuoteRequest({
             ...REQUEST_TEMPLATE,
             to_asset: {
                 id: `${Chain.Solana}_${PYUSD_MINT}`,

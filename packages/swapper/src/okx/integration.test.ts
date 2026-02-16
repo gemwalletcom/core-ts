@@ -1,4 +1,4 @@
-import { Chain, QuoteRequest } from "@gemwallet/types";
+import { QuoteRequest } from "@gemwallet/types";
 
 import { OkxProvider } from "./provider";
 import {
@@ -7,6 +7,7 @@ import {
   OKX_PROJECT_ID,
   OKX_SECRET_KEY,
 } from "./auth";
+import { createSolanaUsdcQuoteRequest } from "../testkit/mock";
 
 function hasAuthEnv(): boolean {
   return Boolean(
@@ -21,26 +22,7 @@ const hasAuth = hasAuthEnv();
 const runIntegration = process.env.OKX_INTEGRATION_TEST === "1" && hasAuth;
 const itIntegration = runIntegration ? it : it.skip;
 
-const WALLET_ADDRESS = "7g2rVN8fAAQdPh1mkajpvELqYa3gWvFXJsBLnKfEQfqy";
-const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-
-const REQUEST_TEMPLATE: QuoteRequest = {
-  from_address: WALLET_ADDRESS,
-  to_address: WALLET_ADDRESS,
-  from_asset: {
-    id: Chain.Solana,
-    symbol: "SOL",
-    decimals: 9,
-  },
-  to_asset: {
-    id: `${Chain.Solana}_${USDC_MINT}`,
-    symbol: "USDC",
-    decimals: 6,
-  },
-  from_value: "1000000",
-  referral_bps: 50,
-  slippage_bps: 100,
-};
+const REQUEST_TEMPLATE: QuoteRequest = createSolanaUsdcQuoteRequest();
 
 describe("OKX live integration", () => {
   jest.setTimeout(60_000);

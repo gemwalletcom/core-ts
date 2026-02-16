@@ -1,34 +1,15 @@
 import { Chain, QuoteRequest } from "@gemwallet/types";
 import { BigIntMath } from "../bigint_math";
+import { APTOS_USDT_FA, createAptosUsdcQuoteRequest } from "../testkit/mock";
 
 const runIntegration = process.env.PANORA_INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
-
-const APTOS_USDC_FA = "0xbae207659db88bea0cbead6da0ed00aac12edcdda169e591cd41c94180b46f3b";
-const APTOS_USDT_FA = "0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b";
-const WALLET_ADDRESS = "0x4eb20e735591a85bb58921ef2e6b55c385bba10e817ffe1e02e50deb6c594aef";
 
 const APT_DECIMALS = 8;
 const USDC_DECIMALS = 6;
 const USDT_DECIMALS = 6;
 
-const REQUEST_TEMPLATE: QuoteRequest = {
-    from_address: WALLET_ADDRESS,
-    to_address: WALLET_ADDRESS,
-    from_asset: {
-        id: Chain.Aptos,
-        symbol: "APT",
-        decimals: APT_DECIMALS,
-    },
-    to_asset: {
-        id: `${Chain.Aptos}_${APTOS_USDC_FA}`,
-        symbol: "USDC",
-        decimals: USDC_DECIMALS,
-    },
-    from_value: "1000000000",
-    referral_bps: 10,
-    slippage_bps: 100,
-};
+const REQUEST_TEMPLATE: QuoteRequest = createAptosUsdcQuoteRequest();
 
 describeIntegration("Panora live integration", () => {
     jest.setTimeout(60_000);

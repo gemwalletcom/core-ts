@@ -7,10 +7,10 @@ import {
     BASIS_POINTS_DENOMINATOR,
     MAX_SAFE_NUMBER_BN,
 } from "./fee";
-import { buildQuoteFixture } from "./testkit";
+import { buildOrcaQuoteFixture } from "../testkit/mock";
 
 const buildQuote = (fromValue: string, referralBps: number): Quote =>
-    buildQuoteFixture({ from_value: fromValue, referral_bps: referralBps });
+    buildOrcaQuoteFixture({ from_value: fromValue, referral_bps: referralBps });
 
 describe("fee helpers", () => {
     it("computes referral fee using basis points", () => {

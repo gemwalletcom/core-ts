@@ -1,10 +1,10 @@
 import { Chain, Quote } from "@gemwallet/types";
 
 import { calculateReferralFeeAmount } from "./index";
-import { buildQuoteFixture } from "./testkit";
+import { buildOrcaQuoteFixture } from "../testkit/mock";
 
 describe("calculateReferralFeeAmount", () => {
-    const baseQuote = buildQuoteFixture({
+    const baseQuote = buildOrcaQuoteFixture({
         from_asset: {
             id: Chain.Solana,
             symbol: "AAA",
@@ -23,7 +23,7 @@ describe("calculateReferralFeeAmount", () => {
     });
 
     it("calculates fee amount using basis points", () => {
-        const quote = buildQuoteFixture({
+        const quote = buildOrcaQuoteFixture({
             from_asset: baseQuote.quote.from_asset,
             to_asset: baseQuote.quote.to_asset,
             from_value: "1000000",
