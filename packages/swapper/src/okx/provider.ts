@@ -67,7 +67,8 @@ function slippagePercent(request: QuoteRequest): string {
   if (request.slippage_bps <= 0) {
     return DEFAULT_SLIPPAGE_PERCENT;
   }
-  return bpsToPercent(request.slippage_bps);
+  const percent = request.slippage_bps / 100;
+  return Math.min(percent, 1).toString();
 }
 
 function maxAutoSlippagePercent(request: QuoteRequest): string | undefined {

@@ -97,7 +97,7 @@ describe("OkxProvider", () => {
     const swapParams = getSwapData.mock.calls[0][0] as Record<string, unknown>;
     expect(swapParams.autoSlippage).toBe(true);
     expect(swapParams.maxAutoSlippagePercent).toBe("3");
-    expect(swapParams.slippagePercent).toBe("1.5");
+    expect(swapParams.slippagePercent).toBe("1");
   });
 
   it("falls back to 1% slippage when slippage_bps is 0", async () => {
