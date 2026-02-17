@@ -14,9 +14,7 @@ import { Protocol } from "../protocol";
 import { SwapperException } from "../error";
 import { getReferrerAddresses } from "../referrer";
 import type { OkxRouteData } from "./model";
-
-const SOLANA_CHAIN_INDEX = "501";
-const SOLANA_NATIVE_TOKEN_ADDRESS = "11111111111111111111111111111111";
+import { SOLANA_CHAIN_INDEX, SOLANA_NATIVE_TOKEN_ADDRESS, SOLANA_DEX_IDS_PARAM, DEFAULT_SLIPPAGE_PERCENT } from "./constants";
 
 function isValidAddress(address: string): boolean {
   try {
@@ -61,8 +59,6 @@ function referralFeeAddress(request: QuoteRequest): string | undefined {
   return getReferrerAddresses().solana || undefined;
 }
 
-const DEFAULT_SLIPPAGE_PERCENT = "1";
-
 function slippagePercent(request: QuoteRequest): string {
   if (request.slippage_bps <= 0) {
     return DEFAULT_SLIPPAGE_PERCENT;
@@ -93,6 +89,7 @@ function buildSwapParams(request: QuoteRequest, route: QuoteData): SwapParams {
     fromTokenAddress: route.fromToken.tokenContractAddress,
     toTokenAddress: route.toToken.tokenContractAddress,
     userWalletAddress: request.from_address,
+    dexIds: SOLANA_DEX_IDS_PARAM,
     slippagePercent: slippagePercent(request),
     autoSlippage: true,
     maxAutoSlippagePercent: maxAutoSlippagePercent(request),
@@ -162,6 +159,7 @@ export class OkxProvider implements Protocol {
       amount: quoteRequest.from_value,
       fromTokenAddress,
       toTokenAddress,
+      dexIds: SOLANA_DEX_IDS_PARAM,
       slippagePercent: slippagePercent(quoteRequest),
       feePercent: referralFeePercent(quoteRequest),
     });
