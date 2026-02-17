@@ -4,6 +4,13 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "@mysten/sui"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@solana/kit"
+        update-types:
+          - "version-update:semver-major"
     groups:
       swapper-deps:
         patterns:
