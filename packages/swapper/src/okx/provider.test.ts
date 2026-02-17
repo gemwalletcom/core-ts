@@ -56,7 +56,7 @@ describe("OkxProvider", () => {
     const swapParams = getSwapData.mock.calls[0][0] as Record<string, unknown>;
     expect(swapParams.autoSlippage).toBe(true);
     expect(swapParams.maxAutoSlippagePercent).toBe("2");
-    expect(swapParams.slippagePercent).toBeUndefined();
+    expect(swapParams.slippagePercent).toBe("1");
 
     const routeData = quote.route_data as Record<string, unknown>;
     expect(routeData.suggestedSlippagePercent).toBe("0.42");
@@ -97,6 +97,37 @@ describe("OkxProvider", () => {
     const swapParams = getSwapData.mock.calls[0][0] as Record<string, unknown>;
     expect(swapParams.autoSlippage).toBe(true);
     expect(swapParams.maxAutoSlippagePercent).toBe("3");
-    expect(swapParams.slippagePercent).toBeUndefined();
+    expect(swapParams.slippagePercent).toBe("1.5");
+  });
+
+  it("falls back to 1% slippage when slippage_bps is 0", async () => {
+    const { provider, getQuote, getSwapData } = createProvider();
+    const route = {
+      fromTokenAmount: "1000000",
+      toTokenAmount: "120000000",
+      fromToken: { tokenContractAddress: SOL_MINT },
+      toToken: { tokenContractAddress: USDC_MINT },
+    };
+    getQuote.mockResolvedValue({ code: "0", msg: "", data: [route] });
+    getSwapData.mockResolvedValue({
+      code: "0",
+      msg: "",
+      data: [
+        {
+          routerResult: route,
+          tx: {
+            to: "JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB",
+            data: SOL_MINT,
+            minReceiveAmount: "119500000",
+          },
+        },
+      ],
+    });
+
+    await provider.get_quote(createRequest(0));
+
+    const swapParams = getSwapData.mock.calls[0][0] as Record<string, unknown>;
+    expect(swapParams.slippagePercent).toBe("1");
+    expect(swapParams.maxAutoSlippagePercent).toBeUndefined();
   });
 });
