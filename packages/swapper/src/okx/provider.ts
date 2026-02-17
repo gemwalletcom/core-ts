@@ -61,6 +61,16 @@ function referralFeeAddress(request: QuoteRequest): string | undefined {
   return getReferrerAddresses().solana || undefined;
 }
 
+const DEFAULT_SLIPPAGE_PERCENT = "1";
+
+function slippagePercent(request: QuoteRequest): string {
+  if (request.slippage_bps <= 0) {
+    return DEFAULT_SLIPPAGE_PERCENT;
+  }
+  const percent = request.slippage_bps / 100;
+  return Math.min(percent, 1).toString();
+}
+
 function maxAutoSlippagePercent(request: QuoteRequest): string | undefined {
   if (request.slippage_bps <= 0) {
     return undefined;
@@ -83,6 +93,7 @@ function buildSwapParams(request: QuoteRequest, route: QuoteData): SwapParams {
     fromTokenAddress: route.fromToken.tokenContractAddress,
     toTokenAddress: route.toToken.tokenContractAddress,
     userWalletAddress: request.from_address,
+    slippagePercent: slippagePercent(request),
     autoSlippage: true,
     maxAutoSlippagePercent: maxAutoSlippagePercent(request),
     feePercent: referralFeePercent(request),
@@ -151,7 +162,7 @@ export class OkxProvider implements Protocol {
       amount: quoteRequest.from_value,
       fromTokenAddress,
       toTokenAddress,
-      slippagePercent: "0.5",
+      slippagePercent: slippagePercent(quoteRequest),
       feePercent: referralFeePercent(quoteRequest),
     });
 
