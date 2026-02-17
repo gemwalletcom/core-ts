@@ -1,7 +1,7 @@
 import { Chain, QuoteRequest } from "@gemwallet/types";
 
 import { StonfiProvider } from "./index";
-import { createQuoteRequest, TON_ASSET, USDT_TON_ASSET } from "./testkit";
+import { TON_ASSET, USDT_TON_ASSET, createStonfiQuoteRequest } from "../testkit/mock";
 
 const runIntegration = process.env.STONFI_INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
@@ -12,7 +12,7 @@ const TON_RPC_ENDPOINT =
 // A valid TON wallet address for testing (TON Foundation address)
 const WALLET_ADDRESS = "EQCD39VS5jcptHL8vMjEXrzGaRcCVYto7HUn4bpAOg8xqB2N";
 
-const REQUEST_TEMPLATE: QuoteRequest = createQuoteRequest({
+const REQUEST_TEMPLATE: QuoteRequest = createStonfiQuoteRequest({
     from_address: WALLET_ADDRESS,
     to_address: WALLET_ADDRESS,
     from_asset: TON_ASSET,
@@ -58,7 +58,7 @@ describeIntegration("Stonfi live integration", () => {
     });
 
     it("fetches a live quote and builds quote data for USDT -> TON", async () => {
-        const reverseRequest = createQuoteRequest({
+        const reverseRequest = createStonfiQuoteRequest({
             from_address: WALLET_ADDRESS,
             to_address: WALLET_ADDRESS,
             from_asset: USDT_TON_ASSET,
@@ -89,7 +89,7 @@ describeIntegration("Stonfi live integration", () => {
             decimals: 9,
         };
 
-        const jettonToJettonRequest = createQuoteRequest({
+        const jettonToJettonRequest = createStonfiQuoteRequest({
             from_address: WALLET_ADDRESS,
             to_address: WALLET_ADDRESS,
             from_asset: USDT_TON_ASSET,

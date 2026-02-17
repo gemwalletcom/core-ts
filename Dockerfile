@@ -28,7 +28,7 @@ COPY . .
 RUN pnpm run build
 
 # Deploy the target app ('api') to /prod_build
-RUN pnpm --filter ./apps/api deploy --prod /prod_build
+RUN pnpm --filter ./apps/api deploy --legacy --prod /prod_build
 
 # Stage 2: Production environment
 FROM node:22-slim AS runner

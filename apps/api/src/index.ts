@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import express from "express";
 
 import { Quote, QuoteRequest, SwapQuoteData } from "@gemwallet/types";
-import { StonfiProvider, Protocol, MayanProvider, CetusAggregatorProvider, RelayProvider, OrcaWhirlpoolProvider, PanoraProvider, SwapperException } from "@gemwallet/swapper";
+import { StonfiProvider, Protocol, MayanProvider, CetusAggregatorProvider, RelayProvider, OrcaWhirlpoolProvider, PanoraProvider, OkxProvider, SwapperException } from "@gemwallet/swapper";
 import versionInfo from "./version.json";
 import { errorResponse, sendErrorResponse, ProxyErrorResponse } from "./error";
 
@@ -34,6 +34,7 @@ const providers: Record<string, Protocol> = {
     relay: new RelayProvider(),
     orca: new OrcaWhirlpoolProvider(solanaRpc),
     panora: new PanoraProvider({ rpcUrl: process.env.APTOS_URL }),
+    okx: new OkxProvider(),
 };
 
 app.get("/", (_, res) => {
