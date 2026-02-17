@@ -19,7 +19,10 @@ COPY apps/api/package.json ./apps/api/
 COPY packages/types/package.json ./packages/types/
 COPY packages/swapper/package.json ./packages/swapper/
 
-RUN pnpm install --config.inject-workspace-packages=true
+# Enable injected workspace packages for pnpm deploy (not needed locally)
+RUN echo "inject-workspace-packages=true" >> .npmrc
+
+RUN pnpm install
 
 # Copy the rest of the source code
 COPY . .
