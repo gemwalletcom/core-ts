@@ -17,6 +17,7 @@
     "@gemwallet/types": "workspace:*",
     "@mayanfinance/swap-sdk": "12.2.5",
     "@mysten/sui": "1.35.0",
+    "@okx-dex/okx-dex-sdk": "^1.0.18",
     "@orca-so/whirlpools": "6.0.0",
     "@orca-so/whirlpools-client": "6.2.0",
     "@orca-so/whirlpools-core": "3.0.0",
@@ -30,8 +31,8 @@
     "@ston-fi/sdk": "2.7.0",
     "@ton/ton": "16.1.0",
     "@types/bn.js": "5.2.0",
-    "bs58": "6.0.0",
     "bn.js": "5.2.2",
+    "bs58": "6.0.0",
     "js-sha3": "0.9.3"
   },
   "files": [

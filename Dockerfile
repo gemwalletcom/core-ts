@@ -19,7 +19,7 @@ COPY apps/api/package.json ./apps/api/
 COPY packages/types/package.json ./packages/types/
 COPY packages/swapper/package.json ./packages/swapper/
 
-RUN pnpm install
+RUN pnpm install --config.inject-workspace-packages=true
 
 # Copy the rest of the source code
 COPY . .

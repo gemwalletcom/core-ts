@@ -1,6 +1,6 @@
+import type { OKXDexClient } from "@okx-dex/okx-dex-sdk";
 import { Quote } from "@gemwallet/types";
 
-import { OkxClient } from "./client";
 import { OkxProvider } from "./provider";
 import { createSolanaUsdcQuoteRequest } from "../testkit/mock";
 
@@ -13,14 +13,15 @@ function createRequest(slippageBps = 100) {
 
 function createProvider() {
   const getQuote = jest.fn();
-  const getSwap = jest.fn();
-  const provider = new OkxProvider({ getQuote, getSwap } as unknown as OkxClient);
-  return { provider, getQuote, getSwap };
+  const getSwapData = jest.fn();
+  const client = { dex: { getQuote, getSwapData } } as unknown as OKXDexClient;
+  const provider = new OkxProvider(client);
+  return { provider, getQuote, getSwapData };
 }
 
 describe("OkxProvider", () => {
   it("uses auto slippage and exposes suggested slippage on quote route data", async () => {
-    const { provider, getQuote, getSwap } = createProvider();
+    const { provider, getQuote, getSwapData } = createProvider();
     const route = {
       fromTokenAmount: "1000000",
       toTokenAmount: "120000000",
@@ -32,7 +33,7 @@ describe("OkxProvider", () => {
       msg: "",
       data: [route],
     });
-    getSwap.mockResolvedValue({
+    getSwapData.mockResolvedValue({
       code: "0",
       msg: "",
       data: [
@@ -52,10 +53,10 @@ describe("OkxProvider", () => {
     expect(quote.output_value).toBe("120000000");
     expect(quote.output_min_value).toBe("119500000");
 
-    const swapRequest = getSwap.mock.calls[0][0] as Record<string, unknown>;
-    expect(swapRequest.autoSlippage).toBe(true);
-    expect(swapRequest.maxAutoSlippagePercent).toBe("2");
-    expect(swapRequest.slippagePercent).toBeUndefined();
+    const swapParams = getSwapData.mock.calls[0][0] as Record<string, unknown>;
+    expect(swapParams.autoSlippage).toBe(true);
+    expect(swapParams.maxAutoSlippagePercent).toBe("2");
+    expect(swapParams.slippagePercent).toBeUndefined();
 
     const routeData = quote.route_data as Record<string, unknown>;
     expect(routeData.suggestedSlippagePercent).toBe("0.42");
@@ -63,7 +64,7 @@ describe("OkxProvider", () => {
   });
 
   it("uses auto slippage for quote data request", async () => {
-    const { provider, getSwap } = createProvider();
+    const { provider, getSwapData } = createProvider();
     const quote: Quote = {
       quote: createRequest(150),
       output_value: "120000000",
@@ -76,7 +77,7 @@ describe("OkxProvider", () => {
         toToken: { tokenContractAddress: USDC_MINT },
       },
     };
-    getSwap.mockResolvedValue({
+    getSwapData.mockResolvedValue({
       code: "0",
       msg: "",
       data: [
@@ -93,9 +94,9 @@ describe("OkxProvider", () => {
 
     await provider.get_quote_data(quote);
 
-    const swapRequest = getSwap.mock.calls[0][0] as Record<string, unknown>;
-    expect(swapRequest.autoSlippage).toBe(true);
-    expect(swapRequest.maxAutoSlippagePercent).toBe("3");
-    expect(swapRequest.slippagePercent).toBeUndefined();
+    const swapParams = getSwapData.mock.calls[0][0] as Record<string, unknown>;
+    expect(swapParams.autoSlippage).toBe(true);
+    expect(swapParams.maxAutoSlippagePercent).toBe("3");
+    expect(swapParams.slippagePercent).toBeUndefined();
   });
 });

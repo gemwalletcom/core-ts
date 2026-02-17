@@ -1,4 +1,6 @@
 import bs58 from "bs58";
+import { OKXDexClient } from "@okx-dex/okx-dex-sdk";
+import type { QuoteData, SwapParams, TransactionData } from "@okx-dex/okx-dex-sdk";
 
 import {
   AssetId,
@@ -11,27 +13,10 @@ import {
 import { Protocol } from "../protocol";
 import { SwapperException } from "../error";
 import { getReferrerAddresses } from "../referrer";
-import {
-  OKX_API_KEY,
-  OKX_API_PASSPHRASE,
-  OKX_PROJECT_ID,
-  OKX_SECRET_KEY,
-  OkxAuth,
-} from "./auth";
-import { OkxClient } from "./client";
-import {
-  OkxQuoteResponse,
-  OkxSwapResponse,
-  OkxSwapRequest,
-} from "./model";
+import type { OkxRouteData } from "./model";
 
-const SOLANA_SLIP44 = "501";
+const SOLANA_CHAIN_INDEX = "501";
 const SOLANA_NATIVE_TOKEN_ADDRESS = "11111111111111111111111111111111";
-
-interface OkxRouteData extends OkxQuoteResponse {
-  suggestedSlippagePercent?: string;
-  suggestedSlippageBps?: number;
-}
 
 function isValidAddress(address: string): boolean {
   try {
@@ -44,10 +29,6 @@ function isValidAddress(address: string): boolean {
 
 function bpsToPercent(bps: number): string {
   return (bps / 100).toString();
-}
-
-function quoteSwapMode(): "exactIn" {
-  return "exactIn";
 }
 
 function assetToTokenAddress(assetId: AssetId): string {
@@ -95,11 +76,10 @@ function percentToBps(value: string): number | undefined {
   return Math.round(percent * 100);
 }
 
-function buildSwapRequest(request: QuoteRequest, route: OkxQuoteResponse): OkxSwapRequest {
+function buildSwapParams(request: QuoteRequest, route: QuoteData): SwapParams {
   return {
-    chainIndex: SOLANA_SLIP44,
+    chainIndex: SOLANA_CHAIN_INDEX,
     amount: request.from_value,
-    swapMode: quoteSwapMode(),
     fromTokenAddress: route.fromToken.tokenContractAddress,
     toTokenAddress: route.toToken.tokenContractAddress,
     userWalletAddress: request.from_address,
@@ -110,11 +90,11 @@ function buildSwapRequest(request: QuoteRequest, route: OkxQuoteResponse): OkxSw
   };
 }
 
-function suggestedSlippage(response: OkxSwapResponse | undefined): {
+function suggestedSlippage(tx: TransactionData | undefined): {
   suggestedSlippagePercent?: string;
   suggestedSlippageBps?: number;
 } {
-  const value = response?.tx?.slippagePercent;
+  const value = tx?.slippagePercent;
   if (!value) {
     return {};
   }
@@ -127,34 +107,51 @@ function suggestedSlippage(response: OkxSwapResponse | undefined): {
 }
 
 export class OkxProvider implements Protocol {
-  private readonly client: OkxClient;
+  private readonly client: OKXDexClient;
 
-  constructor(client?: OkxClient) {
+  constructor(client?: OKXDexClient) {
     if (client) {
       this.client = client;
       return;
     }
 
-    const requiredEnv = [OKX_API_KEY, OKX_SECRET_KEY, OKX_API_PASSPHRASE, OKX_PROJECT_ID];
-    const missing = requiredEnv.filter((name) => !process.env[name]);
+    const apiKey = process.env.OKX_API_KEY;
+    const secretKey = process.env.OKX_SECRET_KEY;
+    const apiPassphrase = process.env.OKX_API_PASSPHRASE;
+    const projectId = process.env.OKX_PROJECT_ID;
+
+    const missing = [
+      !apiKey && "OKX_API_KEY",
+      !secretKey && "OKX_SECRET_KEY",
+      !apiPassphrase && "OKX_API_PASSPHRASE",
+      !projectId && "OKX_PROJECT_ID",
+    ].filter(Boolean);
 
     if (missing.length > 0) {
       throw new Error(`Missing OKX auth env variables: ${missing.join(", ")}`);
     }
 
-    this.client = new OkxClient(OkxAuth.fromEnv());
+    this.client = new OKXDexClient({
+      apiKey: apiKey!,
+      secretKey: secretKey!,
+      apiPassphrase: apiPassphrase!,
+      projectId: projectId!,
+    });
   }
 
   async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
     const fromAsset = AssetId.fromString(quoteRequest.from_asset.id);
     const toAsset = AssetId.fromString(quoteRequest.to_asset.id);
 
-    const response = await this.client.getQuote({
-      chainIndex: SOLANA_SLIP44,
+    const fromTokenAddress = assetToTokenAddress(fromAsset);
+    const toTokenAddress = assetToTokenAddress(toAsset);
+
+    const response = await this.client.dex.getQuote({
+      chainIndex: SOLANA_CHAIN_INDEX,
       amount: quoteRequest.from_value,
-      swapMode: quoteSwapMode(),
-      fromTokenAddress: assetToTokenAddress(fromAsset),
-      toTokenAddress: assetToTokenAddress(toAsset),
+      fromTokenAddress,
+      toTokenAddress,
+      slippagePercent: "0.5",
       feePercent: referralFeePercent(quoteRequest),
     });
 
@@ -170,7 +167,9 @@ export class OkxProvider implements Protocol {
       throw new SwapperException({ type: "no_quote_available" });
     }
 
-    const swapResponse = await this.client.getSwap(buildSwapRequest(quoteRequest, route));
+    const swapResponse = await this.client.dex.getSwapData(
+      buildSwapParams(quoteRequest, route),
+    );
 
     if (swapResponse.code !== "0") {
       throw new SwapperException({
@@ -182,7 +181,7 @@ export class OkxProvider implements Protocol {
     const swapData = swapResponse.data[0];
     const routeData: OkxRouteData = {
       ...route,
-      ...suggestedSlippage(swapData),
+      ...suggestedSlippage(swapData?.tx),
     };
     const outputMinValue = swapData?.tx?.minReceiveAmount || route.toTokenAmount;
 
@@ -196,14 +195,14 @@ export class OkxProvider implements Protocol {
   }
 
   async get_quote_data(quote: Quote): Promise<SwapQuoteData> {
-    const route = quote.route_data as OkxQuoteResponse | undefined;
+    const route = quote.route_data as QuoteData | undefined;
     if (!route || !route.fromToken || !route.toToken) {
       throw new SwapperException({ type: "invalid_route" });
     }
 
-    const swapRequest = buildSwapRequest(quote.quote, route);
-
-    const response = await this.client.getSwap(swapRequest);
+    const response = await this.client.dex.getSwapData(
+      buildSwapParams(quote.quote, route),
+    );
 
     if (response.code !== "0") {
       throw new SwapperException({

@@ -1,21 +1,12 @@
 import { QuoteRequest } from "@gemwallet/types";
 
 import { OkxProvider } from "./provider";
-import {
-  OKX_API_KEY,
-  OKX_API_PASSPHRASE,
-  OKX_PROJECT_ID,
-  OKX_SECRET_KEY,
-} from "./auth";
 import { createSolanaUsdcQuoteRequest } from "../testkit/mock";
 
+const OKX_ENV_KEYS = ["OKX_API_KEY", "OKX_SECRET_KEY", "OKX_API_PASSPHRASE", "OKX_PROJECT_ID"];
+
 function hasAuthEnv(): boolean {
-  return Boolean(
-    process.env[OKX_API_KEY] &&
-    process.env[OKX_SECRET_KEY] &&
-    process.env[OKX_API_PASSPHRASE] &&
-    process.env[OKX_PROJECT_ID],
-  );
+  return OKX_ENV_KEYS.every((key) => Boolean(process.env[key]));
 }
 
 const hasAuth = hasAuthEnv();
