@@ -19,22 +19,16 @@ COPY apps/api/package.json ./apps/api/
 COPY packages/types/package.json ./packages/types/
 COPY packages/swapper/package.json ./packages/swapper/
 
-# Enable injected workspace packages for pnpm deploy (not needed locally)
-RUN echo "inject-workspace-packages=true" >> .npmrc
-
 RUN pnpm install
 
 # Copy the rest of the source code
 COPY . .
 
-# Re-enable injected workspace packages (COPY overwrites .npmrc)
-RUN echo "inject-workspace-packages=true" >> .npmrc
-
 # Build the application
 RUN pnpm run build
 
 # Deploy the target app ('api') to /prod_build
-RUN pnpm --filter ./apps/api deploy --prod /prod_build
+RUN pnpm --filter ./apps/api deploy --legacy --prod /prod_build
 
 # Stage 2: Production environment
 FROM node:22-slim AS runner
