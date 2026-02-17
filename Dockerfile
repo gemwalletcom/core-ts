@@ -27,6 +27,9 @@ RUN pnpm install
 # Copy the rest of the source code
 COPY . .
 
+# Re-enable injected workspace packages (COPY overwrites .npmrc)
+RUN echo "inject-workspace-packages=true" >> .npmrc
+
 # Build the application
 RUN pnpm run build
 
