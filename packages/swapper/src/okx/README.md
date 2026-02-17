@@ -10,7 +10,7 @@ using the official `@okx-dex/okx-dex-sdk`.
 - Supports:
   - auto slippage (`autoSlippage: true`)
   - max auto slippage cap (`slippage_bps * 2` -> `maxAutoSlippagePercent`)
-  - slippage from request (`slippage_bps` -> `slippagePercent`, capped at 1%, fallback 1%)
+  - slippage from request (`slippage_bps` -> `slippagePercent`, capped at 1%; defaults to 1% when not set)
   - referral fee (`referral_bps` -> `feePercent`)
   - Solana referrer wallet (`fromTokenReferrerWalletAddress`)
   - DEX filtering via `dexIds` (top Solana DEXes by TVL)
@@ -41,7 +41,7 @@ The full liquidity list can be fetched via `OKXDexClient.dex.getLiquidity("501")
    - `suggestedSlippagePercent`
    - `suggestedSlippageBps`
 6. `OkxProvider.get_quote_data(...)`
-7. Build swap request with auto slippage, DEX filter, and optional referral data
+7. Build swap request with auto slippage and optional referral data
 8. Decode OKX base58 tx payload and return base64 `SwapQuoteData`
 
 ## Files
