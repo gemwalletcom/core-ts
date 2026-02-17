@@ -29,7 +29,7 @@
     "@solana/web3.js": "1.98.4",
     "@ston-fi/api": "0.30.0",
     "@ston-fi/sdk": "2.7.0",
-    "@ton/ton": "16.1.0",
+    "@ton/ton": "16.2.2",
     "@types/bn.js": "5.2.0",
     "bn.js": "5.2.2",
     "bs58": "6.0.0",
