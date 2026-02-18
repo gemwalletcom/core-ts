@@ -16,7 +16,10 @@ export async function getRecentBlockhash(connection: Connection, commitment?: "c
     return await connection.getLatestBlockhash(commitment || "confirmed");
 }
 
-export async function getRecentPriorityFee(connection: Connection, lockedWritableAccounts?: PublicKey[]): Promise<number> {
+export async function getRecentPriorityFee(
+    connection: Connection,
+    lockedWritableAccounts?: PublicKey[],
+): Promise<number> {
     try {
         const config = lockedWritableAccounts ? { lockedWritableAccounts } : undefined;
         const recentFees = await connection.getRecentPrioritizationFees(config);
@@ -26,8 +29,8 @@ export async function getRecentPriorityFee(connection: Connection, lockedWritabl
         }
 
         const fees = recentFees
-            .map(fee => fee.prioritizationFee)
-            .filter(fee => fee > 0)
+            .map((fee) => fee.prioritizationFee)
+            .filter((fee) => fee > 0)
             .sort((a, b) => a - b);
 
         if (fees.length === 0) {
@@ -37,14 +40,11 @@ export async function getRecentPriorityFee(connection: Connection, lockedWritabl
         const percentileIndex = Math.floor(fees.length * (PRIORITY_FEE_PERCENTILE / 100));
         const percentileFee = fees[Math.min(percentileIndex, fees.length - 1)];
 
-        const recommendedFee = Math.max(
-            Math.ceil(percentileFee * 1.2),
-            1000
-        );
+        const recommendedFee = Math.max(Math.ceil(percentileFee * 1.2), 1000);
 
         return recommendedFee;
     } catch (error) {
-        console.warn("Failed to fetch recent prioritization fees, using default:", error);
+        void error;
         return DEFAULT_COMPUTE_UNIT_PRICE;
     }
 }

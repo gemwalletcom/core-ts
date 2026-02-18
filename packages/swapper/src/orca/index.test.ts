@@ -1,7 +1,7 @@
 import { Chain, Quote } from "@gemwallet/types";
 
-import { calculateReferralFeeAmount } from "./index";
 import { buildOrcaQuoteFixture } from "../testkit/mock";
+import { calculateReferralFeeAmount } from "./index";
 
 describe("calculateReferralFeeAmount", () => {
     const baseQuote = buildOrcaQuoteFixture({
@@ -44,8 +44,6 @@ describe("calculateReferralFeeAmount", () => {
             },
         };
 
-        expect(() => calculateReferralFeeAmount(quote)).toThrow(
-            /Invalid from_value provided/
-        );
+        expect(() => calculateReferralFeeAmount(quote)).toThrow(/Invalid from_value provided/);
     });
 });

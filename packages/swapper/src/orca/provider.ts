@@ -1,36 +1,5 @@
 import { AssetId, Quote, QuoteRequest, SwapQuoteData, SwapQuoteDataType } from "@gemwallet/types";
 import {
-    addComputeBudgetInstructions,
-    getRecentBlockhash,
-    getRecentPriorityFee,
-    serializeTransaction,
-    setTransactionBlockhash,
-} from "../chain/solana/tx_builder";
-import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
-import { Protocol } from "../protocol";
-import { getReferrerAddresses } from "../referrer";
-import { calculateReferralFeeAmount, bnToNumberSafe, applyReferralFee } from "./fee";
-import { OrcaRouteData } from "./model";
-import { BigIntMath } from "../bigint_math";
-import { getMintAddress, parsePublicKey, resolveTokenProgram } from "../chain/solana/account";
-
-import {
-    Connection,
-    PublicKey,
-    SystemProgram,
-    Transaction,
-    TransactionInstruction,
-} from "@solana/web3.js";
-import { createTransferInstruction, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-
-import {
-    createSolanaRpc,
-    address as toAddress,
-    type Account,
-    type Address,
-    type TransactionSigner,
-} from "@solana/kit";
-import {
     orderMints,
     setNativeMintWrappingStrategy,
     setWhirlpoolsConfig,
@@ -54,12 +23,25 @@ import {
     swapQuoteByInputToken,
     type ExactInSwapQuote,
 } from "@orca-so/whirlpools-core";
+import { AccountRole, type AccountLookupMeta, type AccountMeta, type Instruction } from "@solana/instructions";
+import { createSolanaRpc, address as toAddress, type Account, type Address, type TransactionSigner } from "@solana/kit";
+import { createTransferInstruction, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { Connection, PublicKey, SystemProgram, Transaction, TransactionInstruction } from "@solana/web3.js";
+
+import { BigIntMath } from "../bigint_math";
+import { getMintAddress, parsePublicKey, resolveTokenProgram } from "../chain/solana/account";
+import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 import {
-    AccountRole,
-    type AccountLookupMeta,
-    type AccountMeta,
-    type Instruction,
-} from "@solana/instructions";
+    addComputeBudgetInstructions,
+    getRecentBlockhash,
+    getRecentPriorityFee,
+    serializeTransaction,
+    setTransactionBlockhash,
+} from "../chain/solana/tx_builder";
+import { Protocol } from "../protocol";
+import { getReferrerAddresses } from "../referrer";
+import { calculateReferralFeeAmount, bnToNumberSafe, applyReferralFee } from "./fee";
+import { OrcaRouteData } from "./model";
 
 const POOL_CACHE_TTL_MS = 30_000;
 const SUPPORTED_TICK_SPACINGS = [1, 2, 4, 8, 16, 64, 96, 128, 256, 32896];
@@ -136,12 +118,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
         const slippageBps = quoteRequest.slippage_bps ?? 100;
 
         const pool = await this.findBestPool(fromMintAddress, toMintAddress);
-        const quoteResult = await this.buildExactInQuote(
-            pool.account,
-            fromMintAddress,
-            swapAmount,
-            slippageBps,
-        );
+        const quoteResult = await this.buildExactInQuote(pool.account, fromMintAddress, swapAmount, slippageBps);
 
         const routeData = OrcaRouteData.create({
             poolAddress: String(pool.account.address),
@@ -181,25 +158,13 @@ export class OrcaWhirlpoolProvider implements Protocol {
             signer,
         );
         const priorityFeePromise = this.getPriorityFee();
-        const blockhashPromise = getRecentBlockhash(
-            this.connection,
-            DEFAULT_COMMITMENT,
-        );
+        const blockhashPromise = getRecentBlockhash(this.connection, DEFAULT_COMMITMENT);
 
-        const [{ instructions }, priorityFee] = await Promise.all([
-            swapPromise,
-            priorityFeePromise,
-        ]);
+        const [{ instructions }, priorityFee] = await Promise.all([swapPromise, priorityFeePromise]);
 
-        const legacyInstructions = instructions.map((instruction) =>
-            this.toLegacyInstruction(instruction),
-        );
+        const legacyInstructions = instructions.map((instruction) => this.toLegacyInstruction(instruction));
 
-        const computeBudgetInstructions = addComputeBudgetInstructions(
-            [],
-            undefined,
-            priorityFee,
-        );
+        const computeBudgetInstructions = addComputeBudgetInstructions([], undefined, priorityFee);
 
         const referralInstruction = await this.buildReferralInstruction(quote, userPublicKey);
 
@@ -237,9 +202,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
             return this.priorityFeeCache.value;
         }
 
-        const value = await getRecentPriorityFee(this.connection, [
-            new PublicKey(WHIRLPOOL_PROGRAM_ADDRESS),
-        ]);
+        const value = await getRecentPriorityFee(this.connection, [new PublicKey(WHIRLPOOL_PROGRAM_ADDRESS)]);
         this.priorityFeeCache = {
             value,
             expiresAt: now + 3_000,
@@ -247,10 +210,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
         return value;
     }
 
-    private async findBestPool(
-        mintA: Address<string>,
-        mintB: Address<string>,
-    ): Promise<CachedPool> {
+    private async findBestPool(mintA: Address<string>, mintB: Address<string>): Promise<CachedPool> {
         const [orderedA, orderedB] = orderMints(mintA, mintB);
         const cacheKey = `${String(orderedA)}-${String(orderedB)}`;
 
@@ -261,12 +221,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const candidateInfos = await Promise.all(
             this.supportedTickSpacings.map(async (tickSpacing) => {
-                const [address] = await getWhirlpoolAddress(
-                    WHIRLPOOLS_CONFIG_ADDRESS,
-                    orderedA,
-                    orderedB,
-                    tickSpacing,
-                );
+                const [address] = await getWhirlpoolAddress(WHIRLPOOLS_CONFIG_ADDRESS, orderedA, orderedB, tickSpacing);
                 return { tickSpacing, address };
             }),
         );
@@ -370,9 +325,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
         return { quote };
     }
 
-    private async fetchTickArrays(
-        whirlpool: Account<Whirlpool>,
-    ): Promise<TickArrayData[]> {
+    private async fetchTickArrays(whirlpool: Account<Whirlpool>): Promise<TickArrayData[]> {
         const tickArrayStartIndex = getTickArrayStartTickIndex(
             whirlpool.data.tickCurrentIndex,
             whirlpool.data.tickSpacing,
@@ -388,15 +341,15 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const addresses = await Promise.all(
             indexes.map(async (startIndex) => {
-                const [address] = await getTickArrayAddress(
-                    whirlpool.address,
-                    startIndex,
-                );
+                const [address] = await getTickArrayAddress(whirlpool.address, startIndex);
                 return String(address);
             }),
         );
 
-        const accounts = await fetchAllMaybeTickArray(this.rpc, addresses.map((addr) => toAddress(addr)));
+        const accounts = await fetchAllMaybeTickArray(
+            this.rpc,
+            addresses.map((addr) => toAddress(addr)),
+        );
 
         return accounts.map((account, index): TickArrayData => {
             if ("exists" in account && account.exists) {
@@ -448,9 +401,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
         whirlpool: Account<Whirlpool>,
     ): Promise<Awaited<ReturnType<typeof fetchOracle>>["data"] | null> {
         try {
-            const feeTierIndex =
-                whirlpool.data.feeTierIndexSeed[0] +
-                whirlpool.data.feeTierIndexSeed[1] * 256;
+            const feeTierIndex = whirlpool.data.feeTierIndexSeed[0] + whirlpool.data.feeTierIndexSeed[1] * 256;
             if (whirlpool.data.tickSpacing === feeTierIndex) {
                 return null;
             }
@@ -474,10 +425,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
     }
 
     private toLegacyInstruction(instruction: Instruction): TransactionInstruction {
-        const keys =
-            instruction.accounts?.map((account) =>
-                this.toAccountMeta(account),
-            ) ?? [];
+        const keys = instruction.accounts?.map((account) => this.toAccountMeta(account)) ?? [];
         const data = instruction.data ? Buffer.from(instruction.data) : Buffer.alloc(0);
 
         return new TransactionInstruction({
@@ -487,15 +435,13 @@ export class OrcaWhirlpoolProvider implements Protocol {
         });
     }
 
-    private toAccountMeta(
-        account: AccountMeta | AccountLookupMeta,
-    ): { pubkey: PublicKey; isSigner: boolean; isWritable: boolean } {
-        const isSigner =
-            account.role === AccountRole.READONLY_SIGNER ||
-            account.role === AccountRole.WRITABLE_SIGNER;
-        const isWritable =
-            account.role === AccountRole.WRITABLE ||
-            account.role === AccountRole.WRITABLE_SIGNER;
+    private toAccountMeta(account: AccountMeta | AccountLookupMeta): {
+        pubkey: PublicKey;
+        isSigner: boolean;
+        isWritable: boolean;
+    } {
+        const isSigner = account.role === AccountRole.READONLY_SIGNER || account.role === AccountRole.WRITABLE_SIGNER;
+        const isWritable = account.role === AccountRole.WRITABLE || account.role === AccountRole.WRITABLE_SIGNER;
 
         return {
             pubkey: new PublicKey(account.address),
@@ -533,12 +479,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
         if (!programId.equals(TOKEN_PROGRAM_ID)) {
             return null;
         }
-        const userTokenAccount = getAssociatedTokenAddressSync(
-            fromMintKey,
-            userPublicKey,
-            false,
-            programId,
-        );
+        const userTokenAccount = getAssociatedTokenAddressSync(fromMintKey, userPublicKey, false, programId);
         const referrerTokenAccount = getAssociatedTokenAddressSync(
             fromMintKey,
             new PublicKey(referrer),
@@ -555,5 +496,4 @@ export class OrcaWhirlpoolProvider implements Protocol {
             programId,
         );
     }
-
 }

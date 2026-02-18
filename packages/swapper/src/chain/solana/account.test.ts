@@ -1,4 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
+
 import { resolveTokenProgram } from "./account";
 
 jest.mock("@solana-program/token-2022", () => ({
@@ -27,9 +28,7 @@ describe("resolveTokenProgram", () => {
     it("throws when mint account response is empty", async () => {
         fetchAllMint.mockResolvedValue([]);
 
-        await expect(resolveTokenProgram(rpc, mint)).rejects.toThrow(
-            "Failed to fetch mint account data",
-        );
+        await expect(resolveTokenProgram(rpc, mint)).rejects.toThrow("Failed to fetch mint account data");
     });
 
     it("returns the mint program when account exists", async () => {

@@ -8,21 +8,21 @@ using the official `@okx-dex/okx-dex-sdk`.
 - `get_quote`: calls OKX DEX quote + swap data for auto-slippage
 - `get_quote_data`: calls OKX DEX swap data for transaction building
 - Supports:
-  - auto slippage (`autoSlippage: true`)
-  - max auto slippage cap (`slippage_bps * 2` -> `maxAutoSlippagePercent`)
-  - slippage from request (`slippage_bps` -> `slippagePercent`, capped at 1%; defaults to 1% when not set)
-  - referral fee (`referral_bps` -> `feePercent`)
-  - Solana referrer wallet (`fromTokenReferrerWalletAddress`)
-  - DEX filtering via `dexIds` (top Solana DEXes by TVL)
+    - auto slippage (`autoSlippage: true`)
+    - max auto slippage cap (`slippage_bps * 2` -> `maxAutoSlippagePercent`)
+    - slippage from request (`slippage_bps` -> `slippagePercent`, capped at 1%; defaults to 1% when not set)
+    - referral fee (`referral_bps` -> `feePercent`)
+    - Solana referrer wallet (`fromTokenReferrerWalletAddress`)
+    - DEX filtering via `dexIds` (top Solana DEXes by TVL)
 
 ## Auth and Security
 
 - Authentication is handled by the SDK's built-in HMAC-SHA256 signing.
 - Required env vars (server-side only):
-  - `OKX_API_KEY`
-  - `OKX_SECRET_KEY`
-  - `OKX_API_PASSPHRASE`
-  - `OKX_PROJECT_ID`
+    - `OKX_API_KEY`
+    - `OKX_SECRET_KEY`
+    - `OKX_API_PASSPHRASE`
+    - `OKX_PROJECT_ID`
 
 ## DEX Filtering
 
@@ -38,8 +38,8 @@ The full liquidity list can be fetched via `OKXDexClient.dex.getLiquidity("501")
 3. Request quote via `OKXDexClient.dex.getQuote()` (filtered by `dexIds`)
 4. Request swap data via `OKXDexClient.dex.getSwapData()` with `autoSlippage: true`
 5. Store OKX route in `quote.route_data` with:
-   - `suggestedSlippagePercent`
-   - `suggestedSlippageBps`
+    - `suggestedSlippagePercent`
+    - `suggestedSlippageBps`
 6. `OkxProvider.get_quote_data(...)`
 7. Build swap request with auto slippage and optional referral data
 8. Decode OKX base58 tx payload and return base64 `SwapQuoteData`

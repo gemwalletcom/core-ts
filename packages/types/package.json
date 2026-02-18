@@ -1,20 +1,20 @@
 {
-  "name": "@gemwallet/types",
-  "version": "1.0.0",
-  "description": "Shared TypeScript types for the monorepo",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsc -w --preserveWatchOutput",
-    "test": "jest --passWithNoTests"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {},
-  "devDependencies": {},
-  "files": [
-    "dist"
-  ]
+    "name": "@gemwallet/types",
+    "version": "1.0.0",
+    "description": "Shared TypeScript types for the monorepo",
+    "keywords": [],
+    "license": "ISC",
+    "author": "",
+    "files": [
+        "dist"
+    ],
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc -w --preserveWatchOutput",
+        "test": "jest --passWithNoTests"
+    },
+    "dependencies": {},
+    "devDependencies": {}
 }

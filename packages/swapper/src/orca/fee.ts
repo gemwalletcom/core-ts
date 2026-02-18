@@ -1,7 +1,8 @@
 import { BN } from "@coral-xyz/anchor";
 import { AssetId, Quote } from "@gemwallet/types";
-import { PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
+
 import { parsePublicKey } from "../chain/solana/account";
 
 export const BASIS_POINTS_DENOMINATOR = 10_000;
@@ -45,7 +46,7 @@ export async function applyReferralFee(
     }
 
     if (asset.isNative()) {
-        const referralFee = amountIn * referralBps / BigInt(10_000);
+        const referralFee = (amountIn * referralBps) / BigInt(10_000);
         return amountIn - referralFee;
     }
 
@@ -56,6 +57,6 @@ export async function applyReferralFee(
         return amountIn;
     }
 
-    const referralFee = amountIn * referralBps / BigInt(10_000);
+    const referralFee = (amountIn * referralBps) / BigInt(10_000);
     return amountIn - referralFee;
 }

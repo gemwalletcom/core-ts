@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicolo-ribaudo/oxc/json-schema/npm/oxlint/configuration_schema.json",
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-console": "warn",
+    "no-debugger": "error",
+    "eqeqeq": "error",
+    "no-var": "error",
+    "prefer-const": "warn",
+    "no-constant-binary-expression": "error",
+    "no-constructor-return": "error",
+    "no-self-compare": "error",
+    "no-template-curly-in-string": "warn",
+    "no-array-constructor": "error",
+    "no-eval": "error",
+    "no-new-wrappers": "error",
+    "no-throw-literal": "error"
+  },
+  "overrides": [
+    {
+      "files": ["*.test.ts", "*.spec.ts", "integration.test.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["apps/api/src/**/*.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "dist",
+    "node_modules",
+    "*.js",
+    "*.d.ts",
+    "coverage",
+    "packages/types/src/primitives"
+  ]
+}

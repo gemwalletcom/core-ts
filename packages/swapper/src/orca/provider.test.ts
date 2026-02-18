@@ -1,8 +1,9 @@
-import { OrcaWhirlpoolProvider } from "./provider";
 import { Quote } from "@gemwallet/types";
-import { TransactionInstruction, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { TransactionInstruction, PublicKey } from "@solana/web3.js";
+
 import { SOL_ASSET, buildOrcaQuoteFixture, createOrcaQuoteRequest } from "../testkit/mock";
+import { OrcaWhirlpoolProvider } from "./provider";
 
 jest.mock("@solana-program/token-2022", () => ({
     fetchAllMint: jest.fn(),
@@ -98,18 +99,16 @@ describe("OrcaWhirlpoolProvider.get_quote referral handling", () => {
         capturedAmount = null;
         mockFetchAllMint.fetchAllMint.mockReset();
 
-        jest
-            .spyOn(provider as any, "buildExactInQuote")
-            .mockImplementation(async (...args: unknown[]) => {
-                const amount = args[2] as bigint;
-                capturedAmount = amount;
-                return {
-                    quote: {
-                        tokenEstOut: BigInt(5000),
-                        tokenMinOut: BigInt(4000),
-                    },
-                };
-            });
+        jest.spyOn(provider as any, "buildExactInQuote").mockImplementation(async (...args: unknown[]) => {
+            const amount = args[2] as bigint;
+            capturedAmount = amount;
+            return {
+                quote: {
+                    tokenEstOut: BigInt(5000),
+                    tokenMinOut: BigInt(4000),
+                },
+            };
+        });
     });
 
     afterEach(() => {
@@ -118,12 +117,8 @@ describe("OrcaWhirlpoolProvider.get_quote referral handling", () => {
     });
 
     it("reduces swap amount for legacy SPL tokens when referral applies", async () => {
-        jest
-            .spyOn(provider as any, "findBestPool")
-            .mockResolvedValue({ account: { address: "PoolAddress" } });
-        const mintProgramSpy = jest
-            .spyOn(provider as any, "getTokenProgram")
-            .mockResolvedValueOnce(TOKEN_PROGRAM_ID);
+        jest.spyOn(provider as any, "findBestPool").mockResolvedValue({ account: { address: "PoolAddress" } });
+        const mintProgramSpy = jest.spyOn(provider as any, "getTokenProgram").mockResolvedValueOnce(TOKEN_PROGRAM_ID);
 
         const quote = await provider.get_quote(
             createOrcaQuoteRequest({
@@ -143,9 +138,7 @@ describe("OrcaWhirlpoolProvider.get_quote referral handling", () => {
     });
 
     it("uses full input amount for Token-2022 tokens when referral cannot be collected", async () => {
-        jest
-            .spyOn(provider as any, "findBestPool")
-            .mockResolvedValue({ account: { address: "PoolAddress" } });
+        jest.spyOn(provider as any, "findBestPool").mockResolvedValue({ account: { address: "PoolAddress" } });
         const getProgramSpy = jest
             .spyOn(provider as any, "getTokenProgram")
             .mockResolvedValueOnce(new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"));

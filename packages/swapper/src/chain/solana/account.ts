@@ -1,8 +1,9 @@
 import { AssetId } from "@gemwallet/types";
-import { WSOL_MINT } from "./constants";
-import { PublicKey } from "@solana/web3.js";
-import { address as toAddress, type Address, type createSolanaRpc } from "@solana/kit";
 import { fetchAllMint } from "@solana-program/token-2022";
+import { address as toAddress, type Address, type createSolanaRpc } from "@solana/kit";
+import { PublicKey } from "@solana/web3.js";
+
+import { WSOL_MINT } from "./constants";
 
 type SolanaRpc = ReturnType<typeof createSolanaRpc>;
 
@@ -25,10 +26,7 @@ export function getMintAddress(asset: AssetId): Address<string> {
     return toAddress(tokenId);
 }
 
-export async function resolveTokenProgram(
-    rpc: SolanaRpc,
-    mint: PublicKey,
-): Promise<PublicKey> {
+export async function resolveTokenProgram(rpc: SolanaRpc, mint: PublicKey): Promise<PublicKey> {
     const mintAccount = await fetchAllMint(rpc, [toAddress(mint.toBase58())]);
     if (mintAccount.length === 0) {
         throw new Error("Failed to fetch mint account data");

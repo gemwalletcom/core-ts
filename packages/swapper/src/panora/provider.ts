@@ -1,10 +1,11 @@
+import { QuoteRequest, Quote, SwapQuoteData, AssetId, SwapQuoteDataType } from "@gemwallet/types";
 import Panora, { type PanoraConfig } from "@panoraexchange/swap-sdk";
-import { QuoteRequest, Quote, SwapQuoteData, AssetId, Chain, SwapQuoteDataType } from "@gemwallet/types";
+
+import { BigIntMath } from "../bigint_math";
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
 import { type PanoraQuoteResponse, isPanoraQuoteResponse, getPanoraQuoteEntry } from "./model";
 import { normalizePanoraArguments } from "./move";
-import { BigIntMath } from "../bigint_math";
 
 const APTOS_NATIVE_COIN = "0x1::aptos_coin::AptosCoin";
 
@@ -74,9 +75,7 @@ export class PanoraProvider implements Protocol {
 
         const tokenDecimals = validatedRouteData.toToken?.decimals ?? request.to_asset.decimals;
         const outputValue = BigIntMath.parseDecimals(outputAmount, tokenDecimals);
-        const outputMinValue = outputMinAmount
-            ? BigIntMath.parseDecimals(outputMinAmount, tokenDecimals)
-            : outputValue;
+        const outputMinValue = outputMinAmount ? BigIntMath.parseDecimals(outputMinAmount, tokenDecimals) : outputValue;
 
         return {
             quote: request,
@@ -94,10 +93,7 @@ export class PanoraProvider implements Protocol {
             throw new Error("Panora quote response missing transaction data");
         }
 
-        const normalizedArguments = normalizePanoraArguments(
-            quoteEntry.txData.function,
-            quoteEntry.txData.arguments,
-        );
+        const normalizedArguments = normalizePanoraArguments(quoteEntry.txData.function, quoteEntry.txData.arguments);
 
         const payload = {
             type: "entry_function_payload",

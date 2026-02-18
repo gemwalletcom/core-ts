@@ -7,7 +7,7 @@ export class BigIntMath {
      */
     static parseDecimals(value: string | number, toDecimals: number): bigint {
         const stringValue = value.toString();
-        const decimalParts = stringValue.split('.');
+        const decimalParts = stringValue.split(".");
 
         // Handle decimal numbers
         if (decimalParts[1]) {
@@ -16,7 +16,7 @@ export class BigIntMath {
             const wholeNumberPart = decimalParts[0];
 
             // Remove decimal point
-            const integerPart = wholeNumberPart === '0' ? '' : wholeNumberPart;
+            const integerPart = wholeNumberPart === "0" ? "" : wholeNumberPart;
             const fullInteger = `${integerPart}${decimals}`;
 
             // Convert to target decimals
@@ -92,7 +92,7 @@ export class BigIntMath {
     }
 
     static applySlippage(value: string, bps: number): string {
-        return (BigInt(value) * BigInt(10000 - bps) / BigInt(10000)).toString();
+        return ((BigInt(value) * BigInt(10000 - bps)) / BigInt(10000)).toString();
     }
 
     static parseString(value: string): bigint {
