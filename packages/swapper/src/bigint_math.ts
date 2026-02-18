@@ -91,6 +91,10 @@ export class BigIntMath {
         return (bps / 100).toString();
     }
 
+    static applySlippage(value: string, bps: number): string {
+        return (BigInt(value) * BigInt(10000 - bps) / BigInt(10000)).toString();
+    }
+
     static parseString(value: string): bigint {
         const normalized = value.trim();
         if (normalized.length === 0) {
