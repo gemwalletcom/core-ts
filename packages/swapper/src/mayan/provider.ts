@@ -1,13 +1,21 @@
-import { fetchQuote, ChainName, QuoteParams, QuoteOptions, Quote as MayanQuote, ReferrerAddresses } from "@mayanfinance/swap-sdk";
 import { QuoteRequest, Quote, SwapQuoteData, AssetId, Chain } from "@gemwallet/types";
+import {
+    fetchQuote,
+    ChainName,
+    QuoteParams,
+    QuoteOptions,
+    Quote as MayanQuote,
+    ReferrerAddresses,
+} from "@mayanfinance/swap-sdk";
+
+import { BigIntMath } from "../bigint_math";
+import { SUI_COIN_TYPE } from "../chain/sui/constants";
 import { Protocol } from "../protocol";
+import { getReferrerAddresses } from "../referrer";
+import { toMayanError } from "./error";
 import { buildEvmQuoteData, EMPTY_ADDRESS } from "./evm";
 import { buildSolanaQuoteData } from "./solana";
 import { buildSuiQuoteData } from "./sui";
-import { BigIntMath } from "../bigint_math";
-import { getReferrerAddresses } from "../referrer";
-import { SUI_COIN_TYPE } from "../chain/sui/constants";
-import { toMayanError } from "./error";
 
 export class MayanProvider implements Protocol {
     private solanaRpc: string;
@@ -56,18 +64,18 @@ export class MayanProvider implements Protocol {
             slippageBps: "auto",
             referrer: referrerAddresses.solana!,
             referrerBps,
-        }
+        };
 
         // explicitly set which types of quotes we want to fetch
         const options: QuoteOptions = {
-            "wormhole": true,
-            "swift": true,
-            "gasless": false,
-            "mctp": true,
-            "shuttle": false,
-            "fastMctp": true,
-            "onlyDirect": false,
-        }
+            wormhole: true,
+            swift: true,
+            gasless: false,
+            mctp: true,
+            shuttle: false,
+            fastMctp: true,
+            onlyDirect: false,
+        };
 
         let quotes: MayanQuote[];
         try {
@@ -90,7 +98,7 @@ export class MayanProvider implements Protocol {
             output_value: output_value.toString(),
             output_min_value: output_min_value.toString(),
             eta_in_seconds: quote.etaSeconds,
-            route_data: quote
+            route_data: quote,
         };
     }
 

@@ -16,6 +16,20 @@ dev:
 test:
     pnpm run test
 
+lint:
+    pnpm run lint
+
+format:
+    pnpm run format
+
+format-check:
+    pnpm run format:check
+
+dead-code:
+    pnpm run dead-code
+
+check: lint format-check build test
+
 bench PROVIDER="orca" ITERATIONS="2":
     pnpm exec ts-node -P packages/swapper/tsconfig.json scripts/provider-bench.ts --provider {{PROVIDER}} --iterations {{ITERATIONS}}
 

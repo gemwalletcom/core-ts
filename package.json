@@ -10,7 +10,11 @@
     "start:api": "pnpm --filter @gemwallet/api start",
     "dev:api": "pnpm --filter @gemwallet/api dev",
     "clean": "find . -name node_modules -type d -prune -exec rm -rf '{}' + && find . -name dist -type d -prune -exec rm -rf '{}' + && rm -rf .pnpm-store",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "lint": "oxlint -c oxlintrc.json packages apps",
+    "format": "oxfmt --write packages apps",
+    "format:check": "oxfmt --check packages apps",
+    "dead-code": "knip"
   },
   "keywords": [
     "swap",
@@ -21,6 +25,9 @@
   "devDependencies": {
     "@types/jest": "30.0.0",
     "jest": "30.2.0",
+    "knip": "5.83.1",
+    "oxfmt": "0.33.0",
+    "oxlint": "1.48.0",
     "ts-jest": "29.4.5",
     "typescript": "5.9.3"
   },

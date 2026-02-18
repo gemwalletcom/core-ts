@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    "packages/types": {
+      "ignore": ["src/primitives/**"]
+    },
+    "packages/swapper": {
+      "entry": ["src/index.ts!", "src/testkit/mock.ts!"],
+      "ignore": ["src/testkit/**"]
+    },
+    "apps/api": {}
+  },
+  "ignoreWorkspaces": ["scripts"]
+}

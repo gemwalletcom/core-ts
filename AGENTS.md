@@ -17,11 +17,13 @@
 
 ## Coding Style & Naming Conventions
 - TypeScript strict mode; ES2020+/ESNext modules.
-- 2‑space indent, double quotes, named exports when practical.
+- 4‑space indent, double quotes, named exports when practical.
+- Format touched files before committing: `pnpm oxfmt --write <file>...`.
 - Files: kebab‑case; tests end with `.test.ts`; entry files `index.ts`.
 - Group imports; use explicit types for public APIs.
 - Use `node:crypto` (`randomInt`) instead of `Math.random()` when selecting from security‑relevant sets (e.g. tip accounts, signers).
 - Type all external API responses with explicit interfaces; never leave `fetch` JSON as `any`.
+- No JSDoc, no code comments; the code should be self-explanatory.
 - Pre‑compute expensive objects (e.g. `PublicKey`) at module level when the inputs are static constants.
 
 ## Testing Guidelines
@@ -40,7 +42,7 @@
 ## Commit & Pull Request Guidelines
 - Prefer conventional style where helpful: `feat|fix|chore(scope): message`; keep messages imperative.
 - PRs: small, focused; include description, linked issues/PRs, and test notes or screenshots for API responses.
-- Must pass `pnpm build` and `pnpm test`; do not commit `dist/`.
+- Must pass `pnpm build`, `pnpm test`, and `pnpm lint`; do not commit `dist/`.
 
 ## Security & Configuration Tips
 - Configure via env vars used by API/providers: `PORT`, `SOLANA_URL`, `SUI_URL`, `TON_URL`.
@@ -49,5 +51,6 @@
 ## Agent‑Specific Instructions (all code agents)
 - Use `pnpm` workspace filters (`--filter`) and Justfile tasks; avoid changing file layout.
 - Keep edits minimal and focused; update adjacent docs/tests when touching APIs or providers.
+- Fix any lint issues in files you touch: `pnpm oxlint <file>...`.
 - Prefer mocks for external calls; do not add unvetted network dependencies.
 - Reflect provider additions/removals in `apps/api/src/index.ts` and docs; exclude unimplemented protocols.

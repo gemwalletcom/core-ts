@@ -1,13 +1,12 @@
 import { Chain, QuoteRequest } from "@gemwallet/types";
 
-import { StonfiProvider } from "./index";
 import { TON_ASSET, USDT_TON_ASSET, createStonfiQuoteRequest } from "../testkit/mock";
+import { StonfiProvider } from "./index";
 
 const runIntegration = process.env.STONFI_INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
 
-const TON_RPC_ENDPOINT =
-    process.env.TON_URL || "https://toncenter.com";
+const TON_RPC_ENDPOINT = process.env.TON_URL || "https://toncenter.com";
 
 // A valid TON wallet address for testing (TON Foundation address)
 const WALLET_ADDRESS = "EQCD39VS5jcptHL8vMjEXrzGaRcCVYto7HUn4bpAOg8xqB2N";
@@ -22,7 +21,7 @@ const REQUEST_TEMPLATE: QuoteRequest = createStonfiQuoteRequest({
     slippage_bps: 100,
 });
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describeIntegration("Stonfi live integration", () => {
     jest.setTimeout(60_000);

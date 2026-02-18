@@ -1,5 +1,5 @@
-import { SwapperException } from "../error";
 import { BigIntMath } from "../bigint_math";
+import { SwapperException } from "../error";
 
 export function toMayanError(error: unknown, decimals: number): Error {
     if (SwapperException.isSwapperException(error)) {

@@ -1,13 +1,23 @@
+import {
+    AggregatorClient,
+    Env,
+    RouterDataV3,
+    BuildFastRouterSwapParamsV3,
+    CETUS,
+    DEEPBOOKV2,
+    DEEPBOOKV3,
+    BLUEFIN,
+} from "@cetusprotocol/aggregator-sdk";
 import { QuoteRequest, Quote, SwapQuoteData, AssetId, SwapQuoteDataType } from "@gemwallet/types";
-import { Protocol } from "../protocol";
-import { AggregatorClient, Env, RouterDataV3, BuildFastRouterSwapParamsV3, CETUS, DEEPBOOKV2, DEEPBOOKV3, BLUEFIN } from "@cetusprotocol/aggregator-sdk";
 import { SuiClient } from "@mysten/sui/client";
-import { Transaction } from '@mysten/sui/transactions';
+import { Transaction } from "@mysten/sui/transactions";
 import { BN } from "bn.js";
+
 import { SUI_COIN_TYPE } from "../chain/sui/constants";
-import { bnReplacer, bnReviver } from "./bn_replacer";
 import { calculateGasBudget, prefillTransaction, getGasPriceAndCoinRefs } from "../chain/sui/tx_builder";
+import { Protocol } from "../protocol";
 import { getReferrerAddresses, CETUS_PARTNER_ID } from "../referrer";
+import { bnReplacer, bnReviver } from "./bn_replacer";
 
 export class CetusAggregatorProvider implements Protocol {
     private client: AggregatorClient;
@@ -28,7 +38,7 @@ export class CetusAggregatorProvider implements Protocol {
             overlayFeeRate,
             overlayFeeReceiver,
             signer: address,
-            partner: CETUS_PARTNER_ID
+            partner: CETUS_PARTNER_ID,
         });
     }
 
@@ -63,7 +73,7 @@ export class CetusAggregatorProvider implements Protocol {
             }
 
             const rawOutputValue = BigInt(routeData.amountOut.toString(10));
-            const referralValue = rawOutputValue * BigInt(request.referral_bps) / BigInt(10000);
+            const referralValue = (rawOutputValue * BigInt(request.referral_bps)) / BigInt(10000);
             const minOutputValue = rawOutputValue - referralValue;
 
             const quoteResult: Quote = {
@@ -78,7 +88,6 @@ export class CetusAggregatorProvider implements Protocol {
 
             return quoteResult;
         } catch (err: unknown) {
-            console.error("CetusProvider: Error in get_quote", err);
             if (err instanceof Error) {
                 throw new Error(`Get Quote failed: ${err.message}`);
             }
@@ -94,7 +103,6 @@ export class CetusAggregatorProvider implements Protocol {
         try {
             route_data = JSON.parse(routeDataString, bnReviver) as RouterDataV3;
         } catch (parseError) {
-            console.error("Route data that failed to parse:", routeDataString);
             throw new Error(`Failed to parse route data: ${parseError}`);
         }
 
@@ -111,14 +119,15 @@ export class CetusAggregatorProvider implements Protocol {
             };
 
             // create a new client with user's address as signer, overlay fee rate and overlay fee receiver
-            const client = this.createClient(quote.quote.from_address, quote.quote.referral_bps / 10000, this.overlayFeeReceiver);
+            const client = this.createClient(
+                quote.quote.from_address,
+                quote.quote.referral_bps / 10000,
+                this.overlayFeeReceiver,
+            );
 
             const gasPriceAndCoinRefsReq = getGasPriceAndCoinRefs(this.suiClient, quote.quote.from_address);
             const fastRouterSwapReq = client.fastRouterSwap(swapParams);
-            const [{ gasPrice, coinRefs }] = await Promise.all([
-                gasPriceAndCoinRefsReq,
-                fastRouterSwapReq
-            ]);
+            const [{ gasPrice, coinRefs }] = await Promise.all([gasPriceAndCoinRefsReq, fastRouterSwapReq]);
 
             // inspect transaction
             const result = await client.devInspectTransactionBlock(txb);
@@ -140,12 +149,11 @@ export class CetusAggregatorProvider implements Protocol {
                 value: "0",
                 data: Buffer.from(serializedTx).toString("base64"),
                 dataType: SwapQuoteDataType.Contract,
-                gasLimit: gasBudget.toString(10)
+                gasLimit: gasBudget.toString(10),
             };
 
             return quoteData;
         } catch (error: unknown) {
-            console.error("Error building transaction data with Cetus:", error);
             if (error instanceof Error) {
                 throw new Error(`Get Quote Data failed: ${error.message}`);
             }

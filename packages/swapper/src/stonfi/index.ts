@@ -1,7 +1,8 @@
-import { TonClient } from "@ton/ton";
-import { DEX, pTON } from "@ston-fi/sdk";
-import { StonApiClient } from '@ston-fi/api';
 import { QuoteRequest, Quote, SwapQuoteData, AssetId, Chain, SwapQuoteDataType } from "@gemwallet/types";
+import { StonApiClient } from "@ston-fi/api";
+import { DEX, pTON } from "@ston-fi/sdk";
+import { TonClient } from "@ton/ton";
+
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
 
@@ -12,7 +13,7 @@ const PTON_VERSION_1 = "EQCM3B12QK1e4yZSf8GtBRT0aLMNyEsBc_DhVfRRtOEffLez";
 const PTON_VERSION_2_1 = "EQBnGWMCf3-FZZq1W4IWcWiGAc3PHuZ0_H-7sad2oY00o83S";
 
 function getTokenAddress(asset: AssetId): string {
-    return asset.isNative() ? TON_JETTON_ADDRESS : asset.tokenId ?? '';
+    return asset.isNative() ? TON_JETTON_ADDRESS : (asset.tokenId ?? "");
 }
 
 export class StonfiProvider implements Protocol {
@@ -23,11 +24,11 @@ export class StonfiProvider implements Protocol {
     }
 
     async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
-        const fromAsset = AssetId.fromString(quoteRequest.from_asset.id)
-        const toAsset = AssetId.fromString(quoteRequest.to_asset.id)
+        const fromAsset = AssetId.fromString(quoteRequest.from_asset.id);
+        const toAsset = AssetId.fromString(quoteRequest.to_asset.id);
         const referralAddress = getReferrerAddresses().ton;
 
-        if (fromAsset.chain != Chain.Ton || toAsset.chain != Chain.Ton) {
+        if (fromAsset.chain !== Chain.Ton || toAsset.chain !== Chain.Ton) {
             throw new Error("Only TON is supported");
         }
 
@@ -40,32 +41,30 @@ export class StonfiProvider implements Protocol {
             referralFeeBps: quoteRequest.referral_bps.toString(),
         });
 
-        console.log("swapDirectSimulation", swapDirectSimulation);
-
         return {
             quote: quoteRequest,
             output_value: swapDirectSimulation.askUnits,
             output_min_value: swapDirectSimulation.minAskUnits,
             route_data: {},
-            eta_in_seconds: 3 // https://tonscan.org/blocks
-        }
+            eta_in_seconds: 3, // https://tonscan.org/blocks
+        };
     }
 
     async get_quote_data(quote: Quote): Promise<SwapQuoteData> {
-        const fromAsset = AssetId.fromString(quote.quote.from_asset.id)
-        const toAsset = AssetId.fromString(quote.quote.to_asset.id)
-        const fromTokenAdddress = getTokenAddress(fromAsset)
-        const toTokenAddress = getTokenAddress(toAsset)
-        let routers = await client.getRouters();
-        let pools = await client.getPoolsByAssetPair({
+        const fromAsset = AssetId.fromString(quote.quote.from_asset.id);
+        const toAsset = AssetId.fromString(quote.quote.to_asset.id);
+        const fromTokenAdddress = getTokenAddress(fromAsset);
+        const toTokenAddress = getTokenAddress(toAsset);
+        const routers = await client.getRouters();
+        const pools = await client.getPoolsByAssetPair({
             asset0Address: fromTokenAdddress,
-            asset1Address: toTokenAddress
+            asset1Address: toTokenAddress,
         });
         const pool = pools[0];
         if (!pool) {
             throw new Error("No valid pools");
         }
-        const router = routers.find(r => r.address === pool.routerAddress);
+        const router = routers.find((r) => r.address === pool.routerAddress);
         if (!router) {
             throw new Error("No matching router found");
         }
@@ -115,13 +114,13 @@ export class StonfiProvider implements Protocol {
             });
 
             if (!params.body) {
-                throw new Error('Transaction body is required');
+                throw new Error("Transaction body is required");
             }
 
             return {
                 to: params.to.toString(),
                 value: params.value.toString(),
-                data: params.body.toBoc().toString('base64'),
+                data: params.body.toBoc().toString("base64"),
                 dataType: SwapQuoteDataType.Contract,
             };
         } else if (toAsset.isNative()) {
@@ -136,13 +135,13 @@ export class StonfiProvider implements Protocol {
             });
 
             if (!params.body) {
-                throw new Error('Transaction body is required');
+                throw new Error("Transaction body is required");
             }
 
             return {
                 to: params.to.toString(),
                 value: params.value.toString(),
-                data: params.body.toBoc().toString('base64'),
+                data: params.body.toBoc().toString("base64"),
                 dataType: SwapQuoteDataType.Contract,
             };
         } else {
@@ -157,13 +156,13 @@ export class StonfiProvider implements Protocol {
             });
 
             if (!params.body) {
-                throw new Error('Transaction body is required');
+                throw new Error("Transaction body is required");
             }
 
             return {
                 to: params.to.toString(),
                 value: params.value.toString(),
-                data: params.body.toBoc().toString('base64'),
+                data: params.body.toBoc().toString("base64"),
                 dataType: SwapQuoteDataType.Contract,
             };
         }

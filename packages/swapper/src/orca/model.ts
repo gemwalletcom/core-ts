@@ -15,7 +15,7 @@ export class OrcaRouteData {
         public readonly outputMint: string,
         public readonly amount: string,
         public readonly slippageBps: number,
-    ) { }
+    ) {}
 
     static create(fields: OrcaRouteDataType): OrcaRouteData {
         return new OrcaRouteData(

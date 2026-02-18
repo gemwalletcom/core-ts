@@ -1,5 +1,6 @@
 import { QuoteRequest, SwapQuoteData, SwapQuoteDataType } from "@gemwallet/types";
 import { Quote as MayanQuote, ReferrerAddresses, getSwapFromEvmTxPayload } from "@mayanfinance/swap-sdk";
+
 import { getReferrerAddresses } from "../referrer";
 
 export const EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";

@@ -13,10 +13,10 @@ export function bnReplacer(key: string, val: any) {
 }
 
 export function bnReviver(key: string, val: any) {
-    if (bnFields.has(key) && typeof val === 'string') {
+    if (bnFields.has(key) && typeof val === "string") {
         return new BN(val, 16);
     }
-    if (val && typeof val === 'object' && val.__map && Array.isArray(val.__map)) {
+    if (val && typeof val === "object" && val.__map && Array.isArray(val.__map)) {
         return new Map(val.__map);
     }
     return val;

@@ -1,13 +1,12 @@
 import { Chain, QuoteRequest } from "@gemwallet/types";
 
-import { OrcaWhirlpoolProvider } from "./provider";
 import { createOrcaQuoteRequest } from "../testkit/mock";
+import { OrcaWhirlpoolProvider } from "./provider";
 
 const runIntegration = process.env.ORCA_INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
 
-const SOLANA_MAINNET_RPC =
-    process.env.SOLANA_RPC || "https://solana-rpc.publicnode.com";
+const SOLANA_MAINNET_RPC = process.env.SOLANA_RPC || "https://solana-rpc.publicnode.com";
 
 const WALLET_ADDRESS = "A21o4asMbFHYadqXdLusT9Bvx9xaC5YV9gcaidjqtdXC";
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
@@ -64,9 +63,9 @@ describeIntegration("Orca live integration", () => {
         const quote = await provider.get_quote(token2022Request);
 
         expect(quote.route_data).toBeDefined();
-        expect(quote.route_data && "outputMint" in quote.route_data
-            ? quote.route_data.outputMint
-            : null).toBe(PYUSD_MINT);
+        expect(quote.route_data && "outputMint" in quote.route_data ? quote.route_data.outputMint : null).toBe(
+            PYUSD_MINT,
+        );
 
         const quoteData = await provider.get_quote_data(quote);
         expect(typeof quoteData.data).toBe("string");

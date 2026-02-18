@@ -1,13 +1,8 @@
-import { Quote } from "@gemwallet/types";
 import { BN } from "@coral-xyz/anchor";
+import { Quote } from "@gemwallet/types";
 
-import {
-    calculateReferralFeeAmount,
-    bnToNumberSafe,
-    BASIS_POINTS_DENOMINATOR,
-    MAX_SAFE_NUMBER_BN,
-} from "./fee";
 import { buildOrcaQuoteFixture } from "../testkit/mock";
+import { calculateReferralFeeAmount, bnToNumberSafe, BASIS_POINTS_DENOMINATOR, MAX_SAFE_NUMBER_BN } from "./fee";
 
 const buildQuote = (fromValue: string, referralBps: number): Quote =>
     buildOrcaQuoteFixture({ from_value: fromValue, referral_bps: referralBps });

@@ -1,16 +1,19 @@
 import { SwapQuoteData, QuoteRequest, SwapQuoteDataType } from "@gemwallet/types";
 import { Quote as MayanQuote, ReferrerAddresses, createSwapFromSuiMoveCalls } from "@mayanfinance/swap-sdk";
 import { SuiClient } from "@mysten/sui/client";
-import { getReferrerAddresses } from "../referrer";
-import { SUI_COIN_TYPE } from "../chain/sui/constants";
-import { calculateGasBudget, prefillTransaction, getGasPriceAndCoinRefs } from "../chain/sui/tx_builder";
 
-export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQuote, suiRpc: string): Promise<SwapQuoteData> {
+import { calculateGasBudget, prefillTransaction, getGasPriceAndCoinRefs } from "../chain/sui/tx_builder";
+import { getReferrerAddresses } from "../referrer";
+
+export async function buildSuiQuoteData(
+    request: QuoteRequest,
+    routeData: MayanQuote,
+    suiRpc: string,
+): Promise<SwapQuoteData> {
     const referrerAddresses = getReferrerAddresses() as ReferrerAddresses;
     const suiClient = new SuiClient({ url: suiRpc });
 
     try {
-
         const [suiTx, { gasPrice, coinRefs }] = await Promise.all([
             createSwapFromSuiMoveCalls(
                 routeData,
@@ -18,9 +21,9 @@ export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQ
                 request.to_address,
                 referrerAddresses,
                 null,
-                suiClient
+                suiClient,
             ),
-            getGasPriceAndCoinRefs(suiClient, request.from_address)
+            getGasPriceAndCoinRefs(suiClient, request.from_address),
         ]);
 
         const inspectResult = await suiClient.devInspectTransactionBlock({
@@ -31,7 +34,7 @@ export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQ
         if (inspectResult.error) {
             throw new Error(`Failed to estimate gas budget: ${inspectResult.error}`);
         }
-        if (inspectResult.effects.status.status !== 'success') {
+        if (inspectResult.effects.status.status !== "success") {
             throw new Error(`Transaction simulation failed: ${inspectResult.effects.status.error}`);
         }
 
@@ -44,7 +47,7 @@ export async function buildSuiQuoteData(request: QuoteRequest, routeData: MayanQ
             value: "0",
             data: Buffer.from(serializedTx).toString("base64"),
             dataType: SwapQuoteDataType.Contract,
-            gasLimit: gasBudget.toString(10)
+            gasLimit: gasBudget.toString(10),
         };
     } catch (error) {
         throw new Error(`Failed to build Sui transaction: ${error}`);

@@ -1,7 +1,7 @@
-import { toMayanError } from "./error";
 import { SwapperException } from "../error";
+import { toMayanError } from "./error";
 
-describe('toMayanError', () => {
+describe("toMayanError", () => {
     it('converts "Amount too small (min ~0.01962 SOL)" to input_amount_error', () => {
         const result = toMayanError({ message: "Amount too small (min ~0.01962 SOL)" }, 9);
 
@@ -20,7 +20,7 @@ describe('toMayanError', () => {
         });
     });
 
-    it('returns generic Error for non-amount errors', () => {
+    it("returns generic Error for non-amount errors", () => {
         const result = toMayanError({ message: "Network error" }, 9);
 
         expect(result).not.toBeInstanceOf(SwapperException);

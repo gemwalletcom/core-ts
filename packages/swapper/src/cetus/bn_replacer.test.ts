@@ -1,8 +1,9 @@
 import BN from "bn.js";
+
 import { bnReplacer, bnReviver } from "./bn_replacer";
 
-describe('BN Replacer', () => {
-    it('Test BN type conversion for amountIn', () => {
+describe("BN Replacer", () => {
+    it("Test BN type conversion for amountIn", () => {
         const bn = new BN(123456789);
         const object = {
             amountIn: bn,
@@ -14,8 +15,8 @@ describe('BN Replacer', () => {
         expect(parsed.amountIn).toBeInstanceOf(BN);
     });
 
-    it('Test BN type conversion for amountOut', () => {
-        const bn = new BN('3b9aca00', 16);
+    it("Test BN type conversion for amountOut", () => {
+        const bn = new BN("3b9aca00", 16);
         const object = {
             amountOut: bn,
         };
@@ -26,10 +27,8 @@ describe('BN Replacer', () => {
         expect(parsed.amountOut).toBeInstanceOf(BN);
     });
 
-    it('Test Map serialization and deserialization', () => {
-        const map = new Map([
-            ['aggregator_v3', '0x07c27e879ba9282506284b0fef26d393978906fc9496550d978c6f493dbfa3e5']
-        ]);
+    it("Test Map serialization and deserialization", () => {
+        const map = new Map([["aggregator_v3", "0x07c27e879ba9282506284b0fef26d393978906fc9496550d978c6f493dbfa3e5"]]);
         const object = {
             packages: map,
         };
@@ -38,16 +37,18 @@ describe('BN Replacer', () => {
 
         expect(parsed.packages).toEqual(map);
         expect(parsed.packages).toBeInstanceOf(Map);
-        expect(parsed.packages.get('aggregator_v3')).toBe('0x07c27e879ba9282506284b0fef26d393978906fc9496550d978c6f493dbfa3e5');
+        expect(parsed.packages.get("aggregator_v3")).toBe(
+            "0x07c27e879ba9282506284b0fef26d393978906fc9496550d978c6f493dbfa3e5",
+        );
     });
 
-    it('Test complex object with both BN and Map', () => {
-        const amountIn = new BN('3b9aca00', 16);
-        const amountOut = new BN('32987a', 16);
+    it("Test complex object with both BN and Map", () => {
+        const amountIn = new BN("3b9aca00", 16);
+        const amountOut = new BN("32987a", 16);
         const packages = new Map([
-            ['aggregator_v3', '0x07c27e879ba9282506284b0fef26d393978906fc9496550d978c6f493dbfa3e5']
+            ["aggregator_v3", "0x07c27e879ba9282506284b0fef26d393978906fc9496550d978c6f493dbfa3e5"],
         ]);
-        
+
         const routeData = {
             amountIn,
             amountOut,
@@ -65,7 +66,7 @@ describe('BN Replacer', () => {
         expect(parsed.byAmountIn).toBe(true);
     });
 
-    it('Test empty Map serialization', () => {
+    it("Test empty Map serialization", () => {
         const emptyMap = new Map();
         const object = {
             packages: emptyMap,

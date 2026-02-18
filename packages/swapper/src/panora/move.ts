@@ -149,9 +149,7 @@ function parseU8(value: unknown): number | null {
     }
     if (typeof value === "string") {
         const trimmed = value.trim();
-        const parsed = trimmed.startsWith("0x")
-            ? Number.parseInt(trimmed, 16)
-            : Number.parseInt(trimmed, 10);
+        const parsed = trimmed.startsWith("0x") ? Number.parseInt(trimmed, 16) : Number.parseInt(trimmed, 10);
         if (!Number.isFinite(parsed)) {
             return null;
         }
