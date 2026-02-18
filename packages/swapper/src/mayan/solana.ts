@@ -5,13 +5,14 @@ import { getReferrerAddresses } from "../referrer";
 import {
     getRecentBlockhash,
     serializeTransaction,
+    findComputeUnitLimit,
 } from "../chain/solana/tx_builder";
 import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 
 export async function buildSolanaQuoteData(request: QuoteRequest, routeData: MayanQuote, rpcEndpoint: string): Promise<SwapQuoteData> {
     const connection = new Connection(rpcEndpoint);
     const referrerAddresses = getReferrerAddresses() as ReferrerAddresses;
-    const { serializedTrx } = await prepareSolanaSwapTransaction(
+    const { serializedTrx, gasLimit } = await prepareSolanaSwapTransaction(
         routeData,
         request.from_address,
         request.to_address,
@@ -24,6 +25,7 @@ export async function buildSolanaQuoteData(request: QuoteRequest, routeData: May
         value: "0",
         data: serializedTrx,
         dataType: SwapQuoteDataType.Contract,
+        gasLimit,
     };
 }
 
@@ -35,6 +37,7 @@ async function prepareSolanaSwapTransaction(
     connection: Connection,
 ): Promise<{
     serializedTrx: string,
+    gasLimit: string | undefined,
     additionalInfo: {
         blockhash: string,
         lastValidBlockHeight: number,
@@ -56,6 +59,7 @@ async function prepareSolanaSwapTransaction(
     }
 
     const { instructions, signers, lookupTables } = swapData;
+    const gasLimit = findComputeUnitLimit(instructions);
 
     const swapper = new PublicKey(swapperWalletAddress);
 
@@ -72,6 +76,7 @@ async function prepareSolanaSwapTransaction(
 
     return {
         serializedTrx,
+        gasLimit,
         additionalInfo: {
             blockhash,
             lastValidBlockHeight,

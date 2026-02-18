@@ -13,17 +13,14 @@ import {
 import { Protocol } from "../protocol";
 import { SwapperException } from "../error";
 import { getReferrerAddresses } from "../referrer";
-import type { OkxRouteData } from "./model";
-import { SOLANA_CHAIN_INDEX, SOLANA_NATIVE_TOKEN_ADDRESS, SOLANA_DEX_IDS_PARAM, DEFAULT_SLIPPAGE_PERCENT } from "./constants";
-
-function isValidAddress(address: string): boolean {
-  try {
-    const decoded = bs58.decode(address);
-    return decoded.length === 32;
-  } catch {
-    return false;
-  }
-}
+import {
+  SOLANA_CHAIN_INDEX,
+  SOLANA_NATIVE_TOKEN_ADDRESS,
+  SOLANA_DEX_IDS_PARAM,
+  DEFAULT_SLIPPAGE_PERCENT,
+} from "./constants";
+import { COMPUTE_UNIT_MULTIPLIER } from "../chain/solana/tx_builder";
+import { BigIntMath } from "../bigint_math";
 
 function bpsToPercent(bps: number): string {
   return (bps / 100).toString();
@@ -35,12 +32,6 @@ function assetToTokenAddress(assetId: AssetId): string {
   }
   if (!assetId.tokenId) {
     return SOLANA_NATIVE_TOKEN_ADDRESS;
-  }
-  if (!isValidAddress(assetId.tokenId)) {
-    throw new SwapperException({
-      type: "compute_quote_error",
-      message: `Invalid address: ${assetId.tokenId}`,
-    });
   }
   return assetId.tokenId;
 }
@@ -74,14 +65,6 @@ function maxAutoSlippagePercent(request: QuoteRequest): string | undefined {
   return bpsToPercent(request.slippage_bps * 2);
 }
 
-function percentToBps(value: string): number | undefined {
-  const percent = Number(value);
-  if (!Number.isFinite(percent) || percent < 0) {
-    return undefined;
-  }
-  return Math.round(percent * 100);
-}
-
 function buildSwapParams(request: QuoteRequest, route: QuoteData): SwapParams {
   return {
     chainIndex: SOLANA_CHAIN_INDEX,
@@ -98,20 +81,12 @@ function buildSwapParams(request: QuoteRequest, route: QuoteData): SwapParams {
   };
 }
 
-function suggestedSlippage(tx: TransactionData | undefined): {
-  suggestedSlippagePercent?: string;
-  suggestedSlippageBps?: number;
-} {
-  const value = tx?.slippagePercent;
-  if (!value) {
-    return {};
+function minOutputValue(route: QuoteData, slippageBps: number): string {
+  if (route.tx?.minReceiveAmount) {
+    return route.tx.minReceiveAmount;
   }
-
-  const bps = percentToBps(value);
-  return {
-    suggestedSlippagePercent: value,
-    suggestedSlippageBps: bps,
-  };
+  const bps = slippageBps > 0 ? slippageBps : 100;
+  return BigIntMath.applySlippage(route.toTokenAmount, bps);
 }
 
 export class OkxProvider implements Protocol {
@@ -147,6 +122,27 @@ export class OkxProvider implements Protocol {
     });
   }
 
+  private async estimateComputeUnitLimit(tx: TransactionData): Promise<string | undefined> {
+    try {
+      const result = await this.client.dex.getGasLimit({
+        chainIndex: SOLANA_CHAIN_INDEX,
+        fromAddress: tx.from,
+        toAddress: tx.to,
+        extJson: { inputData: tx.data },
+      });
+
+      if (result.code === "0") {
+        const raw = Number(result.data[0]?.gasLimit);
+        if (raw > 0) {
+          return Math.ceil(raw * COMPUTE_UNIT_MULTIPLIER).toString();
+        }
+      }
+    } catch {
+      console.warn("Failed to estimate compute unit limit");
+    }
+    return undefined;
+  }
+
   async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
     const fromAsset = AssetId.fromString(quoteRequest.from_asset.id);
     const toAsset = AssetId.fromString(quoteRequest.to_asset.id);
@@ -176,30 +172,12 @@ export class OkxProvider implements Protocol {
       throw new SwapperException({ type: "no_quote_available" });
     }
 
-    const swapResponse = await this.client.dex.getSwapData(
-      buildSwapParams(quoteRequest, route),
-    );
-
-    if (swapResponse.code !== "0") {
-      throw new SwapperException({
-        type: "compute_quote_error",
-        message: swapResponse.msg || "Failed to fetch OKX auto slippage suggestion",
-      });
-    }
-
-    const swapData = swapResponse.data[0];
-    const routeData: OkxRouteData = {
-      ...route,
-      ...suggestedSlippage(swapData?.tx),
-    };
-    const outputMinValue = swapData?.tx?.minReceiveAmount || route.toTokenAmount;
-
     return {
       quote: quoteRequest,
       output_value: route.toTokenAmount,
-      output_min_value: outputMinValue,
+      output_min_value: minOutputValue(route, quoteRequest.slippage_bps),
       eta_in_seconds: 0,
-      route_data: routeData,
+      route_data: route,
     };
   }
 
@@ -209,9 +187,7 @@ export class OkxProvider implements Protocol {
       throw new SwapperException({ type: "invalid_route" });
     }
 
-    const response = await this.client.dex.getSwapData(
-      buildSwapParams(quote.quote, route),
-    );
+    const response = await this.client.dex.getSwapData(buildSwapParams(quote.quote, route));
 
     if (response.code !== "0") {
       throw new SwapperException({
@@ -220,14 +196,16 @@ export class OkxProvider implements Protocol {
       });
     }
 
-    const data = response.data[0];
-    if (!data || !data.tx || !data.tx.data) {
-      throw new SwapperException({ type: "no_quote_available" });
+    const swapData = response.data[0];
+    if (!swapData?.tx?.data) {
+      throw new SwapperException({ type: "invalid_route" });
     }
+
+    const gasLimit = await this.estimateComputeUnitLimit(swapData.tx);
 
     let serializedBase64: string;
     try {
-      serializedBase64 = Buffer.from(bs58.decode(data.tx.data)).toString("base64");
+      serializedBase64 = Buffer.from(bs58.decode(swapData.tx.data)).toString("base64");
     } catch (error) {
       throw new SwapperException({
         type: "transaction_error",
@@ -236,10 +214,11 @@ export class OkxProvider implements Protocol {
     }
 
     return {
-      to: data.tx.to,
+      to: swapData.tx.to,
       value: "0",
       data: serializedBase64,
       dataType: SwapQuoteDataType.Contract,
+      gasLimit,
     };
   }
 }

@@ -8,7 +8,8 @@ import {
 } from "@solana/web3.js";
 
 export const DEFAULT_COMPUTE_UNIT_LIMIT = 420_000;
-export const DEFAULT_COMPUTE_UNIT_PRICE_MICRO_LAMPORTS = 50_000;
+export const DEFAULT_COMPUTE_UNIT_PRICE = 50_000;
+export const COMPUTE_UNIT_MULTIPLIER = 1.1;
 export const PRIORITY_FEE_PERCENTILE = 75;
 
 export async function getRecentBlockhash(connection: Connection, commitment?: "confirmed" | "finalized") {
@@ -21,7 +22,7 @@ export async function getRecentPriorityFee(connection: Connection, lockedWritabl
         const recentFees = await connection.getRecentPrioritizationFees(config);
 
         if (!recentFees || recentFees.length === 0) {
-            return DEFAULT_COMPUTE_UNIT_PRICE_MICRO_LAMPORTS;
+            return DEFAULT_COMPUTE_UNIT_PRICE;
         }
 
         const fees = recentFees
@@ -30,7 +31,7 @@ export async function getRecentPriorityFee(connection: Connection, lockedWritabl
             .sort((a, b) => a - b);
 
         if (fees.length === 0) {
-            return DEFAULT_COMPUTE_UNIT_PRICE_MICRO_LAMPORTS;
+            return DEFAULT_COMPUTE_UNIT_PRICE;
         }
 
         const percentileIndex = Math.floor(fees.length * (PRIORITY_FEE_PERCENTILE / 100));
@@ -44,7 +45,7 @@ export async function getRecentPriorityFee(connection: Connection, lockedWritabl
         return recommendedFee;
     } catch (error) {
         console.warn("Failed to fetch recent prioritization fees, using default:", error);
-        return DEFAULT_COMPUTE_UNIT_PRICE_MICRO_LAMPORTS;
+        return DEFAULT_COMPUTE_UNIT_PRICE;
     }
 }
 
@@ -59,7 +60,7 @@ export function createComputeUnitPriceInstruction(microLamports: number): Transa
 export function addComputeBudgetInstructions(
     instructions: TransactionInstruction[],
     computeUnitLimit: number = DEFAULT_COMPUTE_UNIT_LIMIT,
-    computeUnitPriceMicroLamports: number = DEFAULT_COMPUTE_UNIT_PRICE_MICRO_LAMPORTS,
+    computeUnitPriceMicroLamports: number = DEFAULT_COMPUTE_UNIT_PRICE,
 ): TransactionInstruction[] {
     return [
         createComputeUnitLimitInstruction(computeUnitLimit),
@@ -79,6 +80,20 @@ export function setTransactionBlockhash(
         transaction.recentBlockhash = blockhash;
         transaction.lastValidBlockHeight = lastValidBlockHeight;
     }
+}
+
+const COMPUTE_BUDGET_PROGRAM_ID = ComputeBudgetProgram.programId;
+const SET_COMPUTE_UNIT_LIMIT_DISCRIMINANT = 2;
+
+export function findComputeUnitLimit(instructions: TransactionInstruction[]): string | undefined {
+    for (const ix of instructions) {
+        if (!ix.programId.equals(COMPUTE_BUDGET_PROGRAM_ID)) continue;
+        if (ix.data.length >= 5 && ix.data[0] === SET_COMPUTE_UNIT_LIMIT_DISCRIMINANT) {
+            const units = ix.data.readUInt32LE(1);
+            return units.toString();
+        }
+    }
+    return undefined;
 }
 
 export function serializeTransaction(transaction: VersionedTransaction | Transaction): string {
