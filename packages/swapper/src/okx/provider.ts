@@ -130,9 +130,7 @@ export class OkxProvider implements Protocol {
                     return Math.ceil(raw * COMPUTE_UNIT_MULTIPLIER).toString();
                 }
             }
-        } catch {
-            // best-effort: silently fall back to no custom limit
-        }
+        } catch { }
         return undefined;
     }
 
