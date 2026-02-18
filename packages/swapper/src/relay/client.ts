@@ -19,7 +19,6 @@ export async function fetchQuote(params: RelayQuotePostBodyParams): Promise<Rela
             try {
                 errorData = await response.json();
             } catch {
-                // If response is not JSON, use text
                 errorData = await response.text();
             }
             throw new Error(`Relay API request failed with status ${response.status}: ${JSON.stringify(errorData)}`);
@@ -27,9 +26,8 @@ export async function fetchQuote(params: RelayQuotePostBodyParams): Promise<Rela
 
         return (await response.json()) as RelayQuoteResponse;
     } catch (error: any) {
-        // Handle network errors or other issues not caught by !response.ok
         if (error instanceof Error && error.message.startsWith("Relay API request failed")) {
-            throw error; // Re-throw errors already processed from the API response
+            throw error;
         }
         throw new Error(`An unexpected error occurred while fetching the quote from Relay: ${error.message}`);
     }

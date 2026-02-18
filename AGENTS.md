@@ -23,6 +23,7 @@
 - Group imports; use explicit types for public APIs.
 - Use `node:crypto` (`randomInt`) instead of `Math.random()` when selecting from security‑relevant sets (e.g. tip accounts, signers).
 - Type all external API responses with explicit interfaces; never leave `fetch` JSON as `any`.
+- No JSDoc, no code comments; the code should be self-explanatory.
 - Pre‑compute expensive objects (e.g. `PublicKey`) at module level when the inputs are static constants.
 
 ## Testing Guidelines

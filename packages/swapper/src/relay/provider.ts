@@ -112,7 +112,6 @@ export class RelayProvider implements Protocol {
             throw new Error("RelayProvider: Invalid route_data structure");
         }
         const steps = quote.route_data as Step[];
-        // filter out approve step and get first transaction
         const filtered = steps.filter((step) => step.id !== "approve" && step.kind === "transaction");
         if (filtered.length === 0) {
             throw new Error("RelayProvider: No steps found in quote data");
