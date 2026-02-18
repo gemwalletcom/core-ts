@@ -5,8 +5,8 @@ using the official `@okx-dex/okx-dex-sdk`.
 
 ## Scope
 
-- `get_quote`: calls OKX DEX quote + swap data for auto-slippage
-- `get_quote_data`: calls OKX DEX swap data for transaction building
+- `get_quote`: calls OKX DEX quote with auto-slippage
+- `get_quote_data`: calls OKX DEX swap data and estimate compute unit for transaction building
 - Supports:
     - auto slippage (`autoSlippage: true`)
     - max auto slippage cap (`slippage_bps * 2` -> `maxAutoSlippagePercent`)
@@ -37,9 +37,7 @@ The full liquidity list can be fetched via `OKXDexClient.dex.getLiquidity("501")
 2. Validate Solana assets and map native SOL to `11111111111111111111111111111111`
 3. Request quote via `OKXDexClient.dex.getQuote()` (filtered by `dexIds`)
 4. Request swap data via `OKXDexClient.dex.getSwapData()` with `autoSlippage: true`
-5. Store OKX route in `quote.route_data` with:
-    - `suggestedSlippagePercent`
-    - `suggestedSlippageBps`
+5. Store OKX route in `quote.route_data`
 6. `OkxProvider.get_quote_data(...)`
 7. Build swap request with auto slippage and optional referral data
 8. Decode OKX base58 tx payload and return base64 `SwapQuoteData`
