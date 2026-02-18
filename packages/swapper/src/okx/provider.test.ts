@@ -14,9 +14,34 @@ function createRequest(slippageBps = 100) {
 function createProvider() {
   const getQuote = jest.fn();
   const getSwapData = jest.fn();
-  const client = { dex: { getQuote, getSwapData } } as unknown as OKXDexClient;
+  const getGasLimit = jest.fn().mockResolvedValue({
+    code: "0",
+    msg: "",
+    data: [{ gasLimit: "500000" }],
+  });
+  const client = { dex: { getQuote, getSwapData, getGasLimit } } as unknown as OKXDexClient;
   const provider = new OkxProvider(client);
-  return { provider, getQuote, getSwapData };
+  return { provider, getQuote, getSwapData, getGasLimit };
+}
+
+function mockSwapResponse(route: Record<string, unknown>, overrides?: Record<string, unknown>) {
+  return {
+    code: "0",
+    msg: "",
+    data: [
+      {
+        routerResult: route,
+        tx: {
+          from: "SenderAddress",
+          to: "JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB",
+          data: SOL_MINT,
+          slippagePercent: "0.42",
+          minReceiveAmount: "119500000",
+          ...overrides,
+        },
+      },
+    ],
+  };
 }
 
 describe("OkxProvider", () => {
@@ -28,26 +53,8 @@ describe("OkxProvider", () => {
       fromToken: { tokenContractAddress: SOL_MINT },
       toToken: { tokenContractAddress: USDC_MINT },
     };
-    getQuote.mockResolvedValue({
-      code: "0",
-      msg: "",
-      data: [route],
-    });
-    getSwapData.mockResolvedValue({
-      code: "0",
-      msg: "",
-      data: [
-        {
-          routerResult: route,
-          tx: {
-            to: "JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB",
-            data: SOL_MINT,
-            slippagePercent: "0.42",
-            minReceiveAmount: "119500000",
-          },
-        },
-      ],
-    });
+    getQuote.mockResolvedValue({ code: "0", msg: "", data: [route] });
+    getSwapData.mockResolvedValue(mockSwapResponse(route));
 
     const quote = await provider.get_quote(createRequest());
     expect(quote.output_value).toBe("120000000");
@@ -63,7 +70,31 @@ describe("OkxProvider", () => {
     expect(routeData.suggestedSlippageBps).toBe(42);
   });
 
-  it("uses auto slippage for quote data request", async () => {
+  it("estimates compute unit limit via getGasLimit", async () => {
+    const { provider, getQuote, getSwapData, getGasLimit } = createProvider();
+    const route = {
+      fromTokenAmount: "1000000",
+      toTokenAmount: "120000000",
+      fromToken: { tokenContractAddress: SOL_MINT },
+      toToken: { tokenContractAddress: USDC_MINT },
+    };
+    getQuote.mockResolvedValue({ code: "0", msg: "", data: [route] });
+    getSwapData.mockResolvedValue(mockSwapResponse(route));
+
+    const quote = await provider.get_quote(createRequest());
+
+    expect(getGasLimit).toHaveBeenCalledWith({
+      chainIndex: "501",
+      fromAddress: "SenderAddress",
+      toAddress: "JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB",
+      extJson: { inputData: SOL_MINT },
+    });
+
+    const routeData = quote.route_data as Record<string, unknown>;
+    expect(routeData.estimatedComputeUnits).toBe("550000");
+  });
+
+  it("passes estimated compute unit limit to get_quote_data swap params and response", async () => {
     const { provider, getSwapData } = createProvider();
     const quote: Quote = {
       quote: createRequest(150),
@@ -75,29 +106,16 @@ describe("OkxProvider", () => {
         toTokenAmount: "120000000",
         fromToken: { tokenContractAddress: SOL_MINT },
         toToken: { tokenContractAddress: USDC_MINT },
+        estimatedComputeUnits: "550000",
       },
     };
-    getSwapData.mockResolvedValue({
-      code: "0",
-      msg: "",
-      data: [
-        {
-          routerResult: quote.route_data,
-          tx: {
-            to: "JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB",
-            data: SOL_MINT,
-            slippagePercent: "0.31",
-          },
-        },
-      ],
-    });
+    getSwapData.mockResolvedValue(mockSwapResponse(quote.route_data as Record<string, unknown>));
 
-    await provider.get_quote_data(quote);
+    const result = await provider.get_quote_data(quote);
 
     const swapParams = getSwapData.mock.calls[0][0] as Record<string, unknown>;
-    expect(swapParams.autoSlippage).toBe(true);
-    expect(swapParams.maxAutoSlippagePercent).toBe("3");
-    expect(swapParams.slippagePercent).toBe("1");
+    expect(swapParams.computeUnitLimit).toBe("550000");
+    expect(result.gasLimit).toBe("550000");
   });
 
   it("falls back to 1% slippage when slippage_bps is 0", async () => {
@@ -109,25 +127,30 @@ describe("OkxProvider", () => {
       toToken: { tokenContractAddress: USDC_MINT },
     };
     getQuote.mockResolvedValue({ code: "0", msg: "", data: [route] });
-    getSwapData.mockResolvedValue({
-      code: "0",
-      msg: "",
-      data: [
-        {
-          routerResult: route,
-          tx: {
-            to: "JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB",
-            data: SOL_MINT,
-            minReceiveAmount: "119500000",
-          },
-        },
-      ],
-    });
+    getSwapData.mockResolvedValue(mockSwapResponse(route));
 
     await provider.get_quote(createRequest(0));
 
     const swapParams = getSwapData.mock.calls[0][0] as Record<string, unknown>;
     expect(swapParams.slippagePercent).toBe("1");
     expect(swapParams.maxAutoSlippagePercent).toBeUndefined();
+  });
+
+  it("handles getGasLimit failure gracefully", async () => {
+    const { provider, getQuote, getSwapData, getGasLimit } = createProvider();
+    getGasLimit.mockRejectedValue(new Error("API error"));
+    const route = {
+      fromTokenAmount: "1000000",
+      toTokenAmount: "120000000",
+      fromToken: { tokenContractAddress: SOL_MINT },
+      toToken: { tokenContractAddress: USDC_MINT },
+    };
+    getQuote.mockResolvedValue({ code: "0", msg: "", data: [route] });
+    getSwapData.mockResolvedValue(mockSwapResponse(route));
+
+    const quote = await provider.get_quote(createRequest());
+
+    const routeData = quote.route_data as Record<string, unknown>;
+    expect(routeData.estimatedComputeUnits).toBeUndefined();
   });
 });

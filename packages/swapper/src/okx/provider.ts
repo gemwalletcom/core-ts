@@ -14,7 +14,13 @@ import { Protocol } from "../protocol";
 import { SwapperException } from "../error";
 import { getReferrerAddresses } from "../referrer";
 import type { OkxRouteData } from "./model";
-import { SOLANA_CHAIN_INDEX, SOLANA_NATIVE_TOKEN_ADDRESS, SOLANA_DEX_IDS_PARAM, DEFAULT_SLIPPAGE_PERCENT } from "./constants";
+import {
+  SOLANA_CHAIN_INDEX,
+  SOLANA_NATIVE_TOKEN_ADDRESS,
+  SOLANA_DEX_IDS_PARAM,
+  DEFAULT_SLIPPAGE_PERCENT,
+} from "./constants";
+import { COMPUTE_UNIT_MULTIPLIER } from "../chain/solana/tx_builder";
 
 function isValidAddress(address: string): boolean {
   try {
@@ -82,7 +88,11 @@ function percentToBps(value: string): number | undefined {
   return Math.round(percent * 100);
 }
 
-function buildSwapParams(request: QuoteRequest, route: QuoteData): SwapParams {
+function buildSwapParams(
+  request: QuoteRequest,
+  route: QuoteData,
+  computeUnitLimit?: string,
+): SwapParams {
   return {
     chainIndex: SOLANA_CHAIN_INDEX,
     amount: request.from_value,
@@ -95,6 +105,7 @@ function buildSwapParams(request: QuoteRequest, route: QuoteData): SwapParams {
     maxAutoSlippagePercent: maxAutoSlippagePercent(request),
     feePercent: referralFeePercent(request),
     fromTokenReferrerWalletAddress: referralFeeAddress(request),
+    computeUnitLimit,
   };
 }
 
@@ -147,6 +158,27 @@ export class OkxProvider implements Protocol {
     });
   }
 
+  private async estimateComputeUnitLimit(tx: TransactionData): Promise<string | undefined> {
+    try {
+      const result = await this.client.dex.getGasLimit({
+        chainIndex: SOLANA_CHAIN_INDEX,
+        fromAddress: tx.from,
+        toAddress: tx.to,
+        extJson: { inputData: tx.data },
+      });
+
+      if (result.code === "0") {
+        const raw = Number(result.data[0]?.gasLimit);
+        if (raw > 0) {
+          return Math.ceil(raw * COMPUTE_UNIT_MULTIPLIER).toString();
+        }
+      }
+    } catch {
+      console.warn("Failed to estimate compute unit limit");
+    }
+    return undefined;
+  }
+
   async get_quote(quoteRequest: QuoteRequest): Promise<Quote> {
     const fromAsset = AssetId.fromString(quoteRequest.from_asset.id);
     const toAsset = AssetId.fromString(quoteRequest.to_asset.id);
@@ -188,9 +220,14 @@ export class OkxProvider implements Protocol {
     }
 
     const swapData = swapResponse.data[0];
+    const estimatedComputeUnits = swapData?.tx
+      ? await this.estimateComputeUnitLimit(swapData.tx)
+      : undefined;
+
     const routeData: OkxRouteData = {
       ...route,
       ...suggestedSlippage(swapData?.tx),
+      estimatedComputeUnits,
     };
     const outputMinValue = swapData?.tx?.minReceiveAmount || route.toTokenAmount;
 
@@ -204,13 +241,13 @@ export class OkxProvider implements Protocol {
   }
 
   async get_quote_data(quote: Quote): Promise<SwapQuoteData> {
-    const route = quote.route_data as QuoteData | undefined;
+    const route = quote.route_data as OkxRouteData | undefined;
     if (!route || !route.fromToken || !route.toToken) {
       throw new SwapperException({ type: "invalid_route" });
     }
 
     const response = await this.client.dex.getSwapData(
-      buildSwapParams(quote.quote, route),
+      buildSwapParams(quote.quote, route, route.estimatedComputeUnits),
     );
 
     if (response.code !== "0") {
@@ -240,6 +277,7 @@ export class OkxProvider implements Protocol {
       value: "0",
       data: serializedBase64,
       dataType: SwapQuoteDataType.Contract,
+      gasLimit: route.estimatedComputeUnits,
     };
   }
 }
