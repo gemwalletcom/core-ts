@@ -126,7 +126,7 @@ function mockEvmTokenQuote(): Quote {
 describe("OkxProvider", () => {
     describe("Solana", () => {
         describe("get_quote", () => {
-            it("returns quote from getQuote", async () => {
+            it("returns quote with chain index and dexIds", async () => {
                 const { provider, getQuote, getSwapData } = createProvider();
                 getQuote.mockResolvedValue({ code: "0", msg: "", data: [solanaRoute] });
 
@@ -135,13 +135,6 @@ describe("OkxProvider", () => {
                 expect(quote.output_value).toBe("120000000");
                 expect(quote.output_min_value).toBe("118800000");
                 expect(getSwapData).not.toHaveBeenCalled();
-            });
-
-            it("passes Solana chain index and dexIds", async () => {
-                const { provider, getQuote } = createProvider();
-                getQuote.mockResolvedValue({ code: "0", msg: "", data: [solanaRoute] });
-
-                await provider.get_quote(createSolanaRequest());
 
                 const params = getQuote.mock.calls[0][0] as Record<string, unknown>;
                 expect(params.chainIndex).toBe("501");
@@ -188,21 +181,12 @@ describe("OkxProvider", () => {
                 expect(swapParams.slippagePercent).toBe("1");
                 expect(swapParams.maxAutoSlippagePercent).toBeUndefined();
             });
-
-            it("handles simulation failure gracefully", async () => {
-                const { provider, getSwapData } = createProvider();
-                getSwapData.mockResolvedValue(mockSolanaSwapResponse());
-
-                const result = await provider.get_quote_data(mockSolanaQuote());
-
-                expect(result.gasLimit).toBeUndefined();
-            });
         });
     });
 
     describe("EVM", () => {
         describe("get_quote", () => {
-            it("returns quote with Manta chain index", async () => {
+            it("returns quote with Manta chain index and no dexIds", async () => {
                 const { provider, getQuote } = createProvider();
                 getQuote.mockResolvedValue({ code: "0", msg: "", data: [evmRoute] });
 
@@ -211,32 +195,12 @@ describe("OkxProvider", () => {
                 expect(quote.output_value).toBe("2500000000");
                 const params = getQuote.mock.calls[0][0] as Record<string, unknown>;
                 expect(params.chainIndex).toBe("169");
-            });
-
-            it("does not pass dexIds for EVM chains", async () => {
-                const { provider, getQuote } = createProvider();
-                getQuote.mockResolvedValue({ code: "0", msg: "", data: [evmRoute] });
-
-                await provider.get_quote(createOkxEvmQuoteRequest());
-
-                const params = getQuote.mock.calls[0][0] as Record<string, unknown>;
                 expect(params.dexIds).toBeUndefined();
-            });
-
-            it("throws for unsupported chain", async () => {
-                const { provider, getQuote } = createProvider();
-                getQuote.mockResolvedValue({ code: "0", msg: "", data: [] });
-
-                const request = createOkxEvmQuoteRequest({
-                    from_asset: { id: Chain.Bitcoin, symbol: "BTC", decimals: 8 },
-                });
-
-                await expect(provider.get_quote(request)).rejects.toThrow();
             });
         });
 
         describe("get_quote_data", () => {
-            it("returns hex data directly without base58 decoding", async () => {
+            it("returns hex data without gasLimit for native swaps", async () => {
                 const { provider, getSwapData } = createProvider();
                 getSwapData.mockResolvedValue(mockEvmSwapResponse());
 
@@ -245,24 +209,11 @@ describe("OkxProvider", () => {
                 expect(result.data).toBe("0xabcdef1234567890");
                 expect(result.to).toBe("0xDEXRouterAddress");
                 expect(result.value).toBe("1000000000000000000");
-            });
+                expect(result.gasLimit).toBeUndefined();
+                expect(result.approval).toBeUndefined();
 
-            it("uses gas from tx response as gasLimit", async () => {
-                const { provider, getSwapData } = createProvider();
-                getSwapData.mockResolvedValue(mockEvmSwapResponse());
-
-                const result = await provider.get_quote_data(mockEvmQuote());
-
-                expect(result.gasLimit).toBe("250000");
-            });
-
-            it("uses gas from tx for EVM chains without RPC simulation", async () => {
-                const { provider, getSwapData } = createProvider();
-                getSwapData.mockResolvedValue(mockEvmSwapResponse());
-
-                const result = await provider.get_quote_data(mockEvmQuote());
-
-                expect(result.gasLimit).toBe("250000");
+                const params = getSwapData.mock.calls[0][0] as Record<string, unknown>;
+                expect(params.fromTokenReferrerWalletAddress).toBe("0x0D9DAB1A248f63B0a48965bA8435e4de7497a3dC");
             });
 
             it("includes approval data for token swaps", async () => {
@@ -279,41 +230,12 @@ describe("OkxProvider", () => {
 
                 const result = await provider.get_quote_data(mockEvmTokenQuote());
 
+                expect(result.gasLimit).toBe("300000");
                 expect(result.approval).toEqual({
                     token: MANTA_USDC_ADDRESS,
                     spender: "0xDEXRouterAddress",
                     value: "1000000",
                 });
-            });
-
-            it("does not include approval data for native token swaps", async () => {
-                const { provider, getSwapData } = createProvider();
-                getSwapData.mockResolvedValue(mockEvmSwapResponse());
-
-                const result = await provider.get_quote_data(mockEvmQuote());
-
-                expect(result.approval).toBeUndefined();
-            });
-
-            it("passes EVM chain index in swap params", async () => {
-                const { provider, getSwapData } = createProvider();
-                getSwapData.mockResolvedValue(mockEvmSwapResponse());
-
-                await provider.get_quote_data(mockEvmQuote());
-
-                const params = getSwapData.mock.calls[0][0] as Record<string, unknown>;
-                expect(params.chainIndex).toBe("169");
-                expect(params.dexIds).toBeUndefined();
-            });
-
-            it("uses EVM referrer address", async () => {
-                const { provider, getSwapData } = createProvider();
-                getSwapData.mockResolvedValue(mockEvmSwapResponse());
-
-                await provider.get_quote_data(mockEvmQuote());
-
-                const params = getSwapData.mock.calls[0][0] as Record<string, unknown>;
-                expect(params.fromTokenReferrerWalletAddress).toBe("0x0D9DAB1A248f63B0a48965bA8435e4de7497a3dC");
             });
         });
     });

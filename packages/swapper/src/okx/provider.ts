@@ -12,10 +12,9 @@ import { SwapperException } from "../error";
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
 import {
+    CHAIN_INDEX,
     DEFAULT_SLIPPAGE_PERCENT,
-    EVM_CHAIN_INDEX,
     EVM_NATIVE_TOKEN_ADDRESS,
-    SOLANA_CHAIN_INDEX,
     SOLANA_DEX_IDS_PARAM,
     SOLANA_NATIVE_TOKEN_ADDRESS,
 } from "./constants";
@@ -25,14 +24,13 @@ function bpsToPercent(bps: number): string {
 }
 
 function chainIndex(chain: Chain): string {
-    if (chain === Chain.Solana) return SOLANA_CHAIN_INDEX;
-    const index = EVM_CHAIN_INDEX[chain];
+    const index = CHAIN_INDEX[chain];
     if (!index) throw new SwapperException({ type: "not_supported_chain" });
     return index;
 }
 
 function isEvmChain(chain: Chain): boolean {
-    return chain in EVM_CHAIN_INDEX;
+    return chain in CHAIN_INDEX && chain !== Chain.Solana;
 }
 
 function dexIds(chain: Chain): string | undefined {
@@ -63,9 +61,9 @@ function referralFeeAddress(request: QuoteRequest, chain: Chain): string | undef
     const referrers = getReferrerAddresses();
     switch (chain) {
         case Chain.Solana:
-            return referrers.solana || undefined;
+            return referrers.solana;
         default:
-            return referrers.evm || undefined;
+            return referrers.evm;
     }
 }
 
@@ -237,7 +235,7 @@ export class OkxProvider implements Protocol {
             value: tx.value || "0",
             data: tx.data,
             dataType: SwapQuoteDataType.Contract,
-            gasLimit: tx.gas || undefined,
+            gasLimit: approval ? tx.gas : undefined,
             approval,
         };
     }
