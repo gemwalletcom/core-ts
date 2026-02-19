@@ -33,6 +33,9 @@ import { getMintAddress, parsePublicKey, resolveTokenProgram } from "../chain/so
 import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 import {
     addComputeBudgetInstructions,
+    createComputeUnitLimitInstruction,
+    DEFAULT_COMPUTE_UNIT_LIMIT,
+    estimateComputeUnitLimit,
     getRecentBlockhash,
     getRecentPriorityFee,
     serializeTransaction,
@@ -150,23 +153,22 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const signer = this.createPassthroughSigner(userPublicKey);
 
-        const swapPromise = swapInstructions(
-            this.rpc,
-            { inputAmount: amount, mint: inputMintAddress },
-            poolAddress,
-            slippageBps,
-            signer,
-        );
-        const priorityFeePromise = this.getPriorityFee();
-        const blockhashPromise = getRecentBlockhash(this.connection, DEFAULT_COMMITMENT);
-
-        const [{ instructions }, priorityFee] = await Promise.all([swapPromise, priorityFeePromise]);
+        const [{ instructions }, priorityFee, { blockhash, lastValidBlockHeight }, referralInstruction] =
+            await Promise.all([
+                swapInstructions(
+                    this.rpc,
+                    { inputAmount: amount, mint: inputMintAddress },
+                    poolAddress,
+                    slippageBps,
+                    signer,
+                ),
+                this.getPriorityFee(),
+                getRecentBlockhash(this.connection, DEFAULT_COMMITMENT),
+                this.buildReferralInstruction(quote, userPublicKey),
+            ]);
 
         const legacyInstructions = instructions.map((instruction) => this.toLegacyInstruction(instruction));
-
-        const computeBudgetInstructions = addComputeBudgetInstructions([], undefined, priorityFee);
-
-        const referralInstruction = await this.buildReferralInstruction(quote, userPublicKey);
+        const computeBudgetInstructions = addComputeBudgetInstructions([], DEFAULT_COMPUTE_UNIT_LIMIT, priorityFee);
 
         const transaction = new Transaction();
         transaction.add(...computeBudgetInstructions, ...legacyInstructions);
@@ -176,10 +178,10 @@ export class OrcaWhirlpoolProvider implements Protocol {
         }
 
         transaction.feePayer = userPublicKey;
-
-        const { blockhash, lastValidBlockHeight } = await blockhashPromise;
-
         setTransactionBlockhash(transaction, blockhash, lastValidBlockHeight);
+
+        const estimatedLimit = await estimateComputeUnitLimit(this.connection, transaction);
+        transaction.instructions[0] = createComputeUnitLimitInstruction(estimatedLimit ?? DEFAULT_COMPUTE_UNIT_LIMIT);
 
         const serialized = serializeTransaction(transaction);
 
@@ -188,6 +190,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
             value: "0",
             data: serialized,
             dataType: SwapQuoteDataType.Contract,
+            gasLimit: estimatedLimit?.toString(),
         };
     }
 
