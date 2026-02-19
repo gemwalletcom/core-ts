@@ -127,7 +127,7 @@ export class OkxProvider implements Protocol {
             const tx = VersionedTransaction.deserialize(bytes);
             const estimate = await simulateComputeUnits(this.connection, tx);
             return estimate?.toString();
-        } catch {}
+        } catch (error) { void error; }
         return undefined;
     }
 
