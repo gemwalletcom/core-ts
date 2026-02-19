@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 export function timedPromise<T>(label: string, promise: Promise<T>): Promise<T> {
     const start = performance.now();
     return promise.then(

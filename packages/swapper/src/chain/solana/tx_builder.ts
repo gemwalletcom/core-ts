@@ -99,15 +99,19 @@ export function findComputeUnitLimit(instructions: TransactionInstruction[]): st
 
 export async function estimateComputeUnitLimit(
     connection: Connection,
-    transaction: Transaction,
+    transaction: Transaction | VersionedTransaction,
 ): Promise<number | undefined> {
     try {
-        const messageV0 = MessageV0.compile({
-            payerKey: transaction.feePayer!,
-            instructions: transaction.instructions,
-            recentBlockhash: transaction.recentBlockhash!,
-        });
-        const versionedTx = new VersionedTransaction(messageV0);
+        const versionedTx =
+            transaction instanceof VersionedTransaction
+                ? transaction
+                : new VersionedTransaction(
+                      MessageV0.compile({
+                          payerKey: transaction.feePayer!,
+                          instructions: transaction.instructions,
+                          recentBlockhash: transaction.recentBlockhash!,
+                      }),
+                  );
         const response = await connection.simulateTransaction(versionedTx, {
             replaceRecentBlockhash: true,
             sigVerify: false,

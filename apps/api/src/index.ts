@@ -42,7 +42,7 @@ const providers: Record<string, Protocol> = {
     relay: new RelayProvider(),
     orca: new OrcaWhirlpoolProvider(solanaRpc),
     panora: new PanoraProvider({ rpcUrl: process.env.APTOS_URL }),
-    okx: new OkxProvider(),
+    okx: new OkxProvider(solanaRpc),
 };
 
 app.get("/", (_, res) => {
