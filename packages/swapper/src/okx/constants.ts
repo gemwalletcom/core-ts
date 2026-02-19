@@ -1,3 +1,13 @@
+import { Chain } from "@gemwallet/types";
+
+export const EVM_CHAIN_INDEX: Record<string, string> = {
+    [Chain.Manta]: "169",
+    [Chain.Mantle]: "5000",
+    [Chain.XLayer]: "196",
+};
+
+export const EVM_NATIVE_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
 const SOLANA_DEX_IDS = [
     "277", // Raydium
     "278", // Raydium CL
