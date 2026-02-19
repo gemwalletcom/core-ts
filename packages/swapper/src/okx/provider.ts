@@ -1,10 +1,13 @@
 import { AssetId, Chain, Quote, QuoteRequest, SwapQuoteData, SwapQuoteDataType } from "@gemwallet/types";
 import { OKXDexClient } from "@okx-dex/okx-dex-sdk";
-import type { QuoteData, SwapParams, TransactionData } from "@okx-dex/okx-dex-sdk";
+import type { QuoteData, SwapParams } from "@okx-dex/okx-dex-sdk";
 import bs58 from "bs58";
 
+import { Connection, VersionedTransaction } from "@solana/web3.js";
+
 import { BigIntMath } from "../bigint_math";
-import { COMPUTE_UNIT_MULTIPLIER } from "../chain/solana/tx_builder";
+import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
+import { estimateComputeUnitLimit as simulateComputeUnits } from "../chain/solana/tx_builder";
 import { SwapperException } from "../error";
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
@@ -84,8 +87,11 @@ function minOutputValue(route: QuoteData, slippageBps: number): string {
 
 export class OkxProvider implements Protocol {
     private readonly client: OKXDexClient;
+    private readonly connection: Connection;
 
-    constructor(client?: OKXDexClient) {
+    constructor(solanaRpcEndpoint: string, client?: OKXDexClient) {
+        this.connection = new Connection(solanaRpcEndpoint, { commitment: DEFAULT_COMMITMENT });
+
         if (client) {
             this.client = client;
             return;
@@ -115,22 +121,13 @@ export class OkxProvider implements Protocol {
         });
     }
 
-    private async estimateComputeUnitLimit(tx: TransactionData): Promise<string | undefined> {
+    private async estimateComputeUnitLimit(txData: string): Promise<string | undefined> {
         try {
-            const result = await this.client.dex.getGasLimit({
-                chainIndex: SOLANA_CHAIN_INDEX,
-                fromAddress: tx.from,
-                toAddress: tx.to,
-                extJson: { inputData: tx.data },
-            });
-
-            if (result.code === "0") {
-                const raw = Number(result.data[0]?.gasLimit);
-                if (raw > 0) {
-                    return Math.ceil(raw * COMPUTE_UNIT_MULTIPLIER).toString();
-                }
-            }
-        } catch { }
+            const bytes = bs58.decode(txData);
+            const tx = VersionedTransaction.deserialize(bytes);
+            const estimate = await simulateComputeUnits(this.connection, tx);
+            return estimate?.toString();
+        } catch (error) { void error; }
         return undefined;
     }
 
@@ -192,7 +189,7 @@ export class OkxProvider implements Protocol {
             throw new SwapperException({ type: "invalid_route" });
         }
 
-        const gasLimit = await this.estimateComputeUnitLimit(swapData.tx);
+        const gasLimit = await this.estimateComputeUnitLimit(swapData.tx.data);
 
         let serializedBase64: string;
         try {

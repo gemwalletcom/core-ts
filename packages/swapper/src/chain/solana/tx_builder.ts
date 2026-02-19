@@ -1,6 +1,7 @@
 import {
     Connection,
     ComputeBudgetProgram,
+    MessageV0,
     PublicKey,
     TransactionInstruction,
     VersionedTransaction,
@@ -93,6 +94,35 @@ export function findComputeUnitLimit(instructions: TransactionInstruction[]): st
             return units.toString();
         }
     }
+    return undefined;
+}
+
+export async function estimateComputeUnitLimit(
+    connection: Connection,
+    transaction: Transaction | VersionedTransaction,
+): Promise<number | undefined> {
+    try {
+        const versionedTx =
+            transaction instanceof VersionedTransaction
+                ? transaction
+                : new VersionedTransaction(
+                      MessageV0.compile({
+                          payerKey: transaction.feePayer!,
+                          instructions: transaction.instructions,
+                          recentBlockhash: transaction.recentBlockhash!,
+                      }),
+                  );
+        const response = await connection.simulateTransaction(versionedTx, {
+            replaceRecentBlockhash: true,
+            sigVerify: false,
+        });
+        if (response.value.err) {
+            return undefined;
+        }
+        if (response.value.unitsConsumed && response.value.unitsConsumed > 0) {
+            return Math.ceil(response.value.unitsConsumed * COMPUTE_UNIT_MULTIPLIER);
+        }
+    } catch (error) { void error; }
     return undefined;
 }
 

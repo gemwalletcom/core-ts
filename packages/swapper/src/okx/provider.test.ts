@@ -14,14 +14,9 @@ function createRequest(slippageBps = 100) {
 function createProvider() {
     const getQuote = jest.fn();
     const getSwapData = jest.fn();
-    const getGasLimit = jest.fn().mockResolvedValue({
-        code: "0",
-        msg: "",
-        data: [{ gasLimit: "500000" }],
-    });
-    const client = { dex: { getQuote, getSwapData, getGasLimit } } as unknown as OKXDexClient;
-    const provider = new OkxProvider(client);
-    return { provider, getQuote, getSwapData, getGasLimit };
+    const client = { dex: { getQuote, getSwapData } } as unknown as OKXDexClient;
+    const provider = new OkxProvider("https://localhost:8899", client);
+    return { provider, getQuote, getSwapData };
 }
 
 const mockRoute = {
@@ -95,19 +90,13 @@ describe("OkxProvider", () => {
             expect(swapParams.slippagePercent).toBe("1");
         });
 
-        it("estimates compute unit limit via getGasLimit", async () => {
-            const { provider, getSwapData, getGasLimit } = createProvider();
+        it("returns undefined gasLimit when simulation fails", async () => {
+            const { provider, getSwapData } = createProvider();
             getSwapData.mockResolvedValue(mockSwapResponse());
 
             const result = await provider.get_quote_data(mockQuote());
 
-            expect(getGasLimit).toHaveBeenCalledWith({
-                chainIndex: "501",
-                fromAddress: "SenderAddress",
-                toAddress: "JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB",
-                extJson: { inputData: SOL_MINT },
-            });
-            expect(result.gasLimit).toBe("550000");
+            expect(result.gasLimit).toBeUndefined();
         });
 
         it("falls back to 1% slippage when slippage_bps is 0", async () => {
@@ -121,9 +110,8 @@ describe("OkxProvider", () => {
             expect(swapParams.maxAutoSlippagePercent).toBeUndefined();
         });
 
-        it("handles getGasLimit failure gracefully", async () => {
-            const { provider, getSwapData, getGasLimit } = createProvider();
-            getGasLimit.mockRejectedValue(new Error("API error"));
+        it("handles simulation failure gracefully", async () => {
+            const { provider, getSwapData } = createProvider();
             getSwapData.mockResolvedValue(mockSwapResponse());
 
             const result = await provider.get_quote_data(mockQuote());
