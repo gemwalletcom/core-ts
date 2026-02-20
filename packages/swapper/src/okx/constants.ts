@@ -32,7 +32,7 @@ export const SOLANA_DEX_IDS_PARAM = SOLANA_DEX_IDS.join(",");
 export const DEFAULT_SLIPPAGE_PERCENT = "1";
 const EVM_GAS_LIMITS: Partial<Record<string, string>> = {
     [Chain.Manta]: "600000",
-    [Chain.Mantle]: "500000000",
+    [Chain.Mantle]: "2000000000",
     [Chain.XLayer]: "800000",
 };
 
