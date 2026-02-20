@@ -206,7 +206,7 @@ describe("OkxProvider", () => {
         });
 
         describe("get_quote_data", () => {
-            it("returns swap gasLimit for native swaps", async () => {
+            it("native swaps should not return gasLimit and approval", async () => {
                 const { provider, getSwapData } = createProvider();
                 getSwapData.mockResolvedValue(mockEvmSwapResponse());
 
@@ -215,7 +215,7 @@ describe("OkxProvider", () => {
                 expect(result.data).toBe("0xabcdef1234567890");
                 expect(result.to).toBe("0xDEXRouterAddress");
                 expect(result.value).toBe("1000000000000000000");
-                expect(result.gasLimit).toBe("800000");
+                expect(result.gasLimit).toBeUndefined();
                 expect(result.approval).toBeUndefined();
 
                 const params = getSwapData.mock.calls[0][0] as Record<string, unknown>;
