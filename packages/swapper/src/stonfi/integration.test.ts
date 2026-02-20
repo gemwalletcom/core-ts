@@ -3,7 +3,7 @@ import { Chain, QuoteRequest } from "@gemwallet/types";
 import { TON_ASSET, USDT_TON_ASSET, createStonfiQuoteRequest } from "../testkit/mock";
 import { StonfiProvider } from "./index";
 
-const runIntegration = process.env.STONFI_INTEGRATION_TEST === "1";
+const runIntegration = process.env.INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
 
 const TON_RPC_ENDPOINT = process.env.TON_URL || "https://toncenter.com";

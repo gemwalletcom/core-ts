@@ -51,6 +51,7 @@
 ## Agent‑Specific Instructions (all code agents)
 - Use `pnpm` workspace filters (`--filter`) and Justfile tasks; avoid changing file layout.
 - Keep edits minimal and focused; update adjacent docs/tests when touching APIs or providers.
+- Keep changes concise to reduce reviewer burden: avoid redundant code, consolidate related tests, and minimize the diff surface area.
 - Fix any lint issues in files you touch: `pnpm oxlint <file>...`.
 - Prefer mocks for external calls; do not add unvetted network dependencies.
 - Reflect provider additions/removals in `apps/api/src/index.ts` and docs; exclude unimplemented protocols.

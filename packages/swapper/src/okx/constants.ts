@@ -1,3 +1,14 @@
+import { Chain } from "@gemwallet/types";
+
+export const CHAIN_INDEX: Record<string, string> = {
+    [Chain.Solana]: "501",
+    [Chain.Manta]: "169",
+    [Chain.Mantle]: "5000",
+    [Chain.XLayer]: "196",
+};
+
+export const EVM_NATIVE_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
 const SOLANA_DEX_IDS = [
     "277", // Raydium
     "278", // Raydium CL
@@ -15,7 +26,16 @@ const SOLANA_DEX_IDS = [
     "345", // OpenBook V2
 ];
 
-export const SOLANA_CHAIN_INDEX = "501";
+export const SOLANA_CHAIN_INDEX = CHAIN_INDEX[Chain.Solana];
 export const SOLANA_NATIVE_TOKEN_ADDRESS = "11111111111111111111111111111111";
 export const SOLANA_DEX_IDS_PARAM = SOLANA_DEX_IDS.join(",");
 export const DEFAULT_SLIPPAGE_PERCENT = "1";
+const EVM_GAS_LIMITS: Partial<Record<string, string>> = {
+    [Chain.Manta]: "600000",
+    [Chain.Mantle]: "2000000000",
+    [Chain.XLayer]: "800000",
+};
+
+export function evmGasLimit(chain: Chain): string | undefined {
+    return EVM_GAS_LIMITS[chain];
+}

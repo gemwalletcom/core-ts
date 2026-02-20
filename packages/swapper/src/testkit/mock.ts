@@ -9,6 +9,9 @@ export const SOLANA_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 export const APTOS_USDC_FA = "0xbae207659db88bea0cbead6da0ed00aac12edcdda169e591cd41c94180b46f3b";
 export const APTOS_USDT_FA = "0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b";
 
+export const XLAYER_TEST_WALLET_ADDRESS = "0x1234567890abcdef1234567890abcdef12345678";
+export const XLAYER_USD0_ADDRESS = "0x779ded0c9e1022225f8e0630b35a9b54be713736";
+
 export const SOL_ASSET = {
     id: Chain.Solana,
     symbol: "SOL",
@@ -88,6 +91,28 @@ export const APTOS_USDC_REQUEST_TEMPLATE: QuoteRequest = {
     referral_bps: 10,
     slippage_bps: 100,
 };
+
+export const OKX_XLAYER_USD0_REQUEST_TEMPLATE: QuoteRequest = {
+    from_address: XLAYER_TEST_WALLET_ADDRESS,
+    to_address: XLAYER_TEST_WALLET_ADDRESS,
+    from_asset: {
+        id: Chain.XLayer,
+        symbol: "OKB",
+        decimals: 18,
+    },
+    to_asset: {
+        id: `${Chain.XLayer}_${XLAYER_USD0_ADDRESS}`,
+        symbol: "USD0",
+        decimals: 18,
+    },
+    from_value: "1000000000000000000",
+    referral_bps: 50,
+    slippage_bps: 100,
+};
+
+export function createOkxEvmQuoteRequest(overrides: Partial<QuoteRequest> = {}): QuoteRequest {
+    return createQuoteRequest(OKX_XLAYER_USD0_REQUEST_TEMPLATE, overrides);
+}
 
 export function createQuoteRequest(base: QuoteRequest, overrides: Partial<QuoteRequest> = {}): QuoteRequest {
     return {
