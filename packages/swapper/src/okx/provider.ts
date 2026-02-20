@@ -6,6 +6,7 @@ import bs58 from "bs58";
 import { Connection, VersionedTransaction } from "@solana/web3.js";
 
 import { BigIntMath } from "../bigint_math";
+import { checkEvmApproval } from "../chain/evm/allowance";
 import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 import { estimateComputeUnitLimit as simulateComputeUnits } from "../chain/solana/tx_builder";
 import { SwapperException } from "../error";
@@ -17,6 +18,7 @@ import {
     EVM_NATIVE_TOKEN_ADDRESS,
     SOLANA_DEX_IDS_PARAM,
     SOLANA_NATIVE_TOKEN_ADDRESS,
+    evmGasLimit,
 } from "./constants";
 
 function bpsToPercent(bps: number): string {
@@ -140,6 +142,7 @@ export class OkxProvider implements Protocol {
             apiPassphrase: apiPassphrase!,
             projectId: projectId!,
         });
+
     }
 
     private async estimateComputeUnitLimit(txData: string): Promise<string | undefined> {
@@ -199,8 +202,12 @@ export class OkxProvider implements Protocol {
 
         const fromAsset = AssetId.fromString(quote.quote.from_asset.id);
         const chain = fromAsset.chain;
+        const isTokenSwap = isEvmChain(chain) && !!fromAsset.tokenId;
 
-        const response = await this.client.dex.getSwapData(buildSwapParams(quote.quote, route, chain));
+        const [response, approveSpender] = await Promise.all([
+            this.client.dex.getSwapData(buildSwapParams(quote.quote, route, chain)),
+            isTokenSwap ? this.getApproveSpender(chain) : Promise.resolve(undefined),
+        ]);
 
         if (response.code !== "0") {
             throw new SwapperException({
@@ -215,27 +222,31 @@ export class OkxProvider implements Protocol {
         }
 
         if (isEvmChain(chain)) {
-            return this.buildEvmQuoteData(swapData.tx, fromAsset, quote.quote.from_value);
+            return this.buildEvmQuoteData(swapData.tx, fromAsset, quote.quote.from_address, quote.quote.from_value, approveSpender);
         }
 
         return this.buildSolanaQuoteData(swapData.tx);
     }
 
-    private buildEvmQuoteData(tx: TransactionData, fromAsset: AssetId, fromValue: string): SwapQuoteData {
-        const approval: SwapQuoteData["approval"] = fromAsset.tokenId
-            ? {
-                  token: fromAsset.tokenId,
-                  spender: tx.to,
-                  value: fromValue,
-              }
-            : undefined;
+    private async getApproveSpender(chain: Chain): Promise<string | undefined> {
+        const chainData = await this.client.dex.getChainData(chainIndex(chain));
+        return chainData.data?.[0]?.dexTokenApproveAddress ?? undefined;
+    }
 
+    private async buildEvmQuoteData(
+        tx: TransactionData,
+        fromAsset: AssetId,
+        owner: string,
+        fromValue: string,
+        approveSpender?: string,
+    ): Promise<SwapQuoteData> {
+        const approval = await checkEvmApproval(fromAsset.chain, fromAsset.tokenId, owner, fromValue, approveSpender);
         return {
             to: tx.to,
             value: tx.value || "0",
             data: tx.data,
             dataType: SwapQuoteDataType.Contract,
-            gasLimit: approval ? tx.gas : undefined,
+            gasLimit: approval ? evmGasLimit(fromAsset.chain) : undefined,
             approval,
         };
     }

@@ -3,7 +3,7 @@ import { Chain, QuoteRequest } from "@gemwallet/types";
 import { createOrcaQuoteRequest } from "../testkit/mock";
 import { OrcaWhirlpoolProvider } from "./provider";
 
-const runIntegration = process.env.ORCA_INTEGRATION_TEST === "1";
+const runIntegration = process.env.INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
 
 const SOLANA_MAINNET_RPC = process.env.SOLANA_RPC || "https://solana-rpc.publicnode.com";

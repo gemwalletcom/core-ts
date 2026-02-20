@@ -28,6 +28,9 @@ format-check:
 dead-code:
     pnpm run dead-code
 
+test-integration:
+    cd packages/swapper && INTEGRATION_TEST=1 npx jest --testPathPatterns='integration'
+
 check: lint format-check build test
 
 bench PROVIDER="orca" ITERATIONS="2":
