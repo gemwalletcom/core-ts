@@ -22,8 +22,8 @@ importers:
         specifier: 30.2.0
         version: 30.2.0(@types/node@25.2.3)(ts-node@10.9.2(@types/node@25.2.3)(typescript@5.9.3))
       knip:
-        specifier: 5.84.0
-        version: 5.84.0(@types/node@25.2.3)(typescript@5.9.3)
+        specifier: 5.84.1
+        version: 5.84.1(@types/node@25.2.3)(typescript@5.9.3)
       oxfmt:
         specifier: 0.33.0
         version: 0.33.0
@@ -3014,8 +3014,8 @@ packages:
   keyv@5.5.5:
     resolution: {integrity: sha512-FA5LmZVF1VziNc0bIdCSA1IoSVnDCqE8HJIZZv2/W8YmoAM50+tnUgJR/gQZwEeIMleuIOnRnHA/UaZRNeV4iQ==}
 
-  knip@5.84.0:
-    resolution: {integrity: sha512-gWXgr9HxRvghijn9t+7AueEwp3vy7uPIV+Ckl72xqBRw+tK2nNI9H0oknVE9J/NSk1jE5WuShzTp4A+40PjYhg==}
+  knip@5.84.1:
+    resolution: {integrity: sha512-F1+yACEsSapAwmQLzfD4i9uPsnI82P4p5ABpNQ9pcc4fpQtjHEX34XDtNl5863I4O6SCECpymylcWDHI3ouhQQ==}
     engines: {node: '>=18.18.0'}
     hasBin: true
     peerDependencies:
@@ -7491,7 +7491,7 @@ snapshots:
     dependencies:
       '@keyv/serialize': 1.1.1
 
-  knip@5.84.0(@types/node@25.2.3)(typescript@5.9.3):
+  knip@5.84.1(@types/node@25.2.3)(typescript@5.9.3):
     dependencies:
       '@nodelib/fs.walk': 1.2.8
       '@types/node': 25.2.3
