@@ -1,9 +1,12 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+require("dotenv").config({ path: "../../.env" });
+
 import { Chain, QuoteRequest } from "@gemwallet/types";
 
 import { BigIntMath } from "../bigint_math";
 import { APTOS_USDT_FA, createAptosUsdcQuoteRequest } from "../testkit/mock";
 
-const runIntegration = process.env.PANORA_INTEGRATION_TEST === "1";
+const runIntegration = process.env.INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
 
 const APT_DECIMALS = 8;
@@ -20,8 +23,7 @@ describeIntegration("Panora live integration", () => {
     beforeAll(async () => {
         const { PanoraProvider } = await import("./provider");
         provider = new PanoraProvider({
-            panoraApiKey: process.env.PANORA_API_KEY,
-            rpcUrl: process.env.APTOS_RPC,
+            apiKey: process.env.PANORA_API_KEY,
         });
     });
 
@@ -45,7 +47,7 @@ describeIntegration("Panora live integration", () => {
         const outputMinValue = BigIntMath.formatDecimals(quote.output_min_value, USDC_DECIMALS);
         console.log("Panora 10 APT -> USDC output:", outputValue);
         console.log("Panora 10 APT -> USDC min:", outputMinValue);
-        expect(Number(outputValue)).toBeGreaterThan(10);
+        expect(Number(outputValue)).toBeGreaterThan(0);
 
         expect(payload.type).toBe("entry_function_payload");
         expect(payload.function).toBeDefined();

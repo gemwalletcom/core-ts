@@ -1,26 +1,30 @@
 import { QuoteRequest, Quote, SwapQuoteData, AssetId, SwapQuoteDataType } from "@gemwallet/types";
-import Panora, { type PanoraConfig } from "@panoraexchange/swap-sdk";
 
 import { BigIntMath } from "../bigint_math";
 import { Protocol } from "../protocol";
 import { getReferrerAddresses } from "../referrer";
+import { PanoraClient } from "./client";
 import { type PanoraQuoteResponse, isPanoraQuoteResponse, getPanoraQuoteEntry } from "./model";
 import { normalizePanoraArguments } from "./move";
 
 const APTOS_NATIVE_COIN = "0x1::aptos_coin::AptosCoin";
 
-export type PanoraProviderOptions = PanoraConfig & {
+export interface PanoraProviderOptions {
+    apiKey?: string;
     integratorFeeAddress?: `0x${string}`;
-};
+}
 
 export class PanoraProvider implements Protocol {
-    private readonly client: Panora;
+    private readonly client: PanoraClient;
     private readonly integratorFeeAddress?: `0x${string}`;
 
     constructor(options: PanoraProviderOptions = {}) {
-        const { integratorFeeAddress, ...config } = options;
-        this.integratorFeeAddress = integratorFeeAddress ?? getReferrerAddresses().aptos;
-        this.client = new Panora(config);
+        const apiKey = options.apiKey ?? process.env.PANORA_API_KEY;
+        if (!apiKey) {
+            throw new Error("Panora API key required: set PANORA_API_KEY env var or pass apiKey option");
+        }
+        this.integratorFeeAddress = options.integratorFeeAddress ?? getReferrerAddresses().aptos;
+        this.client = new PanoraClient({ apiKey });
     }
 
     private mapAssetToTokenAddress(asset: AssetId): string {
@@ -33,7 +37,7 @@ export class PanoraProvider implements Protocol {
 
     private buildIntegratorFeeParams(referralBps: number): {
         integratorFeePercentage?: string;
-        integratorFeeAddress?: `0x${string}`;
+        integratorFeeAddress?: string;
     } {
         if (!this.integratorFeeAddress || referralBps <= 0 || referralBps > 200) {
             return {};
@@ -50,15 +54,15 @@ export class PanoraProvider implements Protocol {
         const toAsset = AssetId.fromString(request.to_asset.id);
 
         const params = {
-            fromTokenAddress: this.mapAssetToTokenAddress(fromAsset) as `0x${string}`,
-            toTokenAddress: this.mapAssetToTokenAddress(toAsset) as `0x${string}`,
+            fromTokenAddress: this.mapAssetToTokenAddress(fromAsset),
+            toTokenAddress: this.mapAssetToTokenAddress(toAsset),
             fromTokenAmount: BigIntMath.formatDecimals(request.from_value, request.from_asset.decimals),
-            toWalletAddress: request.to_address as `0x${string}`,
+            toWalletAddress: request.to_address,
             slippagePercentage: BigIntMath.bpsToPercent(request.slippage_bps),
             ...this.buildIntegratorFeeParams(request.referral_bps),
         };
 
-        const routeData = await this.client.getQuote({ params });
+        const routeData = await this.client.getQuote(params);
 
         if (!isPanoraQuoteResponse(routeData)) {
             throw new Error("Invalid Panora quote response");
