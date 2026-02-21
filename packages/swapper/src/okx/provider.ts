@@ -1,7 +1,8 @@
 import { AssetId, Chain, Quote, QuoteRequest, SwapQuoteData, SwapQuoteDataType } from "@gemwallet/types";
-import { OKXDexClient } from "@okx-dex/okx-dex-sdk";
-import type { QuoteData, SwapParams, TransactionData } from "@okx-dex/okx-dex-sdk";
 import bs58 from "bs58";
+
+import { OkxDexClient } from "./client";
+import type { QuoteData, SwapParams, TransactionData } from "./models";
 
 import { Connection, VersionedTransaction } from "@solana/web3.js";
 
@@ -109,10 +110,10 @@ function minOutputValue(route: QuoteData, slippageBps: number): string {
 }
 
 export class OkxProvider implements Protocol {
-    private readonly client: OKXDexClient;
+    private readonly client: OkxDexClient;
     private readonly connection: Connection;
 
-    constructor(solanaRpcEndpoint: string, client?: OKXDexClient) {
+    constructor(solanaRpcEndpoint: string, client?: OkxDexClient) {
         this.connection = new Connection(solanaRpcEndpoint, { commitment: DEFAULT_COMMITMENT });
 
         if (client) {
@@ -136,13 +137,12 @@ export class OkxProvider implements Protocol {
             throw new Error(`Missing OKX auth env variables: ${missing.join(", ")}`);
         }
 
-        this.client = new OKXDexClient({
+        this.client = new OkxDexClient({
             apiKey: apiKey!,
             secretKey: secretKey!,
             apiPassphrase: apiPassphrase!,
             projectId: projectId!,
         });
-
     }
 
     private async estimateComputeUnitLimit(txData: string): Promise<string | undefined> {
@@ -163,7 +163,7 @@ export class OkxProvider implements Protocol {
         const fromTokenAddress = assetToTokenAddress(fromAsset);
         const toTokenAddress = assetToTokenAddress(toAsset);
 
-        const response = await this.client.dex.getQuote({
+        const response = await this.client.getQuote({
             chainIndex: chainIndex(chain),
             amount: quoteRequest.from_value,
             fromTokenAddress,
@@ -205,7 +205,7 @@ export class OkxProvider implements Protocol {
         const isTokenSwap = isEvmChain(chain) && !!fromAsset.tokenId;
 
         const [response, approveSpender] = await Promise.all([
-            this.client.dex.getSwapData(buildSwapParams(quote.quote, route, chain)),
+            this.client.getSwapData(buildSwapParams(quote.quote, route, chain)),
             isTokenSwap ? this.getApproveSpender(chain) : Promise.resolve(undefined),
         ]);
 
@@ -229,7 +229,7 @@ export class OkxProvider implements Protocol {
     }
 
     private async getApproveSpender(chain: Chain): Promise<string | undefined> {
-        const chainData = await this.client.dex.getChainData(chainIndex(chain));
+        const chainData = await this.client.getChainData(chainIndex(chain));
         return chainData.data?.[0]?.dexTokenApproveAddress ?? undefined;
     }
 

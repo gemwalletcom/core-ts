@@ -2,9 +2,9 @@
 require("dotenv").config({ path: "../../.env" });
 
 import { Chain, QuoteRequest } from "@gemwallet/types";
-import { OKXDexClient } from "@okx-dex/okx-dex-sdk";
 
 import { createOkxEvmQuoteRequest, createSolanaUsdcQuoteRequest, XLAYER_USD0_ADDRESS } from "../testkit/mock";
+import { OkxDexClient } from "./client";
 import { CHAIN_INDEX } from "./constants";
 import { OkxProvider } from "./provider";
 
@@ -18,8 +18,8 @@ const hasAuth = hasAuthEnv();
 const runIntegration = process.env.INTEGRATION_TEST === "1" && hasAuth;
 const itIntegration = runIntegration ? it : it.skip;
 
-function createClient(): OKXDexClient {
-    return new OKXDexClient({
+function createClient(): OkxDexClient {
+    return new OkxDexClient({
         apiKey: process.env.OKX_API_KEY!,
         secretKey: process.env.OKX_SECRET_KEY!,
         apiPassphrase: process.env.OKX_API_PASSPHRASE!,
@@ -96,7 +96,7 @@ describe("OKX live integration", () => {
     describe("Chain Data", () => {
         itIntegration("fetches XLayer approve spender address", async () => {
             const client = createClient();
-            const response = await client.dex.getChainData(CHAIN_INDEX[Chain.XLayer]);
+            const response = await client.getChainData(CHAIN_INDEX[Chain.XLayer]);
 
             expect(response.code).toBe("0");
             expect(response.data.length).toBeGreaterThan(0);

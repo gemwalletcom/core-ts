@@ -1,7 +1,8 @@
 import { Chain, Quote } from "@gemwallet/types";
-import type { OKXDexClient } from "@okx-dex/okx-dex-sdk";
 
 import { createOkxEvmQuoteRequest, createSolanaUsdcQuoteRequest, XLAYER_USD0_ADDRESS } from "../testkit/mock";
+import type { OkxDexClient } from "./client";
+
 import { OkxProvider } from "./provider";
 
 const SOL_MINT = "11111111111111111111111111111111";
@@ -20,7 +21,7 @@ function createProvider() {
         code: "0",
         data: [{ dexTokenApproveAddress: MOCK_APPROVE_ADDRESS }],
     });
-    const client = { dex: { getQuote, getSwapData, getChainData } } as unknown as OKXDexClient;
+    const client = { getQuote, getSwapData, getChainData } as unknown as OkxDexClient;
     const provider = new OkxProvider("https://localhost:8899", client);
     return { provider, getQuote, getSwapData, getChainData };
 }
