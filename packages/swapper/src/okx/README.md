@@ -1,7 +1,7 @@
-# OKX Provider (Solana)
+# OKX Provider
 
-This provider implements Solana swap support against OKX DEX aggregator APIs
-using the official `@okx-dex/okx-dex-sdk`.
+This provider implements swap support against OKX DEX aggregator APIs
+using a thin HMAC-SHA256 authenticated HTTP client (`client.ts`).
 
 ## Scope
 
@@ -17,7 +17,7 @@ using the official `@okx-dex/okx-dex-sdk`.
 
 ## Auth and Security
 
-- Authentication is handled by the SDK's built-in HMAC-SHA256 signing.
+- Authentication is handled via HMAC-SHA256 request signing in `client.ts`.
 - Required env vars (server-side only):
     - `OKX_API_KEY`
     - `OKX_SECRET_KEY`
@@ -29,14 +29,14 @@ using the official `@okx-dex/okx-dex-sdk`.
 Quotes are limited to top Solana DEXes by TVL (see `constants.ts`):
 Raydium, Orca, Meteora, Sanctum, PumpSwap, PancakeSwap V3, Phoenix, OpenBook V2.
 
-The full liquidity list can be fetched via `OKXDexClient.dex.getLiquidity("501")`.
+The full liquidity list can be fetched via the OKX DEX API `/api/v6/dex/aggregator/all-tokens`.
 
 ## Data Flow
 
 1. `OkxProvider.get_quote(...)`
 2. Validate Solana assets and map native SOL to `11111111111111111111111111111111`
-3. Request quote via `OKXDexClient.dex.getQuote()` (filtered by `dexIds`)
-4. Request swap data via `OKXDexClient.dex.getSwapData()` with `autoSlippage: true`
+3. Request quote via `OkxDexClient.getQuote()` (filtered by `dexIds`)
+4. Request swap data via `OkxDexClient.getSwapData()` with `autoSlippage: true`
 5. Store OKX route in `quote.route_data`
 6. `OkxProvider.get_quote_data(...)`
 7. Build swap request with auto slippage and optional referral data

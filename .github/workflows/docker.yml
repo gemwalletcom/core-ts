@@ -30,12 +30,14 @@ jobs:
 
     - name: Run and Test
       env:
+        PANORA_API_KEY: "ci-dummy-panora-key"
         OKX_API_KEY: "ci-dummy-key"
         OKX_SECRET_KEY: "ci-dummy-secret"
         OKX_API_PASSPHRASE: "ci-dummy-passphrase"
         OKX_PROJECT_ID: "ci-dummy-project"
       run: |
         docker run -d --rm --name test-container -p 3000:3000 \
+          -e PANORA_API_KEY \
           -e OKX_API_KEY \
           -e OKX_SECRET_KEY \
           -e OKX_API_PASSPHRASE \
