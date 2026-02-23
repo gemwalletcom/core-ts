@@ -119,8 +119,8 @@ importers:
         specifier: 5.2.0
         version: 5.2.0
       bn.js:
-        specifier: 5.2.2
-        version: 5.2.2
+        specifier: 5.2.3
+        version: 5.2.3
       bs58:
         specifier: 6.0.0
         version: 6.0.0
@@ -1789,8 +1789,8 @@ packages:
   bip39@3.1.0:
     resolution: {integrity: sha512-c9kiwdk45Do5GL0vJMe7tS95VjCii65mYAH7DfWl3uW8AVzXKQVUm64i3hzVybBDMp9r7j9iNxR85+ul8MdN/A==}
 
-  bn.js@5.2.2:
-    resolution: {integrity: sha512-v2YAxEmKaBLahNwE1mjp4WON6huMNeuDvagFZW+ASCuA/ku0bXR9hSMw0XpiqMoA3+rmnyck/tPRSFQkoC9Cuw==}
+  bn.js@5.2.3:
+    resolution: {integrity: sha512-EAcmnPkxpntVL+DS7bO1zhcZNvCkxqtkd0ZY53h06GNQ3DEkkGZ/gKgmDv6DdZQGj9BgfSPKtJJ7Dp1GPP8f7w==}
 
   body-parser@2.2.1:
     resolution: {integrity: sha512-nfDwkulwiZYQIGwxdy0RUmowMhKcFVcYXUU7m4QlKYim1rUtg83xm2yjZ40QjDuc291AJjjeSc9b++AWHSgSHw==}
@@ -3618,7 +3618,7 @@ snapshots:
       '@coral-xyz/borsh': 0.31.1(@solana/web3.js@1.98.4(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10))
       '@noble/hashes': 1.8.0
       '@solana/web3.js': 1.98.4(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)
-      bn.js: 5.2.2
+      bn.js: 5.2.3
       bs58: 4.0.1
       buffer-layout: 1.2.2
       camelcase: 6.3.0
@@ -3636,7 +3636,7 @@ snapshots:
   '@coral-xyz/borsh@0.31.1(@solana/web3.js@1.98.4(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/web3.js': 1.98.4(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)
-      bn.js: 5.2.2
+      bn.js: 5.2.3
       buffer-layout: 1.2.2
 
   '@cspotcode/source-map-support@0.8.1':
@@ -4223,7 +4223,7 @@ snapshots:
 
   '@pythnetwork/price-service-sdk@1.8.0':
     dependencies:
-      bn.js: 5.2.2
+      bn.js: 5.2.3
 
   '@pythnetwork/pyth-sui-js@2.2.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
@@ -4837,7 +4837,7 @@ snapshots:
       '@solana/buffer-layout': 4.0.1
       '@solana/codecs-numbers': 2.3.0(typescript@5.9.3)
       agentkeepalive: 4.6.0
-      bn.js: 5.2.2
+      bn.js: 5.2.3
       borsh: 0.7.0
       bs58: 4.0.1
       buffer: 6.0.3
@@ -5223,7 +5223,7 @@ snapshots:
     dependencies:
       '@noble/hashes': 1.8.0
 
-  bn.js@5.2.2: {}
+  bn.js@5.2.3: {}
 
   body-parser@2.2.1:
     dependencies:
@@ -5241,7 +5241,7 @@ snapshots:
 
   borsh@0.7.0:
     dependencies:
-      bn.js: 5.2.2
+      bn.js: 5.2.3
       bs58: 4.0.1
       text-encoding-utf-8: 1.0.2
 
