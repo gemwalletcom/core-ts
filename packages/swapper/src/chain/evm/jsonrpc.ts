@@ -1,6 +1,7 @@
 import { Chain } from "@gemwallet/types";
 
 const DEFAULT_RPC_URLS: Partial<Record<string, string>> = {
+    [Chain.Base]: "https://mainnet.base.org",
     [Chain.Manta]: "https://pacific-rpc.manta.network/http",
     [Chain.Mantle]: "https://rpc.mantle.xyz",
     [Chain.XLayer]: "https://rpc.xlayer.tech",
