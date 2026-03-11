@@ -2,6 +2,7 @@ import { Chain } from "@gemwallet/types";
 
 export const CHAIN_INDEX: Record<string, string> = {
     [Chain.Solana]: "501",
+    [Chain.Base]: "8453",
     [Chain.Manta]: "169",
     [Chain.Mantle]: "5000",
     [Chain.XLayer]: "196",
