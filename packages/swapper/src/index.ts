@@ -7,4 +7,5 @@ export * from "./referrer";
 export * from "./orca";
 export * from "./panora";
 export * from "./okx";
+export * from "./squid";
 export * from "./error";
