@@ -35,6 +35,7 @@ jobs:
         OKX_SECRET_KEY: "ci-dummy-secret"
         OKX_API_PASSPHRASE: "ci-dummy-passphrase"
         OKX_PROJECT_ID: "ci-dummy-project"
+        SQUID_INTEGRATOR_ID: "ci-dummy-squid-integrator"
       run: |
         docker run -d --rm --name test-container -p 3000:3000 \
           -e PANORA_API_KEY \
@@ -42,6 +43,7 @@ jobs:
           -e OKX_SECRET_KEY \
           -e OKX_API_PASSPHRASE \
           -e OKX_PROJECT_ID \
+          -e SQUID_INTEGRATOR_ID \
           core-ts:test
         echo "Waiting for container to start..."
         sleep 4 # Adjust sleep time if needed
