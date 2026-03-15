@@ -5,6 +5,7 @@ import { Chain, QuoteRequest } from "@gemwallet/types";
 
 import { BigIntMath } from "../bigint_math";
 import { timedPromise } from "../debug";
+import type { SquidRoute } from "./model";
 
 const runIntegration = process.env.INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
@@ -36,8 +37,12 @@ describeIntegration("Squid live integration", () => {
     let provider: import("./provider").SquidProvider;
 
     beforeAll(async () => {
+        const integratorId = process.env.SQUID_INTEGRATOR_ID;
+        if (!integratorId) {
+            throw new Error("Missing required environment variable: SQUID_INTEGRATOR_ID");
+        }
         const { SquidProvider } = await import("./provider");
-        provider = new SquidProvider(process.env.SQUID_INTEGRATOR_ID || "");
+        provider = new SquidProvider(integratorId);
     });
 
     it("fetches a live quote for 10 OSMO -> ATOM", async () => {
@@ -52,8 +57,8 @@ describeIntegration("Squid live integration", () => {
         console.log("Squid 10 OSMO -> ATOM output:", outputValue);
         console.log("Squid ETA:", quote.eta_in_seconds, "seconds");
 
-        const routeData = quote.route_data as { estimate: { gasCosts: object[]; actions: object[] } };
-        expect(routeData.estimate.gasCosts.length).toBeGreaterThan(0);
-        expect(routeData.estimate.actions.length).toBeGreaterThan(0);
+        const routeData = quote.route_data as SquidRoute;
+        expect(routeData.estimate.toAmount).toBe(quote.output_value);
+        expect(routeData.estimate.toAmountMin).toBe(quote.output_min_value);
     });
 });

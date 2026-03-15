@@ -3,13 +3,17 @@ import { QuoteRequest, Quote, SwapQuoteData, AssetId, Chain, SwapQuoteDataType }
 import { SwapperException } from "../error";
 import { Protocol } from "../protocol";
 import { fetchRoute } from "./client";
-import { SquidRouteRequest } from "./model";
+import type { SquidRouteRequest } from "./model";
 
 export class SquidProvider implements Protocol {
-    private integratorId: string;
+    private readonly integratorId: string;
 
-    constructor(integratorId: string) {
-        this.integratorId = integratorId;
+    constructor(integratorId?: string) {
+        const resolvedIntegratorId = integratorId ?? process.env.SQUID_INTEGRATOR_ID;
+        if (!resolvedIntegratorId) {
+            throw new Error("Squid integrator ID is required");
+        }
+        this.integratorId = resolvedIntegratorId;
     }
 
     mapChainToSquidChainId(chain: Chain): string {
@@ -80,15 +84,18 @@ export class SquidProvider implements Protocol {
             quote: quoteRequest,
             output_value: route.estimate.toAmount,
             output_min_value: route.estimate.toAmountMin,
-            route_data: {},
+            route_data: route,
             eta_in_seconds: route.estimate.estimatedRouteDuration,
         };
     }
 
     async get_quote_data(quote: Quote): Promise<SwapQuoteData> {
-        const params = this.buildRouteRequest(quote.quote, false);
-        const { route } = await fetchRoute(params, this.integratorId);
+        const { route } = await fetchRoute(this.buildRouteRequest(quote.quote, false), this.integratorId);
         const tx = route.transactionRequest;
+
+        if (!tx) {
+            throw new SwapperException({ type: "invalid_route" });
+        }
 
         return {
             to: tx.target,

@@ -44,7 +44,7 @@ const providers: Record<string, Protocol> = {
     orca: new OrcaWhirlpoolProvider(solanaRpc),
     panora: new PanoraProvider(),
     okx: new OkxProvider(solanaRpc),
-    squid: new SquidProvider(process.env.SQUID_INTEGRATOR_ID || ""),
+    squid: new SquidProvider(),
 };
 
 app.get("/", (_, res) => {

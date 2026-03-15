@@ -1,4 +1,4 @@
-import { Chain, QuoteRequest } from "@gemwallet/types";
+import { AssetId, Chain, QuoteRequest } from "@gemwallet/types";
 
 import { createQuoteRequest } from "../testkit/mock";
 import { SquidProvider } from "./provider";
@@ -27,6 +27,10 @@ const SQUID_COSMOS_QUOTE_REQUEST: QuoteRequest = {
 describe("SquidProvider", () => {
     const provider = new SquidProvider("test-integrator");
 
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     describe("mapChainToSquidChainId", () => {
         it("maps supported Cosmos chains", () => {
             expect(provider.mapChainToSquidChainId(Chain.Cosmos)).toBe("cosmoshub-4");
@@ -44,7 +48,6 @@ describe("SquidProvider", () => {
 
     describe("mapAssetToSquidToken", () => {
         it("maps native Cosmos assets to denoms", () => {
-            const { AssetId } = require("@gemwallet/types");
             expect(provider.mapAssetToSquidToken(AssetId.fromString("cosmos"))).toBe("uatom");
             expect(provider.mapAssetToSquidToken(AssetId.fromString("osmosis"))).toBe("uosmo");
             expect(provider.mapAssetToSquidToken(AssetId.fromString("celestia"))).toBe("utia");
@@ -52,7 +55,6 @@ describe("SquidProvider", () => {
         });
 
         it("returns tokenId for non-native assets", () => {
-            const { AssetId } = require("@gemwallet/types");
             const ibc = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2";
             expect(provider.mapAssetToSquidToken(AssetId.fromString(`osmosis_${ibc}`))).toBe(ibc);
         });
@@ -74,7 +76,7 @@ describe("SquidProvider", () => {
 
             const fetchSpy = jest.spyOn(global, "fetch").mockResolvedValueOnce({
                 ok: true,
-                json: async () => mockRoute,
+                text: async () => JSON.stringify(mockRoute),
             } as Response);
 
             const request = createQuoteRequest(SQUID_COSMOS_QUOTE_REQUEST);
@@ -83,6 +85,7 @@ describe("SquidProvider", () => {
             expect(quote.output_value).toBe("500000");
             expect(quote.output_min_value).toBe("495000");
             expect(quote.eta_in_seconds).toBe(60);
+            expect(quote.route_data).toEqual(mockRoute.route);
 
             const body = JSON.parse(fetchSpy.mock.calls[0][1]!.body as string);
             expect(body.fromChain).toBe("osmosis-1");
@@ -90,13 +93,11 @@ describe("SquidProvider", () => {
             expect(body.fromToken).toBe("uosmo");
             expect(body.toToken).toBe("uatom");
             expect(body.quoteOnly).toBe(true);
-
-            fetchSpy.mockRestore();
         });
     });
 
     describe("get_quote_data", () => {
-        it("returns cosmos transaction data", async () => {
+        it("fetches and returns cosmos transaction data", async () => {
             const cosmosMsg = JSON.stringify({
                 typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
                 value: {
@@ -126,16 +127,16 @@ describe("SquidProvider", () => {
                 },
             };
 
-            jest.spyOn(global, "fetch").mockResolvedValueOnce({
+            const fetchSpy = jest.spyOn(global, "fetch").mockResolvedValueOnce({
                 ok: true,
-                json: async () => mockRoute,
+                text: async () => JSON.stringify(mockRoute),
             } as Response);
 
             const quote = {
                 quote: createQuoteRequest(SQUID_COSMOS_QUOTE_REQUEST),
                 output_value: "500000",
                 output_min_value: "495000",
-                route_data: {},
+                route_data: mockRoute.route,
                 eta_in_seconds: 60,
             };
 
@@ -144,8 +145,7 @@ describe("SquidProvider", () => {
             expect(data.data).toBe(cosmosMsg);
             expect(data.gasLimit).toBe("500000");
             expect(data.dataType).toBe("contract");
-
-            jest.restoreAllMocks();
+            expect(fetchSpy).toHaveBeenCalledTimes(1);
         });
     });
 });

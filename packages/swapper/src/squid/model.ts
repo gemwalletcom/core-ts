@@ -26,11 +26,13 @@ export interface SquidTransactionRequest {
     gasPrice: string;
 }
 
+export interface SquidRoute {
+    estimate: SquidEstimate;
+    transactionRequest?: SquidTransactionRequest;
+}
+
 export interface SquidRouteResponse {
-    route: {
-        estimate: SquidEstimate;
-        transactionRequest: SquidTransactionRequest;
-    };
+    route: SquidRoute;
 }
 
 export interface SquidErrorResponse {
