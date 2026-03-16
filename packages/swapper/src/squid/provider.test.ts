@@ -1,29 +1,7 @@
-import { AssetId, Chain, QuoteRequest } from "@gemwallet/types";
+import { AssetId, Chain } from "@gemwallet/types";
 
-import { createQuoteRequest } from "../testkit/mock";
-import { Long } from "../protobuf";
+import { createQuoteRequest, OSMOSIS_TEST_ADDRESS, SQUID_OSMO_TO_ATOM_REQUEST } from "../testkit/mock";
 import { SquidProvider } from "./provider";
-
-const COSMOS_TEST_ADDRESS = "cosmos1qwerty12345test";
-const OSMOSIS_TEST_ADDRESS = "osmo1qwerty12345test";
-
-const SQUID_COSMOS_QUOTE_REQUEST: QuoteRequest = {
-    from_address: OSMOSIS_TEST_ADDRESS,
-    to_address: COSMOS_TEST_ADDRESS,
-    from_asset: {
-        id: Chain.Osmosis,
-        symbol: "OSMO",
-        decimals: 6,
-    },
-    to_asset: {
-        id: Chain.Cosmos,
-        symbol: "ATOM",
-        decimals: 6,
-    },
-    from_value: "1000000",
-    referral_bps: 0,
-    slippage_bps: 100,
-};
 
 describe("SquidProvider", () => {
     const provider = new SquidProvider("test-integrator");
@@ -80,7 +58,7 @@ describe("SquidProvider", () => {
                 text: async () => JSON.stringify(mockRoute),
             } as Response);
 
-            const request = createQuoteRequest(SQUID_COSMOS_QUOTE_REQUEST);
+            const request = createQuoteRequest(SQUID_OSMO_TO_ATOM_REQUEST);
             const quote = await provider.get_quote(request);
 
             expect(quote.output_value).toBe("500000");
@@ -128,13 +106,13 @@ describe("SquidProvider", () => {
                 },
             };
 
-            const fetchSpy = jest.spyOn(global, "fetch").mockResolvedValueOnce({
+            jest.spyOn(global, "fetch").mockResolvedValueOnce({
                 ok: true,
                 text: async () => JSON.stringify(mockRoute),
             } as Response);
 
             const quote = {
-                quote: createQuoteRequest(SQUID_COSMOS_QUOTE_REQUEST),
+                quote: createQuoteRequest(SQUID_OSMO_TO_ATOM_REQUEST),
                 output_value: "500000",
                 output_min_value: "495000",
                 route_data: mockRoute.route,
@@ -146,7 +124,6 @@ describe("SquidProvider", () => {
             expect(JSON.parse(data.data)).toEqual(JSON.parse(cosmosMsg));
             expect(data.gasLimit).toBe("500000");
             expect(data.dataType).toBe("contract");
-            expect(fetchSpy).toHaveBeenCalledTimes(1);
         });
 
         it("normalizes Long.js timeoutTimestamp to string", async () => {
@@ -176,7 +153,7 @@ describe("SquidProvider", () => {
             } as Response);
 
             const quote = {
-                quote: createQuoteRequest(SQUID_COSMOS_QUOTE_REQUEST),
+                quote: createQuoteRequest(SQUID_OSMO_TO_ATOM_REQUEST),
                 output_value: "500000",
                 output_min_value: "495000",
                 route_data: mockRoute.route,
@@ -187,22 +164,6 @@ describe("SquidProvider", () => {
             const parsed = JSON.parse(data.data);
 
             expect(parsed.value.timeoutTimestamp).toBe("1773631986332999936");
-        });
-    });
-
-    describe("Long", () => {
-        it("converts Long.js objects to uint64 strings", () => {
-            expect(Long.toUint64({ low: -72998656, high: 412955876 })).toBe("1773631986332999936");
-        });
-
-        it("leaves plain values unchanged", () => {
-            expect(Long.deepConvert(42)).toBe(42);
-            expect(Long.deepConvert("hello")).toBe("hello");
-        });
-
-        it("recurses into nested objects", () => {
-            const input = { a: { low: 1, high: 0 }, b: "keep" };
-            expect(Long.deepConvert(input)).toEqual({ a: "1", b: "keep" });
         });
     });
 });

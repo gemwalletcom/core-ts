@@ -174,3 +174,29 @@ export function createSolanaUsdcQuoteRequest(overrides: Partial<QuoteRequest> = 
 export function createAptosUsdcQuoteRequest(overrides: Partial<QuoteRequest> = {}): QuoteRequest {
     return createQuoteRequest(APTOS_USDC_REQUEST_TEMPLATE, overrides);
 }
+
+export const COSMOS_TEST_ADDRESS = "cosmos1tkvyjqeq204rmrrz3w4hcrs336qahsfwmugljt";
+export const OSMOSIS_TEST_ADDRESS = "osmo1tkvyjqeq204rmrrz3w4hcrs336qahsfwn8m0ye";
+
+export const ATOM_ASSET = { id: Chain.Cosmos, symbol: "ATOM", decimals: 6 };
+export const OSMO_ASSET = { id: Chain.Osmosis, symbol: "OSMO", decimals: 6 };
+
+export const SQUID_OSMO_TO_ATOM_REQUEST: QuoteRequest = {
+    from_address: OSMOSIS_TEST_ADDRESS,
+    to_address: COSMOS_TEST_ADDRESS,
+    from_asset: OSMO_ASSET,
+    to_asset: ATOM_ASSET,
+    from_value: "10000000",
+    referral_bps: 0,
+    slippage_bps: 100,
+};
+
+export const SQUID_ATOM_TO_OSMO_REQUEST: QuoteRequest = {
+    from_address: COSMOS_TEST_ADDRESS,
+    to_address: OSMOSIS_TEST_ADDRESS,
+    from_asset: ATOM_ASSET,
+    to_asset: OSMO_ASSET,
+    from_value: "1000000",
+    referral_bps: 0,
+    slippage_bps: 100,
+};
