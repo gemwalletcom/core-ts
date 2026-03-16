@@ -10,8 +10,8 @@ import type { SquidRoute } from "./model";
 const runIntegration = process.env.INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
 
-const OSMOSIS_ADDRESS = "osmo1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5lzv7xu";
-const COSMOS_ADDRESS = "cosmos1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5z054l";
+const OSMOSIS_ADDRESS = "osmo1tkvyjqeq204rmrrz3w4hcrs336qahsfwn8m0ye";
+const COSMOS_ADDRESS = "cosmos1tkvyjqeq204rmrrz3w4hcrs336qahsfwmugljt";
 
 const OSMO_TO_ATOM_REQUEST: QuoteRequest = {
     from_address: OSMOSIS_ADDRESS,
@@ -27,6 +27,24 @@ const OSMO_TO_ATOM_REQUEST: QuoteRequest = {
         decimals: 6,
     },
     from_value: "10000000",
+    referral_bps: 0,
+    slippage_bps: 100,
+};
+
+const ATOM_TO_OSMO_REQUEST: QuoteRequest = {
+    from_address: COSMOS_ADDRESS,
+    to_address: OSMOSIS_ADDRESS,
+    from_asset: {
+        id: Chain.Cosmos,
+        symbol: "ATOM",
+        decimals: 6,
+    },
+    to_asset: {
+        id: Chain.Osmosis,
+        symbol: "OSMO",
+        decimals: 6,
+    },
+    from_value: "1000000",
     referral_bps: 0,
     slippage_bps: 100,
 };
@@ -60,5 +78,33 @@ describeIntegration("Squid live integration", () => {
         const routeData = quote.route_data as SquidRoute;
         expect(routeData.estimate.toAmount).toBe(quote.output_value);
         expect(routeData.estimate.toAmountMin).toBe(quote.output_min_value);
+    });
+
+    it("fetches quote_data for OSMO -> ATOM (MsgExecuteContract)", async () => {
+        const quote = await provider.get_quote(OSMO_TO_ATOM_REQUEST);
+        const data = await provider.get_quote_data(quote);
+
+        expect(data.dataType).toBe("contract");
+        expect(data.gasLimit).toBeTruthy();
+
+        const msg = JSON.parse(data.data);
+        expect(msg.typeUrl).toBe("/cosmwasm.wasm.v1.MsgExecuteContract");
+        expect(msg.value.contract).toBeTruthy();
+        expect(msg.value.sender).toBe(OSMOSIS_ADDRESS);
+        console.log("OSMO->ATOM data:", JSON.stringify(msg, null, 2));
+    });
+
+    it("fetches quote_data for ATOM -> OSMO (MsgTransfer)", async () => {
+        const quote = await provider.get_quote(ATOM_TO_OSMO_REQUEST);
+        const data = await provider.get_quote_data(quote);
+
+        expect(data.dataType).toBe("contract");
+        expect(data.gasLimit).toBeTruthy();
+
+        const msg = JSON.parse(data.data);
+        expect(msg.typeUrl).toBe("/ibc.applications.transfer.v1.MsgTransfer");
+        expect(msg.value.sourcePort).toBe("transfer");
+        expect(typeof msg.value.timeoutTimestamp).toBe("string");
+        console.log("ATOM->OSMO data:", JSON.stringify(msg, null, 2));
     });
 });

@@ -3,6 +3,7 @@ import { QuoteRequest, Quote, SwapQuoteData, AssetId, Chain, SwapQuoteDataType }
 import { SwapperException } from "../error";
 import { Protocol } from "../protocol";
 import { fetchRoute } from "./client";
+import { Long } from "../protobuf";
 import type { SquidRouteRequest } from "./model";
 
 export class SquidProvider implements Protocol {
@@ -97,10 +98,12 @@ export class SquidProvider implements Protocol {
             throw new SwapperException({ type: "invalid_route" });
         }
 
+        const data = JSON.stringify(Long.deepConvert(JSON.parse(tx.data)));
+
         return {
             to: tx.target,
             value: tx.value,
-            data: tx.data,
+            data,
             dataType: SwapQuoteDataType.Contract,
             gasLimit: tx.gasLimit,
         };

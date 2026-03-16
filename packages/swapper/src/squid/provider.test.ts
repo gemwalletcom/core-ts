@@ -1,6 +1,7 @@
 import { AssetId, Chain, QuoteRequest } from "@gemwallet/types";
 
 import { createQuoteRequest } from "../testkit/mock";
+import { Long } from "../protobuf";
 import { SquidProvider } from "./provider";
 
 const COSMOS_TEST_ADDRESS = "cosmos1qwerty12345test";
@@ -142,10 +143,66 @@ describe("SquidProvider", () => {
 
             const data = await provider.get_quote_data(quote);
 
-            expect(data.data).toBe(cosmosMsg);
+            expect(JSON.parse(data.data)).toEqual(JSON.parse(cosmosMsg));
             expect(data.gasLimit).toBe("500000");
             expect(data.dataType).toBe("contract");
             expect(fetchSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it("normalizes Long.js timeoutTimestamp to string", async () => {
+            const dataWithLong = JSON.stringify({
+                typeUrl: "/ibc.applications.transfer.v1.MsgTransfer",
+                value: {
+                    sourcePort: "transfer",
+                    sourceChannel: "channel-141",
+                    token: { denom: "uatom", amount: "1000000" },
+                    sender: "cosmos1test",
+                    receiver: "osmo1test",
+                    timeoutTimestamp: { low: -72998656, high: 412955876, unsigned: false },
+                    memo: "",
+                },
+            });
+
+            const mockRoute = {
+                route: {
+                    estimate: { toAmount: "500000", toAmountMin: "495000", estimatedRouteDuration: 60 },
+                    transactionRequest: { target: "", data: dataWithLong, value: "0", gasLimit: "500000", gasPrice: "0.03uatom" },
+                },
+            };
+
+            jest.spyOn(global, "fetch").mockResolvedValueOnce({
+                ok: true,
+                text: async () => JSON.stringify(mockRoute),
+            } as Response);
+
+            const quote = {
+                quote: createQuoteRequest(SQUID_COSMOS_QUOTE_REQUEST),
+                output_value: "500000",
+                output_min_value: "495000",
+                route_data: mockRoute.route,
+                eta_in_seconds: 60,
+            };
+
+            const data = await provider.get_quote_data(quote);
+            const parsed = JSON.parse(data.data);
+
+            expect(parsed.value.timeoutTimestamp).toBe("1773631986332999936");
+        });
+    });
+
+    describe("Long", () => {
+        it("converts Long.js objects to uint64 strings", () => {
+            expect(Long.toUint64({ low: -72998656, high: 412955876 })).toBe("1773631986332999936");
+        });
+
+        it("leaves plain values unchanged", () => {
+            expect(Long.deepConvert(42)).toBe(42);
+            expect(Long.deepConvert("hello")).toBe("hello");
+        });
+
+        it("recurses into nested objects", () => {
+            const input = { a: { low: 1, high: 0 }, b: "keep" };
+            expect(Long.deepConvert(input)).toEqual({ a: "1", b: "keep" });
         });
     });
 });
