@@ -64,7 +64,7 @@ describe("SquidProvider", () => {
             expect(quote.output_value).toBe("500000");
             expect(quote.output_min_value).toBe("495000");
             expect(quote.eta_in_seconds).toBe(60);
-            expect(quote.route_data).toEqual(mockRoute.route);
+            expect(quote.route_data).toEqual({});
 
             const body = JSON.parse(fetchSpy.mock.calls[0][1]!.body as string);
             expect(body.fromChain).toBe("osmosis-1");

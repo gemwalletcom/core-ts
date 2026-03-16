@@ -1,9 +1,10 @@
 import { QuoteRequest, Quote, SwapQuoteData, AssetId, Chain, SwapQuoteDataType } from "@gemwallet/types";
 
+import { resolveCosmosMaxAmount } from "../cosmos_fee";
 import { SwapperException } from "../error";
 import { Protocol } from "../protocol";
-import { fetchRoute } from "./client";
 import { Long } from "../protobuf";
+import { fetchRoute } from "./client";
 import type { SquidRouteRequest } from "./model";
 
 export class SquidProvider implements Protocol {
@@ -67,7 +68,7 @@ export class SquidProvider implements Protocol {
             toChain: this.mapChainToSquidChainId(toAsset.chain),
             fromToken: this.mapAssetToSquidToken(fromAsset),
             toToken: this.mapAssetToSquidToken(toAsset),
-            fromAmount: quoteRequest.from_value,
+            fromAmount: resolveCosmosMaxAmount(quoteRequest),
             fromAddress: quoteRequest.from_address,
             toAddress: quoteRequest.to_address,
             slippageConfig: {
@@ -85,7 +86,7 @@ export class SquidProvider implements Protocol {
             quote: quoteRequest,
             output_value: route.estimate.toAmount,
             output_min_value: route.estimate.toAmountMin,
-            route_data: route,
+            route_data: {},
             eta_in_seconds: route.estimate.estimatedRouteDuration,
         };
     }

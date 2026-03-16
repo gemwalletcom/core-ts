@@ -4,7 +4,6 @@ require("dotenv").config({ path: "../../.env" });
 import { BigIntMath } from "../bigint_math";
 import { timedPromise } from "../debug";
 import { SQUID_ATOM_TO_OSMO_REQUEST, SQUID_OSMO_TO_ATOM_REQUEST, OSMOSIS_TEST_ADDRESS } from "../testkit/mock";
-import type { SquidRoute } from "./model";
 
 const runIntegration = process.env.INTEGRATION_TEST === "1";
 const describeIntegration = runIntegration ? describe : describe.skip;
@@ -34,10 +33,6 @@ describeIntegration("Squid live integration", () => {
         const outputValue = BigIntMath.formatDecimals(quote.output_value, 6);
         console.log("Squid 10 OSMO -> ATOM output:", outputValue);
         console.log("Squid ETA:", quote.eta_in_seconds, "seconds");
-
-        const routeData = quote.route_data as SquidRoute;
-        expect(routeData.estimate.toAmount).toBe(quote.output_value);
-        expect(routeData.estimate.toAmountMin).toBe(quote.output_min_value);
     });
 
     it("fetches quote_data for OSMO -> ATOM (MsgExecuteContract)", async () => {
