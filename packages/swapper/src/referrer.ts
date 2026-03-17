@@ -1,3 +1,5 @@
+import { AssetId, QuoteRequest } from "@gemwallet/types";
+
 export type Referrers = {
     evm: string;
     solana: string;
@@ -20,6 +22,25 @@ export function getReferrerAddresses(): Referrers {
         tron: "TYeyZXywpA921LEtw2PF3obK4B8Jjgpp32",
         aptos: "0xc09d385527743bb03ed7847bb9180b5ff2263d38d5a93f1c9b3068f8505f6488",
     };
+}
+
+export function isPreferredFeeToken(asset: AssetId, symbol: string): boolean {
+    if (asset.isNative()) return true;
+    if (symbol.includes("USD")) return true;
+    return false;
+}
+
+export function preferInputAsFeeToken(request: QuoteRequest): boolean {
+    const fromAsset = AssetId.fromString(request.from_asset.id);
+    const toAsset = AssetId.fromString(request.to_asset.id);
+
+    if (fromAsset.isNative()) return true;
+    if (toAsset.isNative()) return false;
+
+    if (isPreferredFeeToken(fromAsset, request.from_asset.symbol)) return true;
+    if (isPreferredFeeToken(toAsset, request.to_asset.symbol)) return false;
+
+    return true;
 }
 
 export const CETUS_PARTNER_ID = "0x08b1875b6541c847f05ed71d04cbcfa66e4e8619bf3b8923b07c5b5409433366";

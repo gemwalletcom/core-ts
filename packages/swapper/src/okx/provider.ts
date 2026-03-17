@@ -12,7 +12,7 @@ import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 import { estimateComputeUnitLimit as simulateComputeUnits } from "../chain/solana/tx_builder";
 import { SwapperException } from "../error";
 import { Protocol } from "../protocol";
-import { getReferrerAddresses } from "../referrer";
+import { getReferrerAddresses, preferInputAsFeeToken } from "../referrer";
 import {
     CHAIN_INDEX,
     DEFAULT_SLIPPAGE_PERCENT,
@@ -85,6 +85,14 @@ function maxAutoSlippagePercent(request: QuoteRequest): string | undefined {
     return bpsToPercent(request.slippage_bps * 2);
 }
 
+function referrerWalletAddresses(request: QuoteRequest, chain: Chain): Partial<SwapParams> {
+    const address = referralFeeAddress(request, chain);
+    if (!address) return {};
+    return preferInputAsFeeToken(request)
+        ? { fromTokenReferrerWalletAddress: address }
+        : { toTokenReferrerWalletAddress: address };
+}
+
 function buildSwapParams(request: QuoteRequest, route: QuoteData, chain: Chain): SwapParams {
     return {
         chainIndex: chainIndex(chain),
@@ -97,7 +105,7 @@ function buildSwapParams(request: QuoteRequest, route: QuoteData, chain: Chain):
         autoSlippage: true,
         maxAutoSlippagePercent: maxAutoSlippagePercent(request),
         feePercent: referralFeePercent(request),
-        fromTokenReferrerWalletAddress: referralFeeAddress(request, chain),
+        ...referrerWalletAddresses(request, chain),
     };
 }
 

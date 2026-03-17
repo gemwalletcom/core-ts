@@ -1,6 +1,6 @@
 import { Chain, Quote } from "@gemwallet/types";
 
-import { createOkxEvmQuoteRequest, createSolanaUsdcQuoteRequest, XLAYER_USD0_ADDRESS } from "../testkit/mock";
+import { createOkxEvmQuoteRequest, createSolanaUsdcQuoteRequest, SOLANA_USDC_MINT, XLAYER_USD0_ADDRESS } from "../testkit/mock";
 import type { OkxDexClient } from "./client";
 
 import { OkxProvider } from "./provider";
@@ -178,6 +178,21 @@ describe("OkxProvider", () => {
                 expect(result.gasLimit).toBeUndefined();
             });
 
+            it("sets toTokenReferrerWalletAddress when toToken is native", async () => {
+                const { provider, getSwapData } = createProvider();
+                getSwapData.mockResolvedValue(mockSolanaSwapResponse());
+
+                const request = createSolanaUsdcQuoteRequest({
+                    from_asset: { id: `${Chain.Solana}_${SOLANA_USDC_MINT}`, symbol: "USDC", decimals: 6 },
+                    to_asset: { id: Chain.Solana, symbol: "SOL", decimals: 9 },
+                });
+                await provider.get_quote_data(mockSolanaQuote(request));
+
+                const params = getSwapData.mock.calls[0][0] as Record<string, unknown>;
+                expect(params.toTokenReferrerWalletAddress).toBe("5fmLrs2GuhfDP1B51ziV5Kd1xtAr9rw1jf3aQ4ihZ2gy");
+                expect(params.fromTokenReferrerWalletAddress).toBeUndefined();
+            });
+
             it("falls back to 1% slippage when slippage_bps is 0", async () => {
                 const { provider, getSwapData } = createProvider();
                 getSwapData.mockResolvedValue(mockSolanaSwapResponse());
@@ -242,6 +257,10 @@ describe("OkxProvider", () => {
                     spender: MOCK_APPROVE_ADDRESS,
                     value: "1000000000000000000",
                 });
+
+                const params = getSwapData.mock.calls[0][0] as Record<string, unknown>;
+                expect(params.toTokenReferrerWalletAddress).toBe("0x0D9DAB1A248f63B0a48965bA8435e4de7497a3dC");
+                expect(params.fromTokenReferrerWalletAddress).toBeUndefined();
             });
         });
     });
