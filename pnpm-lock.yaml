@@ -83,8 +83,8 @@ importers:
         specifier: 7.0.1
         version: 7.0.1(@solana/kit@5.5.1(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10))(@solana/rpc@5.5.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
       '@orca-so/whirlpools-client':
-        specifier: 6.2.0
-        version: 6.2.0(@solana/kit@5.5.1(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10))
+        specifier: 6.2.1
+        version: 6.2.1(@solana/kit@5.5.1(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10))
       '@orca-so/whirlpools-core':
         specifier: 3.1.0
         version: 3.1.0
@@ -542,6 +542,11 @@ packages:
 
   '@orca-so/whirlpools-client@6.2.0':
     resolution: {integrity: sha512-RHuq9liHJTFNuquPSybtETk+lce/guukDj5FUYY7w0/k/j5ndSwrONf2p6pk/MWjbTHftrQwj/cFPDt3AEXhhQ==}
+    peerDependencies:
+      '@solana/kit': ^5.0.0
+
+  '@orca-so/whirlpools-client@6.2.1':
+    resolution: {integrity: sha512-u0/yWQH8o0PvuDNeALe9dePjbRnr8dAmA4XWgdfuLRoJ0WvJmqOCqx6D5uQfvruGeDiZCybRf6E3tnb5EIGLiw==}
     peerDependencies:
       '@solana/kit': ^5.0.0
 
@@ -3996,6 +4001,10 @@ snapshots:
       '@solana/rpc': 5.5.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
 
   '@orca-so/whirlpools-client@6.2.0(@solana/kit@5.5.1(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10))':
+    dependencies:
+      '@solana/kit': 5.5.1(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10)
+
+  '@orca-so/whirlpools-client@6.2.1(@solana/kit@5.5.1(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/kit': 5.5.1(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10)
 
