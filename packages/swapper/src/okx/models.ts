@@ -60,4 +60,5 @@ export interface SwapParams {
     dexIds?: string;
     feePercent?: string;
     fromTokenReferrerWalletAddress?: string;
+    toTokenReferrerWalletAddress?: string;
 }
