@@ -122,7 +122,9 @@ export async function estimateComputeUnitLimit(
         if (response.value.unitsConsumed && response.value.unitsConsumed > 0) {
             return Math.ceil(response.value.unitsConsumed * COMPUTE_UNIT_MULTIPLIER);
         }
-    } catch (error) { void error; }
+    } catch (error) {
+        void error;
+    }
     return undefined;
 }
 

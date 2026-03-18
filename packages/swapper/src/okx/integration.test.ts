@@ -3,7 +3,7 @@ require("dotenv").config({ path: "../../.env" });
 
 import { Chain, QuoteRequest } from "@gemwallet/types";
 
-import { createOkxEvmQuoteRequest, createSolanaUsdcQuoteRequest, XLAYER_USD0_ADDRESS } from "../testkit/mock";
+import { createOkxEvmQuoteRequest, createSolanaUsdcQuoteRequest } from "../testkit/mock";
 import { OkxDexClient } from "./client";
 import { CHAIN_INDEX } from "./constants";
 import { OkxProvider } from "./provider";

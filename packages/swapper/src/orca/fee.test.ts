@@ -1,5 +1,5 @@
-import { BN } from "@coral-xyz/anchor";
 import { Quote } from "@gemwallet/types";
+import BN from "bn.js";
 
 import { buildOrcaQuoteFixture } from "../testkit/mock";
 import { calculateReferralFeeAmount, bnToNumberSafe, BASIS_POINTS_DENOMINATOR, MAX_SAFE_NUMBER_BN } from "./fee";

@@ -1,7 +1,7 @@
-import { BN } from "@coral-xyz/anchor";
 import { AssetId, Quote } from "@gemwallet/types";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
+import BN from "bn.js";
 
 import { parsePublicKey } from "../chain/solana/account";
 
