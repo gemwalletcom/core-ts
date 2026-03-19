@@ -24,8 +24,15 @@ describe("OKX auth", () => {
 
     describe("sign", () => {
         it("produces stable HMAC-SHA256 signature", () => {
-            const sig = sign("2026-01-01T00:00:00.000Z", "GET", "/api/v6/dex/aggregator/quote?chainIndex=501", "test-secret");
-            expect(sig).toBe(sign("2026-01-01T00:00:00.000Z", "GET", "/api/v6/dex/aggregator/quote?chainIndex=501", "test-secret"));
+            const sig = sign(
+                "2026-01-01T00:00:00.000Z",
+                "GET",
+                "/api/v6/dex/aggregator/quote?chainIndex=501",
+                "test-secret",
+            );
+            expect(sig).toBe(
+                sign("2026-01-01T00:00:00.000Z", "GET", "/api/v6/dex/aggregator/quote?chainIndex=501", "test-secret"),
+            );
             expect(typeof sig).toBe("string");
             expect(sig.length).toBeGreaterThan(0);
         });

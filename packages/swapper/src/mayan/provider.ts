@@ -20,10 +20,12 @@ import { buildSuiQuoteData } from "./sui";
 export class MayanProvider implements Protocol {
     private solanaRpc: string;
     private suiRpc: string;
+    private apiKey: string | undefined;
 
     constructor(solanaRpc: string, suiRpc: string) {
         this.solanaRpc = solanaRpc;
         this.suiRpc = suiRpc;
+        this.apiKey = process.env.MAYAN_API_KEY;
     }
 
     mapAssetToTokenId(asset: AssetId): string {
@@ -75,6 +77,7 @@ export class MayanProvider implements Protocol {
             shuttle: false,
             fastMctp: true,
             onlyDirect: false,
+            apiKey: this.apiKey,
         };
 
         let quotes: MayanQuote[];

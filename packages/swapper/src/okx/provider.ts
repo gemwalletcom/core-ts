@@ -1,10 +1,6 @@
 import { AssetId, Chain, Quote, QuoteRequest, SwapQuoteData, SwapQuoteDataType } from "@gemwallet/types";
-import bs58 from "bs58";
-
-import { OkxDexClient } from "./client";
-import type { QuoteData, SwapParams, TransactionData } from "./models";
-
 import { Connection, VersionedTransaction } from "@solana/web3.js";
+import bs58 from "bs58";
 
 import { BigIntMath } from "../bigint_math";
 import { checkEvmApproval } from "../chain/evm/allowance";
@@ -13,6 +9,7 @@ import { estimateComputeUnitLimit as simulateComputeUnits } from "../chain/solan
 import { SwapperException } from "../error";
 import { Protocol } from "../protocol";
 import { getReferrerAddresses, preferInputAsFeeToken } from "../referrer";
+import { OkxDexClient } from "./client";
 import {
     CHAIN_INDEX,
     DEFAULT_SLIPPAGE_PERCENT,
@@ -21,6 +18,7 @@ import {
     SOLANA_NATIVE_TOKEN_ADDRESS,
     evmGasLimit,
 } from "./constants";
+import type { QuoteData, SwapParams, TransactionData } from "./models";
 
 function bpsToPercent(bps: number): string {
     return (bps / 100).toString();
@@ -159,7 +157,9 @@ export class OkxProvider implements Protocol {
             const tx = VersionedTransaction.deserialize(bytes);
             const estimate = await simulateComputeUnits(this.connection, tx);
             return estimate?.toString();
-        } catch (error) { void error; }
+        } catch (error) {
+            void error;
+        }
         return undefined;
     }
 
@@ -230,7 +230,13 @@ export class OkxProvider implements Protocol {
         }
 
         if (isEvmChain(chain)) {
-            return this.buildEvmQuoteData(swapData.tx, fromAsset, quote.quote.from_address, quote.quote.from_value, approveSpender);
+            return this.buildEvmQuoteData(
+                swapData.tx,
+                fromAsset,
+                quote.quote.from_address,
+                quote.quote.from_value,
+                approveSpender,
+            );
         }
 
         return this.buildSolanaQuoteData(swapData.tx);

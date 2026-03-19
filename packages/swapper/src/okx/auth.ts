@@ -14,7 +14,9 @@ export function buildQueryString(params: object): string {
 }
 
 export function sign(timestamp: string, method: string, path: string, secretKey: string): string {
-    return createHmac("sha256", secretKey).update(timestamp + method + path).digest("base64");
+    return createHmac("sha256", secretKey)
+        .update(timestamp + method + path)
+        .digest("base64");
 }
 
 const HEADER_KEY = "OK-ACCESS-KEY";

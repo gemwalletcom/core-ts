@@ -38,7 +38,7 @@ export class OkxDexClient {
             throw new Error(`OKX API ${response.status}: ${text}`);
         }
 
-        const json = await response.json() as T;
+        const json = (await response.json()) as T;
         return json;
     }
 }

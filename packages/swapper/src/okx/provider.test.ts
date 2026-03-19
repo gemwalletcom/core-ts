@@ -1,8 +1,12 @@
 import { Chain, Quote } from "@gemwallet/types";
 
-import { createOkxEvmQuoteRequest, createSolanaUsdcQuoteRequest, SOLANA_USDC_MINT, XLAYER_USD0_ADDRESS } from "../testkit/mock";
+import {
+    createOkxEvmQuoteRequest,
+    createSolanaUsdcQuoteRequest,
+    SOLANA_USDC_MINT,
+    XLAYER_USD0_ADDRESS,
+} from "../testkit/mock";
 import type { OkxDexClient } from "./client";
-
 import { OkxProvider } from "./provider";
 
 const SOL_MINT = "11111111111111111111111111111111";
