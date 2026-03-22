@@ -39,7 +39,7 @@ function createQuote(mint: string, referralBps = 100): Quote {
     );
 }
 
-describe("OrcaWhirlpoolProvider.buildReferralInstruction", () => {
+describe("OrcaWhirlpoolProvider.buildReferralInstructions", () => {
     let provider: OrcaWhirlpoolProvider;
     const userKey = new PublicKey("9iqKg7nZFkC6xhnoWvyvCSdrgSX1uxPxL4X4fb97aotW");
 
@@ -49,13 +49,13 @@ describe("OrcaWhirlpoolProvider.buildReferralInstruction", () => {
         mockFetchAllMint.fetchAllMint?.mockReset?.();
     });
 
-    it("returns null when referral amount is zero", async () => {
+    it("returns empty array when referral amount is zero", async () => {
         const quote = createQuote(TEST_LEGACY_MINT, 0);
 
         // @ts-expect-error accessing private method for test purposes
-        const instruction = await provider.buildReferralInstruction(quote, userKey);
+        const instructions = await provider.buildReferralInstructions(quote, userKey);
 
-        expect(instruction).toBeNull();
+        expect(instructions).toEqual([]);
     });
 
     it("skips referral when mint uses token-2022 program", async () => {
@@ -68,12 +68,12 @@ describe("OrcaWhirlpoolProvider.buildReferralInstruction", () => {
         const quote = createQuote(TEST_TOKEN2022_MINT);
 
         // @ts-expect-error accessing private method for test purposes
-        const instruction = await provider.buildReferralInstruction(quote, userKey);
+        const instructions = await provider.buildReferralInstructions(quote, userKey);
 
-        expect(instruction).toBeNull();
+        expect(instructions).toEqual([]);
     });
 
-    it("builds transfer instruction for legacy token program", async () => {
+    it("builds create-ata and transfer instructions for legacy token program", async () => {
         mockFetchAllMint.fetchAllMint.mockResolvedValue([
             {
                 exists: true,
@@ -83,9 +83,11 @@ describe("OrcaWhirlpoolProvider.buildReferralInstruction", () => {
         const quote = createQuote(TEST_LEGACY_MINT);
 
         // @ts-expect-error accessing private method for test purposes
-        const instruction = await provider.buildReferralInstruction(quote, userKey);
+        const instructions = await provider.buildReferralInstructions(quote, userKey);
 
-        expect(instruction).toBeInstanceOf(TransactionInstruction);
+        expect(instructions).toHaveLength(2);
+        expect(instructions[0]).toBeInstanceOf(TransactionInstruction);
+        expect(instructions[1]).toBeInstanceOf(TransactionInstruction);
     });
 });
 
