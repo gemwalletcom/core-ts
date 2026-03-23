@@ -1,5 +1,5 @@
 import { Quote } from "@gemwallet/types";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { TransactionInstruction, PublicKey } from "@solana/web3.js";
 
 import { SOL_ASSET, buildOrcaQuoteFixture, createOrcaQuoteRequest } from "../testkit/mock";
@@ -72,8 +72,8 @@ describe("OrcaWhirlpoolProvider.buildReferralInstructions", () => {
         const instructions = await provider.buildReferralInstructions(quote, userKey);
 
         expect(instructions).toHaveLength(2);
-        expect(instructions[0]).toBeInstanceOf(TransactionInstruction);
-        expect(instructions[1]).toBeInstanceOf(TransactionInstruction);
+        expect(instructions[0].programId).toEqual(ASSOCIATED_TOKEN_PROGRAM_ID);
+        expect(instructions[1].programId).toEqual(TOKEN_PROGRAM_ID);
     });
 
     it("builds create-ata and transfer instructions for token-2022 program", async () => {
@@ -89,8 +89,8 @@ describe("OrcaWhirlpoolProvider.buildReferralInstructions", () => {
         const instructions = await provider.buildReferralInstructions(quote, userKey);
 
         expect(instructions).toHaveLength(2);
-        expect(instructions[0]).toBeInstanceOf(TransactionInstruction);
-        expect(instructions[1]).toBeInstanceOf(TransactionInstruction);
+        expect(instructions[0].programId).toEqual(ASSOCIATED_TOKEN_PROGRAM_ID);
+        expect(instructions[1].programId).toEqual(TOKEN_2022_PROGRAM_ID);
     });
 });
 
