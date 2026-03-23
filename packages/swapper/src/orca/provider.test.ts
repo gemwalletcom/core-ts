@@ -17,6 +17,7 @@ const TEST_RPC = "https://example.org";
 
 const TEST_LEGACY_MINT = "So11111111111111111111111111111111111111112";
 const TEST_TOKEN2022_MINT = "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo";
+const TOKEN2022_PROGRAM_ADDRESS = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
 
 function createQuote(mint: string, referralBps = 100): Quote {
     return buildOrcaQuoteFixture(
@@ -58,21 +59,6 @@ describe("OrcaWhirlpoolProvider.buildReferralInstructions", () => {
         expect(instructions).toEqual([]);
     });
 
-    it("skips referral when mint uses token-2022 program", async () => {
-        mockFetchAllMint.fetchAllMint.mockResolvedValue([
-            {
-                exists: true,
-                programAddress: "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
-            },
-        ]);
-        const quote = createQuote(TEST_TOKEN2022_MINT);
-
-        // @ts-expect-error accessing private method for test purposes
-        const instructions = await provider.buildReferralInstructions(quote, userKey);
-
-        expect(instructions).toEqual([]);
-    });
-
     it("builds create-ata and transfer instructions for legacy token program", async () => {
         mockFetchAllMint.fetchAllMint.mockResolvedValue([
             {
@@ -81,6 +67,23 @@ describe("OrcaWhirlpoolProvider.buildReferralInstructions", () => {
             },
         ]);
         const quote = createQuote(TEST_LEGACY_MINT);
+
+        // @ts-expect-error accessing private method for test purposes
+        const instructions = await provider.buildReferralInstructions(quote, userKey);
+
+        expect(instructions).toHaveLength(2);
+        expect(instructions[0]).toBeInstanceOf(TransactionInstruction);
+        expect(instructions[1]).toBeInstanceOf(TransactionInstruction);
+    });
+
+    it("builds create-ata and transfer instructions for token-2022 program", async () => {
+        mockFetchAllMint.fetchAllMint.mockResolvedValue([
+            {
+                exists: true,
+                programAddress: TOKEN2022_PROGRAM_ADDRESS,
+            },
+        ]);
+        const quote = createQuote(TEST_TOKEN2022_MINT);
 
         // @ts-expect-error accessing private method for test purposes
         const instructions = await provider.buildReferralInstructions(quote, userKey);
@@ -120,7 +123,6 @@ describe("OrcaWhirlpoolProvider.get_quote referral handling", () => {
 
     it("reduces swap amount for legacy SPL tokens when referral applies", async () => {
         jest.spyOn(provider as any, "findBestPool").mockResolvedValue({ account: { address: "PoolAddress" } });
-        const mintProgramSpy = jest.spyOn(provider as any, "getTokenProgram").mockResolvedValueOnce(TOKEN_PROGRAM_ID);
 
         const quote = await provider.get_quote(
             createOrcaQuoteRequest({
@@ -136,14 +138,10 @@ describe("OrcaWhirlpoolProvider.get_quote referral handling", () => {
 
         expect(capturedAmount).toBe(BigInt(990000));
         expect(quote.route_data).toMatchObject({ amount: "990000" });
-        expect(mintProgramSpy).toHaveBeenCalledWith(new PublicKey(TEST_LEGACY_MINT));
     });
 
-    it("uses full input amount for Token-2022 tokens when referral cannot be collected", async () => {
+    it("reduces swap amount for Token-2022 tokens when referral applies", async () => {
         jest.spyOn(provider as any, "findBestPool").mockResolvedValue({ account: { address: "PoolAddress" } });
-        const getProgramSpy = jest
-            .spyOn(provider as any, "getTokenProgram")
-            .mockResolvedValueOnce(new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"));
 
         const quote = await provider.get_quote(
             createOrcaQuoteRequest({
@@ -157,8 +155,7 @@ describe("OrcaWhirlpoolProvider.get_quote referral handling", () => {
             }),
         );
 
-        expect(capturedAmount).toBe(BigInt(1000000));
-        expect(quote.route_data).toMatchObject({ amount: "1000000" });
-        expect(getProgramSpy).toHaveBeenCalledWith(new PublicKey(TEST_TOKEN2022_MINT));
+        expect(capturedAmount).toBe(BigInt(990000));
+        expect(quote.route_data).toMatchObject({ amount: "990000" });
     });
 });

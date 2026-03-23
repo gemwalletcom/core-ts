@@ -1,9 +1,6 @@
 import { AssetId, Quote } from "@gemwallet/types";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
-
-import { parsePublicKey } from "../chain/solana/account";
 
 export const BASIS_POINTS_DENOMINATOR = 10_000;
 export const MAX_SAFE_NUMBER_BN = new BN(Number.MAX_SAFE_INTEGER.toString());
@@ -35,12 +32,7 @@ export function bnToNumberSafe(value: BN): number {
     return value.toNumber();
 }
 
-export async function applyReferralFee(
-    asset: AssetId,
-    amountIn: bigint,
-    referralBps: bigint,
-    resolveProgram: (mint: PublicKey) => Promise<PublicKey>,
-): Promise<bigint> {
+export async function applyReferralFee(asset: AssetId, amountIn: bigint, referralBps: bigint): Promise<bigint> {
     if (referralBps <= BigInt(0)) {
         return amountIn;
     }
@@ -48,13 +40,6 @@ export async function applyReferralFee(
     if (asset.isNative()) {
         const referralFee = (amountIn * referralBps) / BigInt(10_000);
         return amountIn - referralFee;
-    }
-
-    const tokenId = asset.getTokenId();
-    const mintKey = parsePublicKey(tokenId);
-    const programId = await resolveProgram(mintKey);
-    if (!programId.equals(TOKEN_PROGRAM_ID)) {
-        return amountIn;
     }
 
     const referralFee = (amountIn * referralBps) / BigInt(10_000);

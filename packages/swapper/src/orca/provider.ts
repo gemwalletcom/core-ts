@@ -27,9 +27,8 @@ import { AccountRole, type AccountLookupMeta, type AccountMeta, type Instruction
 import { createSolanaRpc, address as toAddress, type Account, type Address, type TransactionSigner } from "@solana/kit";
 import {
     createAssociatedTokenAccountIdempotentInstruction,
-    createTransferInstruction,
+    createTransferCheckedInstruction,
     getAssociatedTokenAddressSync,
-    TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { Connection, PublicKey, SystemProgram, Transaction, TransactionInstruction } from "@solana/web3.js";
 
@@ -115,9 +114,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const amountIn = BigIntMath.parseString(quoteRequest.from_value);
         const referralBps = BigInt(quoteRequest.referral_bps ?? 0);
-        const swapAmount = await applyReferralFee(fromAsset, amountIn, referralBps, (mint) =>
-            this.getTokenProgram(mint),
-        );
+        const swapAmount = await applyReferralFee(fromAsset, amountIn, referralBps);
 
         if (swapAmount <= BigInt(0)) {
             throw new Error("Swap amount must be greater than zero");
@@ -482,10 +479,6 @@ export class OrcaWhirlpoolProvider implements Protocol {
         const tokenId = fromAsset.getTokenId();
         const fromMintKey = parsePublicKey(tokenId);
         const programId = await this.getTokenProgram(fromMintKey);
-        if (!programId.equals(TOKEN_PROGRAM_ID)) {
-            return [];
-        }
-
         const referrerPublicKey = new PublicKey(referrer);
         const userTokenAccount = getAssociatedTokenAddressSync(fromMintKey, userPublicKey, false, programId);
         const referrerTokenAccount = getAssociatedTokenAddressSync(fromMintKey, referrerPublicKey, false, programId);
@@ -498,11 +491,13 @@ export class OrcaWhirlpoolProvider implements Protocol {
                 fromMintKey,
                 programId,
             ),
-            createTransferInstruction(
+            createTransferCheckedInstruction(
                 userTokenAccount,
+                fromMintKey,
                 referrerTokenAccount,
                 userPublicKey,
                 bnToNumberSafe(referralAmount),
+                quote.quote.from_asset.decimals,
                 [],
                 programId,
             ),
