@@ -25,7 +25,11 @@ import {
 } from "@orca-so/whirlpools-core";
 import { AccountRole, type AccountLookupMeta, type AccountMeta, type Instruction } from "@solana/instructions";
 import { createSolanaRpc, address as toAddress, type Account, type Address, type TransactionSigner } from "@solana/kit";
-import { createTransferInstruction, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+    createAssociatedTokenAccountIdempotentInstruction,
+    createTransferCheckedInstruction,
+    getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 import { Connection, PublicKey, SystemProgram, Transaction, TransactionInstruction } from "@solana/web3.js";
 
 import { BigIntMath } from "../bigint_math";
@@ -110,9 +114,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const amountIn = BigIntMath.parseString(quoteRequest.from_value);
         const referralBps = BigInt(quoteRequest.referral_bps ?? 0);
-        const swapAmount = await applyReferralFee(fromAsset, amountIn, referralBps, (mint) =>
-            this.getTokenProgram(mint),
-        );
+        const swapAmount = await applyReferralFee(fromAsset, amountIn, referralBps);
 
         if (swapAmount <= BigInt(0)) {
             throw new Error("Swap amount must be greater than zero");
@@ -153,7 +155,7 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const signer = this.createPassthroughSigner(userPublicKey);
 
-        const [{ instructions }, priorityFee, { blockhash, lastValidBlockHeight }, referralInstruction] =
+        const [{ instructions }, priorityFee, { blockhash, lastValidBlockHeight }, referralInstructions] =
             await Promise.all([
                 swapInstructions(
                     this.rpc,
@@ -164,18 +166,14 @@ export class OrcaWhirlpoolProvider implements Protocol {
                 ),
                 this.getPriorityFee(),
                 getRecentBlockhash(this.connection, DEFAULT_COMMITMENT),
-                this.buildReferralInstruction(quote, userPublicKey),
+                this.buildReferralInstructions(quote, userPublicKey),
             ]);
 
         const legacyInstructions = instructions.map((instruction) => this.toLegacyInstruction(instruction));
         const computeBudgetInstructions = addComputeBudgetInstructions([], DEFAULT_COMPUTE_UNIT_LIMIT, priorityFee);
 
         const transaction = new Transaction();
-        transaction.add(...computeBudgetInstructions, ...legacyInstructions);
-
-        if (referralInstruction) {
-            transaction.add(referralInstruction);
-        }
+        transaction.add(...computeBudgetInstructions, ...legacyInstructions, ...referralInstructions);
 
         transaction.feePayer = userPublicKey;
         setTransactionBlockhash(transaction, blockhash, lastValidBlockHeight);
@@ -453,13 +451,13 @@ export class OrcaWhirlpoolProvider implements Protocol {
         };
     }
 
-    private async buildReferralInstruction(
+    private async buildReferralInstructions(
         quote: Quote,
         userPublicKey: PublicKey,
-    ): Promise<TransactionInstruction | null> {
+    ): Promise<TransactionInstruction[]> {
         const referralAmount = calculateReferralFeeAmount(quote);
         if (referralAmount.isZero()) {
-            return null;
+            return [];
         }
 
         const referrer = getReferrerAddresses().solana;
@@ -469,34 +467,40 @@ export class OrcaWhirlpoolProvider implements Protocol {
 
         const fromAsset = AssetId.fromString(quote.quote.from_asset.id);
         if (fromAsset.isNative()) {
-            return SystemProgram.transfer({
-                fromPubkey: userPublicKey,
-                toPubkey: new PublicKey(referrer),
-                lamports: bnToNumberSafe(referralAmount),
-            });
+            return [
+                SystemProgram.transfer({
+                    fromPubkey: userPublicKey,
+                    toPubkey: new PublicKey(referrer),
+                    lamports: bnToNumberSafe(referralAmount),
+                }),
+            ];
         }
 
         const tokenId = fromAsset.getTokenId();
         const fromMintKey = parsePublicKey(tokenId);
         const programId = await this.getTokenProgram(fromMintKey);
-        if (!programId.equals(TOKEN_PROGRAM_ID)) {
-            return null;
-        }
+        const referrerPublicKey = new PublicKey(referrer);
         const userTokenAccount = getAssociatedTokenAddressSync(fromMintKey, userPublicKey, false, programId);
-        const referrerTokenAccount = getAssociatedTokenAddressSync(
-            fromMintKey,
-            new PublicKey(referrer),
-            false,
-            programId,
-        );
+        const referrerTokenAccount = getAssociatedTokenAddressSync(fromMintKey, referrerPublicKey, false, programId);
 
-        return createTransferInstruction(
-            userTokenAccount,
-            referrerTokenAccount,
-            userPublicKey,
-            bnToNumberSafe(referralAmount),
-            [],
-            programId,
-        );
+        return [
+            createAssociatedTokenAccountIdempotentInstruction(
+                userPublicKey,
+                referrerTokenAccount,
+                referrerPublicKey,
+                fromMintKey,
+                programId,
+            ),
+            createTransferCheckedInstruction(
+                userTokenAccount,
+                fromMintKey,
+                referrerTokenAccount,
+                userPublicKey,
+                bnToNumberSafe(referralAmount),
+                quote.quote.from_asset.decimals,
+                [],
+                programId,
+            ),
+        ];
     }
 }
