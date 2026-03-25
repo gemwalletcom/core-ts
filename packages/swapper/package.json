@@ -15,7 +15,7 @@
         "test": "jest --passWithNoTests"
     },
     "dependencies": {
-        "@cetusprotocol/aggregator-sdk": "1.4.5",
+        "@cetusprotocol/aggregator-sdk": "1.4.6",
         "@gemwallet/types": "workspace:*",
         "@mayanfinance/swap-sdk": "13.2.0",
         "@mysten/sui": "1.45.2",
