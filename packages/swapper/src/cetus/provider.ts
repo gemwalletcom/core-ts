@@ -9,7 +9,6 @@ import {
     BLUEFIN,
 } from "@cetusprotocol/aggregator-sdk";
 import { QuoteRequest, Quote, SwapQuoteData, AssetId, SwapQuoteDataType } from "@gemwallet/types";
-import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
 import { BN } from "bn.js";
 
@@ -19,21 +18,28 @@ import { Protocol } from "../protocol";
 import { getReferrerAddresses, CETUS_PARTNER_ID } from "../referrer";
 import { bnReplacer, bnReviver } from "./bn_replacer";
 
+// @ts-ignore — v2 ESM types unresolvable under moduleResolution "node"
+import { SuiJsonRpcClient } from "@mysten/sui-v2/jsonRpc";
+
+function createSuiV2Client(url: string): InstanceType<typeof SuiJsonRpcClient> {
+    return new SuiJsonRpcClient({ network: "mainnet", url });
+}
+
 export class CetusAggregatorProvider implements Protocol {
     private client: AggregatorClient;
-    private suiClient: SuiClient;
+    private suiRpcUrl: string;
     private overlayFeeReceiver: string;
     private readonly selectedProtocols: string[] = [CETUS, DEEPBOOKV2, DEEPBOOKV3, BLUEFIN];
 
     constructor(suiRpcUrl: string) {
-        this.suiClient = new SuiClient({ url: suiRpcUrl });
+        this.suiRpcUrl = suiRpcUrl;
         this.overlayFeeReceiver = getReferrerAddresses().sui;
         this.client = this.createClient();
     }
 
     createClient(address?: string, overlayFeeRate?: number, overlayFeeReceiver?: string) {
         return new AggregatorClient({
-            client: this.suiClient,
+            client: createSuiV2Client(this.suiRpcUrl),
             env: Env.Mainnet,
             overlayFeeRate,
             overlayFeeReceiver,
@@ -118,18 +124,18 @@ export class CetusAggregatorProvider implements Protocol {
                 slippage: slippage_bps / 10000,
             };
 
-            // create a new client with user's address as signer, overlay fee rate and overlay fee receiver
             const client = this.createClient(
                 quote.quote.from_address,
                 quote.quote.referral_bps / 10000,
                 this.overlayFeeReceiver,
             );
 
-            const gasPriceAndCoinRefsReq = getGasPriceAndCoinRefs(this.suiClient, quote.quote.from_address);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const suiClient = (client as any).client;
+            const gasPriceAndCoinRefsReq = getGasPriceAndCoinRefs(suiClient, quote.quote.from_address);
             const fastRouterSwapReq = client.fastRouterSwap(swapParams);
             const [{ gasPrice, coinRefs }] = await Promise.all([gasPriceAndCoinRefsReq, fastRouterSwapReq]);
 
-            // inspect transaction
             const result = await client.devInspectTransactionBlock(txb);
             if (result.error) {
                 throw new Error(`Swap simulation failed: ${result.error}`);
@@ -138,12 +144,10 @@ export class CetusAggregatorProvider implements Protocol {
                 throw new Error(`Swap simulation failed: ${result.effects.status.error}`);
             }
 
-            // build transaction
             const gasBudget = calculateGasBudget(result.effects);
             prefillTransaction(txb, quote.quote.from_address, gasBudget, gasPrice, coinRefs);
-            const serializedTx = await txb.build({ client: this.suiClient });
+            const serializedTx = await txb.build({ client: suiClient });
 
-            // build quote data
             const quoteData: SwapQuoteData = {
                 to: "",
                 value: "0",
