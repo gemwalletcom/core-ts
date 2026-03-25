@@ -1,6 +1,8 @@
 import { SwapQuoteData, QuoteRequest, SwapQuoteDataType } from "@gemwallet/types";
 import { Quote as MayanQuote, ReferrerAddresses, createSwapFromSuiMoveCalls } from "@mayanfinance/swap-sdk";
-import { SuiClient } from "@mysten/sui/client";
+
+// @ts-ignore — v2 ESM types unresolvable under moduleResolution "node"
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 
 import { calculateGasBudget, prefillTransaction, getGasPriceAndCoinRefs } from "../chain/sui/tx_builder";
 import { getReferrerAddresses } from "../referrer";
@@ -11,9 +13,10 @@ export async function buildSuiQuoteData(
     suiRpc: string,
 ): Promise<SwapQuoteData> {
     const referrerAddresses = getReferrerAddresses() as ReferrerAddresses;
-    const suiClient = new SuiClient({ url: suiRpc });
+    const suiClient = new SuiJsonRpcClient({ network: "mainnet", url: suiRpc });
 
     try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const [suiTx, { gasPrice, coinRefs }] = await Promise.all([
             createSwapFromSuiMoveCalls(
                 routeData,
@@ -21,14 +24,14 @@ export async function buildSuiQuoteData(
                 request.to_address,
                 referrerAddresses,
                 null,
-                suiClient,
+                suiClient as any,
             ),
             getGasPriceAndCoinRefs(suiClient, request.from_address),
         ]);
 
         const inspectResult = await suiClient.devInspectTransactionBlock({
-            transactionBlock: suiTx,
             sender: request.from_address,
+            transactionBlock: suiTx,
         });
 
         if (inspectResult.error) {
