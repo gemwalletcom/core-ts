@@ -49,7 +49,7 @@ export const SOLANA_CHAIN_INDEX = CHAIN_INDEX[Chain.Solana];
 export const SOLANA_NATIVE_TOKEN_ADDRESS = "11111111111111111111111111111111";
 export const SOLANA_DEX_IDS_PARAM = SOLANA_DEX_IDS.join(",");
 export const DEFAULT_SLIPPAGE_PERCENT = "1";
-const DEFAULT_EVM_GAS_LIMIT = "920000";
+export const DEFAULT_EVM_GAS_LIMIT = "920000";
 const EVM_GAS_LIMITS: Partial<Record<string, string>> = {
     [Chain.Manta]: "600000",
     [Chain.ZkSync]: "2000000",
