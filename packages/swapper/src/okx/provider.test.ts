@@ -7,6 +7,7 @@ import {
     XLAYER_USD0_ADDRESS,
 } from "../testkit/mock";
 import type { OkxDexClient } from "./client";
+import { DEFAULT_EVM_GAS_LIMIT } from "./constants";
 import { OkxProvider } from "./provider";
 
 const SOL_MINT = "11111111111111111111111111111111";
@@ -255,7 +256,7 @@ describe("OkxProvider", () => {
 
                 expect(result.data).toBe("0xswapCalldata");
                 expect(result.value).toBe("0");
-                expect(result.gasLimit).toBe("800000");
+                expect(result.gasLimit).toBe(DEFAULT_EVM_GAS_LIMIT);
                 expect(result.approval).toEqual({
                     token: XLAYER_USD0_ADDRESS,
                     spender: MOCK_APPROVE_ADDRESS,

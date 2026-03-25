@@ -5,7 +5,7 @@ import { Chain, QuoteRequest } from "@gemwallet/types";
 
 import { createOkxEvmQuoteRequest, createSolanaUsdcQuoteRequest } from "../testkit/mock";
 import { OkxDexClient } from "./client";
-import { CHAIN_INDEX } from "./constants";
+import { CHAIN_INDEX, DEFAULT_EVM_GAS_LIMIT } from "./constants";
 import { OkxProvider } from "./provider";
 
 const OKX_ENV_KEYS = ["OKX_API_KEY", "OKX_SECRET_KEY", "OKX_API_PASSPHRASE", "OKX_PROJECT_ID"];
@@ -88,7 +88,7 @@ describe("OKX live integration", () => {
 
             expect(quoteData.dataType).toBe("contract");
             expect(quoteData.data).toMatch(/^0x/);
-            expect(quoteData.gasLimit).toBe("800000");
+            expect(quoteData.gasLimit).toBe(DEFAULT_EVM_GAS_LIMIT);
             expect(quoteData.approval).toBeUndefined();
         });
     });
