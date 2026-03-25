@@ -79,11 +79,8 @@ importers:
         specifier: 13.2.0
         version: 13.2.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@mysten/sui':
-        specifier: 1.45.2
-        version: 1.45.2(typescript@5.9.3)
-      '@mysten/sui-v2':
-        specifier: npm:@mysten/sui@2.9.1
-        version: '@mysten/sui@2.9.1(typescript@5.9.3)'
+        specifier: 2.9.1
+        version: 2.9.1(typescript@5.9.3)
       '@orca-so/whirlpools':
         specifier: 7.0.1
         version: 7.0.1(@solana/kit@5.5.1(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10))(@solana/rpc@5.5.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)

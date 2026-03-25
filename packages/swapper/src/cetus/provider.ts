@@ -9,21 +9,18 @@ import {
     BLUEFIN,
 } from "@cetusprotocol/aggregator-sdk";
 import { QuoteRequest, Quote, SwapQuoteData, AssetId, SwapQuoteDataType } from "@gemwallet/types";
-import { Transaction } from "@mysten/sui/transactions";
 import { BN } from "bn.js";
+
+// @ts-ignore — v2 ESM types unresolvable under moduleResolution "node"
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
+// @ts-ignore — v2 ESM types unresolvable under moduleResolution "node"
+import { Transaction } from "@mysten/sui/transactions";
 
 import { SUI_COIN_TYPE } from "../chain/sui/constants";
 import { calculateGasBudget, prefillTransaction, getGasPriceAndCoinRefs } from "../chain/sui/tx_builder";
 import { Protocol } from "../protocol";
 import { getReferrerAddresses, CETUS_PARTNER_ID } from "../referrer";
 import { bnReplacer, bnReviver } from "./bn_replacer";
-
-// @ts-ignore — v2 ESM types unresolvable under moduleResolution "node"
-import { SuiJsonRpcClient } from "@mysten/sui-v2/jsonRpc";
-
-function createSuiV2Client(url: string): InstanceType<typeof SuiJsonRpcClient> {
-    return new SuiJsonRpcClient({ network: "mainnet", url });
-}
 
 export class CetusAggregatorProvider implements Protocol {
     private client: AggregatorClient;
@@ -39,7 +36,7 @@ export class CetusAggregatorProvider implements Protocol {
 
     createClient(address?: string, overlayFeeRate?: number, overlayFeeReceiver?: string) {
         return new AggregatorClient({
-            client: createSuiV2Client(this.suiRpcUrl),
+            client: new SuiJsonRpcClient({ network: "mainnet", url: this.suiRpcUrl }),
             env: Env.Mainnet,
             overlayFeeRate,
             overlayFeeReceiver,

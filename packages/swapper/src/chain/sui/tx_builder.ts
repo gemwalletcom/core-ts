@@ -1,16 +1,40 @@
-import { SuiClient, TransactionEffects } from "@mysten/sui/client";
-import { Transaction } from "@mysten/sui/transactions";
-
 import { BigIntMath } from "../../bigint_math";
 import { SUI_COIN_TYPE } from "./constants";
 
+interface CoinRef {
+    objectId: string;
+    version: string;
+    digest: string;
+}
+
+export interface SuiRpcClient {
+    getReferenceGasPrice(): Promise<string | bigint>;
+    getCoins(input: { owner: string; coinType: string; limit: number }): Promise<{
+        data: { coinObjectId: string; version: string; digest: string }[];
+    }>;
+}
+
+export interface SuiTransactionEffects {
+    status: { status: string; error?: string };
+    gasUsed: { computationCost: string; storageCost: string; storageRebate: string };
+}
+
 export interface SuiTransactionPrerequisites {
     gasPrice: bigint;
-    coinRefs: { objectId: string; version: string; digest: string }[];
+    coinRefs: CoinRef[];
+}
+
+export interface SuiTransactionBuilder {
+    setSender(address: string): void;
+    setGasPrice(price: bigint): void;
+    setGasBudget(budget: bigint): void;
+    setGasPayment(coins: CoinRef[]): void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    build(options: { client: any }): Promise<Uint8Array>;
 }
 
 export async function getGasPriceAndCoinRefs(
-    suiClient: SuiClient,
+    suiClient: SuiRpcClient,
     ownerAddress: string,
 ): Promise<SuiTransactionPrerequisites> {
     const [gasPrice, coins] = await Promise.all([
@@ -27,8 +51,8 @@ export async function getGasPriceAndCoinRefs(
     return { gasPrice: BigInt(gasPrice), coinRefs };
 }
 
-export function calculateGasBudget(transactionEffects: TransactionEffects, increasePercentage: number = 20): bigint {
-    const gasUsed = transactionEffects.gasUsed;
+export function calculateGasBudget(effects: SuiTransactionEffects, increasePercentage: number = 20): bigint {
+    const gasUsed = effects.gasUsed;
     const computationBudget = BigInt(gasUsed.computationCost);
     const storageBudget = BigInt(gasUsed.storageCost) - BigInt(gasUsed.storageRebate);
 
@@ -38,11 +62,11 @@ export function calculateGasBudget(transactionEffects: TransactionEffects, incre
 }
 
 export function prefillTransaction(
-    transaction: Transaction,
+    transaction: SuiTransactionBuilder,
     senderAddress: string,
     gasBudget: bigint,
     gasPrice: bigint,
-    coinRefs: { objectId: string; version: string; digest: string }[],
+    coinRefs: CoinRef[],
 ) {
     transaction.setSender(senderAddress);
     transaction.setGasPrice(gasPrice);
