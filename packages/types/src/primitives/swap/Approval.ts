@@ -8,6 +8,7 @@ export interface ApprovalData {
 	token: string;
 	spender: string;
 	value: string;
+	isUnlimited: boolean;
 }
 
 export interface QuoteAsset {

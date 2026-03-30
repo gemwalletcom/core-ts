@@ -23,6 +23,7 @@ export interface ApprovalResult {
     token: string;
     spender: string;
     value: string;
+    isUnlimited: boolean;
 }
 
 export async function checkEvmApproval(
@@ -46,5 +47,5 @@ export async function checkEvmApproval(
             /* fall through to return approval */
         }
     }
-    return { token: tokenId, spender, value: fromValue };
+    return { token: tokenId, spender, value: fromValue, isUnlimited: true };
 }
