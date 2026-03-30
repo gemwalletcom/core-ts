@@ -257,10 +257,11 @@ describe("OkxProvider", () => {
                 expect(result.data).toBe("0xswapCalldata");
                 expect(result.value).toBe("0");
                 expect(result.gasLimit).toBe(DEFAULT_EVM_GAS_LIMIT);
-                expect(result.approval).toEqual({
+                expect(result.approval).toMatchObject({
                     token: XLAYER_USD0_ADDRESS,
                     spender: MOCK_APPROVE_ADDRESS,
                     value: "1000000000000000000",
+                    isUnlimited: true,
                 });
 
                 const params = getSwapData.mock.calls[0][0] as Record<string, unknown>;
