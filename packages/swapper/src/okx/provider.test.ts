@@ -1,5 +1,6 @@
 import { Chain, Quote } from "@gemwallet/types";
 
+import * as allowance from "../chain/evm/allowance";
 import {
     createOkxEvmQuoteRequest,
     createSolanaUsdcQuoteRequest,
@@ -207,6 +208,10 @@ describe("OkxProvider", () => {
         });
     });
 
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     describe("EVM", () => {
         describe("get_quote", () => {
             it("returns quote with XLayer chain index and no dexIds", async () => {
@@ -239,7 +244,7 @@ describe("OkxProvider", () => {
                 expect(params.fromTokenReferrerWalletAddress).toBe("0x0D9DAB1A248f63B0a48965bA8435e4de7497a3dC");
             });
 
-            it("returns approval from swap signatureData for token swaps", async () => {
+            it("returns approval when on-chain allowance is insufficient", async () => {
                 const { provider, getSwapData } = createProvider();
                 getSwapData.mockResolvedValue(
                     mockEvmSwapResponse({
@@ -253,6 +258,8 @@ describe("OkxProvider", () => {
                     }),
                 );
 
+                jest.spyOn(allowance, "approvalRequired").mockResolvedValueOnce(true);
+
                 const result = await provider.get_quote_data(mockEvmTokenQuote());
 
                 expect(result.data).toBe("0xswapCalldata");
@@ -264,6 +271,28 @@ describe("OkxProvider", () => {
                     value: "1000000000000000000",
                     isUnlimited: true,
                 });
+            });
+
+            it("skips approval when on-chain allowance is sufficient", async () => {
+                const { provider, getSwapData } = createProvider();
+                getSwapData.mockResolvedValue(
+                    mockEvmSwapResponse({
+                        data: "0xswapCalldata",
+                        value: "0",
+                        signatureData: [
+                            JSON.stringify({
+                                approveContract: MOCK_APPROVE_ADDRESS,
+                            }),
+                        ],
+                    }),
+                );
+
+                jest.spyOn(allowance, "approvalRequired").mockResolvedValueOnce(false);
+
+                const result = await provider.get_quote_data(mockEvmTokenQuote());
+
+                expect(result.approval).toBeUndefined();
+                expect(result.gasLimit).toBeUndefined();
             });
 
             it("does not return approval when signatureData is missing", async () => {

@@ -3,6 +3,7 @@ import { Connection, VersionedTransaction } from "@solana/web3.js";
 import bs58 from "bs58";
 
 import { BigIntMath } from "../bigint_math";
+import { approvalRequired } from "../chain/evm/allowance";
 import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 import { estimateComputeUnitLimit as simulateComputeUnits } from "../chain/solana/tx_builder";
 import { SwapperException } from "../error";
@@ -249,7 +250,7 @@ export class OkxProvider implements Protocol {
         }
 
         if (isEvmChain(chain)) {
-            return this.buildEvmQuoteData(swapData.tx, fromAsset, quote.quote.from_value);
+            return this.buildEvmQuoteData(swapData.tx, fromAsset, quote.quote.from_address, quote.quote.from_value);
         }
 
         return this.buildSolanaQuoteData(swapData.tx);
@@ -258,17 +259,14 @@ export class OkxProvider implements Protocol {
     private async buildEvmQuoteData(
         tx: TransactionData,
         fromAsset: AssetId,
+        owner: string,
         fromValue: string,
     ): Promise<SwapQuoteData> {
+        const token = fromAsset.tokenId;
         const spender = extractApproveContract(tx.signatureData);
         const approval =
-            fromAsset.tokenId && spender
-                ? {
-                      token: fromAsset.tokenId,
-                      spender,
-                      value: fromValue,
-                      isUnlimited: true,
-                  }
+            token && spender && (await approvalRequired(fromAsset.chain, token, owner, spender, fromValue))
+                ? { token, spender, value: fromValue, isUnlimited: true }
                 : undefined;
         return {
             to: tx.to,
