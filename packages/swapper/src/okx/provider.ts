@@ -103,6 +103,7 @@ function buildSwapParams(
         toTokenAddress: route.toToken.tokenContractAddress,
         userWalletAddress: request.from_address,
         approveTransaction: approveTransaction || undefined,
+        approveAmount: approveTransaction ? request.from_value : undefined,
         dexIds: dexIds(chain),
         slippagePercent: slippagePercent(request),
         autoSlippage: true,

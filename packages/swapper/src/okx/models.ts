@@ -49,6 +49,7 @@ export interface SwapParams {
     toTokenAddress: string;
     userWalletAddress: string;
     approveTransaction?: boolean;
+    approveAmount?: string;
     slippagePercent?: string;
     autoSlippage?: boolean;
     maxAutoSlippagePercent?: string;

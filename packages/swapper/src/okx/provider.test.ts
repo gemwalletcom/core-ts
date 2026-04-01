@@ -294,6 +294,7 @@ describe("OkxProvider", () => {
 
                 const params = getSwapData.mock.calls[0][0] as Record<string, unknown>;
                 expect(params.approveTransaction).toBe(true);
+                expect(params.approveAmount).toBe("1000000000000000000");
                 expect(params.toTokenReferrerWalletAddress).toBe("0x0D9DAB1A248f63B0a48965bA8435e4de7497a3dC");
                 expect(params.fromTokenReferrerWalletAddress).toBeUndefined();
             });
