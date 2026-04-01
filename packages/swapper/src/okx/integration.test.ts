@@ -1,11 +1,10 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 require("dotenv").config({ path: "../../.env" });
 
-import { Chain, QuoteRequest } from "@gemwallet/types";
+import { QuoteRequest } from "@gemwallet/types";
 
 import { createOkxEvmQuoteRequest, createSolanaUsdcQuoteRequest } from "../testkit/mock";
-import { OkxDexClient } from "./client";
-import { CHAIN_INDEX, DEFAULT_EVM_GAS_LIMIT } from "./constants";
+import { DEFAULT_EVM_GAS_LIMIT } from "./constants";
 import { OkxProvider } from "./provider";
 
 const OKX_ENV_KEYS = ["OKX_API_KEY", "OKX_SECRET_KEY", "OKX_API_PASSPHRASE", "OKX_PROJECT_ID"];
@@ -17,15 +16,6 @@ function hasAuthEnv(): boolean {
 const hasAuth = hasAuthEnv();
 const runIntegration = process.env.INTEGRATION_TEST === "1" && hasAuth;
 const itIntegration = runIntegration ? it : it.skip;
-
-function createClient(): OkxDexClient {
-    return new OkxDexClient({
-        apiKey: process.env.OKX_API_KEY!,
-        secretKey: process.env.OKX_SECRET_KEY!,
-        apiPassphrase: process.env.OKX_API_PASSPHRASE!,
-        projectId: process.env.OKX_PROJECT_ID!,
-    });
-}
 
 const SOLANA_REQUEST: QuoteRequest = createSolanaUsdcQuoteRequest();
 
@@ -90,22 +80,6 @@ describe("OKX live integration", () => {
             expect(quoteData.data).toMatch(/^0x/);
             expect(quoteData.gasLimit).toBe(DEFAULT_EVM_GAS_LIMIT);
             expect(quoteData.approval).toBeUndefined();
-        });
-    });
-
-    describe("Chain Data", () => {
-        itIntegration("fetches XLayer approve spender address", async () => {
-            const client = createClient();
-            const response = await client.getChainData(CHAIN_INDEX[Chain.XLayer]);
-
-            expect(response.code).toBe("0");
-            expect(response.data.length).toBeGreaterThan(0);
-
-            const chainData = response.data[0];
-            console.log(`\nXLayer chain data:`);
-            console.log(`  chainIndex: ${chainData.chainIndex}`);
-            console.log(`  chainName: ${chainData.chainName}`);
-            console.log(`  dexTokenApproveAddress: ${chainData.dexTokenApproveAddress}`);
         });
     });
 });

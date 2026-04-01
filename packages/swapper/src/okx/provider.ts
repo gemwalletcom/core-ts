@@ -3,7 +3,6 @@ import { Connection, VersionedTransaction } from "@solana/web3.js";
 import bs58 from "bs58";
 
 import { BigIntMath } from "../bigint_math";
-import { checkEvmApproval } from "../chain/evm/allowance";
 import { DEFAULT_COMMITMENT } from "../chain/solana/constants";
 import { estimateComputeUnitLimit as simulateComputeUnits } from "../chain/solana/tx_builder";
 import { SwapperException } from "../error";
@@ -91,13 +90,19 @@ function referrerWalletAddresses(request: QuoteRequest, chain: Chain): Partial<S
         : { toTokenReferrerWalletAddress: address };
 }
 
-function buildSwapParams(request: QuoteRequest, route: QuoteData, chain: Chain): SwapParams {
+function buildSwapParams(
+    request: QuoteRequest,
+    route: QuoteData,
+    chain: Chain,
+    approveTransaction = false,
+): SwapParams {
     return {
         chainIndex: chainIndex(chain),
         amount: request.from_value,
         fromTokenAddress: route.fromToken.tokenContractAddress,
         toTokenAddress: route.toToken.tokenContractAddress,
         userWalletAddress: request.from_address,
+        approveTransaction: approveTransaction || undefined,
         dexIds: dexIds(chain),
         slippagePercent: slippagePercent(request),
         autoSlippage: true,
@@ -113,6 +118,23 @@ function minOutputValue(route: QuoteData, slippageBps: number): string {
     }
     const bps = slippageBps > 0 ? slippageBps : 100;
     return BigIntMath.applySlippage(route.toTokenAmount, bps);
+}
+
+function parseApproveContract(signatureData: string): string | undefined {
+    try {
+        const parsed = JSON.parse(signatureData) as { approveContract?: unknown };
+        return typeof parsed.approveContract === "string" && parsed.approveContract.length > 0
+            ? parsed.approveContract
+            : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+function extractApproveContract(signatureData: string[] | undefined): string | undefined {
+    return signatureData
+        ?.map(parseApproveContract)
+        .find((approveContract): approveContract is string => approveContract !== undefined);
 }
 
 export class OkxProvider implements Protocol {
@@ -211,11 +233,7 @@ export class OkxProvider implements Protocol {
         const fromAsset = AssetId.fromString(quote.quote.from_asset.id);
         const chain = fromAsset.chain;
         const isTokenSwap = isEvmChain(chain) && !!fromAsset.tokenId;
-
-        const [response, approveSpender] = await Promise.all([
-            this.client.getSwapData(buildSwapParams(quote.quote, route, chain)),
-            isTokenSwap ? this.getApproveSpender(chain) : Promise.resolve(undefined),
-        ]);
+        const response = await this.client.getSwapData(buildSwapParams(quote.quote, route, chain, isTokenSwap));
 
         if (response.code !== "0") {
             throw new SwapperException({
@@ -230,31 +248,27 @@ export class OkxProvider implements Protocol {
         }
 
         if (isEvmChain(chain)) {
-            return this.buildEvmQuoteData(
-                swapData.tx,
-                fromAsset,
-                quote.quote.from_address,
-                quote.quote.from_value,
-                approveSpender,
-            );
+            return this.buildEvmQuoteData(swapData.tx, fromAsset, quote.quote.from_value);
         }
 
         return this.buildSolanaQuoteData(swapData.tx);
     }
 
-    private async getApproveSpender(chain: Chain): Promise<string | undefined> {
-        const chainData = await this.client.getChainData(chainIndex(chain));
-        return chainData.data?.[0]?.dexTokenApproveAddress ?? undefined;
-    }
-
     private async buildEvmQuoteData(
         tx: TransactionData,
         fromAsset: AssetId,
-        owner: string,
         fromValue: string,
-        approveSpender?: string,
     ): Promise<SwapQuoteData> {
-        const approval = await checkEvmApproval(fromAsset.chain, fromAsset.tokenId, owner, fromValue, approveSpender);
+        const spender = extractApproveContract(tx.signatureData);
+        const approval =
+            fromAsset.tokenId && spender
+                ? {
+                      token: fromAsset.tokenId,
+                      spender,
+                      value: fromValue,
+                      isUnlimited: true,
+                  }
+                : undefined;
         return {
             to: tx.to,
             value: tx.value || "0",

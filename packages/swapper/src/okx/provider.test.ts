@@ -22,13 +22,9 @@ const MOCK_APPROVE_ADDRESS = "0x57df6092665eb6058DE53939612413ff4B09114E";
 function createProvider() {
     const getQuote = jest.fn();
     const getSwapData = jest.fn();
-    const getChainData = jest.fn().mockResolvedValue({
-        code: "0",
-        data: [{ dexTokenApproveAddress: MOCK_APPROVE_ADDRESS }],
-    });
-    const client = { getQuote, getSwapData, getChainData } as unknown as OkxDexClient;
+    const client = { getQuote, getSwapData } as unknown as OkxDexClient;
     const provider = new OkxProvider("https://localhost:8899", client);
-    return { provider, getQuote, getSwapData, getChainData };
+    return { provider, getQuote, getSwapData };
 }
 
 const solanaRoute = {
@@ -243,12 +239,17 @@ describe("OkxProvider", () => {
                 expect(params.fromTokenReferrerWalletAddress).toBe("0x0D9DAB1A248f63B0a48965bA8435e4de7497a3dC");
             });
 
-            it("returns approval with spender from chain data for token swaps", async () => {
+            it("returns approval from swap signatureData for token swaps", async () => {
                 const { provider, getSwapData } = createProvider();
                 getSwapData.mockResolvedValue(
                     mockEvmSwapResponse({
                         data: "0xswapCalldata",
                         value: "0",
+                        signatureData: [
+                            JSON.stringify({
+                                approveContract: MOCK_APPROVE_ADDRESS,
+                            }),
+                        ],
                     }),
                 );
 
@@ -263,8 +264,36 @@ describe("OkxProvider", () => {
                     value: "1000000000000000000",
                     isUnlimited: true,
                 });
+            });
+
+            it("does not return approval when signatureData is missing", async () => {
+                const { provider, getSwapData } = createProvider();
+                getSwapData.mockResolvedValue(
+                    mockEvmSwapResponse({
+                        data: "0xswapCalldata",
+                        value: "0",
+                    }),
+                );
+
+                const result = await provider.get_quote_data(mockEvmTokenQuote());
+
+                expect(result.gasLimit).toBeUndefined();
+                expect(result.approval).toBeUndefined();
+            });
+
+            it("requests OKX approval metadata for token swaps", async () => {
+                const { provider, getSwapData } = createProvider();
+                getSwapData.mockResolvedValue(
+                    mockEvmSwapResponse({
+                        data: "0xswapCalldata",
+                        value: "0",
+                    }),
+                );
+
+                await provider.get_quote_data(mockEvmTokenQuote());
 
                 const params = getSwapData.mock.calls[0][0] as Record<string, unknown>;
+                expect(params.approveTransaction).toBe(true);
                 expect(params.toTokenReferrerWalletAddress).toBe("0x0D9DAB1A248f63B0a48965bA8435e4de7497a3dC");
                 expect(params.fromTokenReferrerWalletAddress).toBeUndefined();
             });

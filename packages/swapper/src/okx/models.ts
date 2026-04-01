@@ -31,12 +31,6 @@ export interface TransactionData {
     signatureData?: string[];
 }
 
-export interface ChainData {
-    chainIndex: string;
-    chainName: string;
-    dexTokenApproveAddress: string | null;
-}
-
 export interface QuoteParams {
     chainIndex: string;
     amount: string;
@@ -54,6 +48,7 @@ export interface SwapParams {
     fromTokenAddress: string;
     toTokenAddress: string;
     userWalletAddress: string;
+    approveTransaction?: boolean;
     slippagePercent?: string;
     autoSlippage?: boolean;
     maxAutoSlippagePercent?: string;

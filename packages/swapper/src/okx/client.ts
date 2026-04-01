@@ -1,6 +1,6 @@
 import { buildHeaders, buildQueryString } from "./auth";
 import type { OkxClientConfig } from "./auth";
-import type { ChainData, OkxApiResponse, QuoteData, QuoteParams, SwapParams, TransactionData } from "./models";
+import type { OkxApiResponse, QuoteData, QuoteParams, SwapParams, TransactionData } from "./models";
 
 const BASE_URL = "https://web3.okx.com";
 
@@ -17,10 +17,6 @@ export class OkxDexClient {
 
     async getSwapData(params: SwapParams): Promise<OkxApiResponse<{ routerResult: QuoteData; tx: TransactionData }>> {
         return this.get("/api/v6/dex/aggregator/swap", params);
-    }
-
-    async getChainData(chainIndex: string): Promise<OkxApiResponse<ChainData>> {
-        return this.get("/api/v6/dex/aggregator/supported/chain", { chainIndex });
     }
 
     private async get<T>(path: string, params: object): Promise<T> {
