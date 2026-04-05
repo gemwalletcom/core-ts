@@ -7,13 +7,15 @@ export type ProxyErrorResponse = { err: ErrorResponse } | { error: string };
 export function errorResponse(err: SwapperError, rawError: unknown, structured: boolean): ProxyErrorResponse {
     const rawMessage = extractMessage(rawError);
     if (!structured) {
-        return { error: rawMessage ?? ("message" in err ? err.message : undefined) ?? "Unknown error occurred" };
+        const stringMessage = hasStringMessage(err) ? err.message : undefined;
+        return { error: rawMessage ?? stringMessage ?? "Unknown error occurred" };
     }
     if (hasStringMessage(err)) {
         return { err: { type: err.type, message: rawMessage ?? err.message ?? "" } };
     }
-    const { type, ...rest } = err;
-    return { err: { type, message: rest } };
+    const structuredMessage =
+        "message" in err && typeof err.message === "object" && err.message !== null ? err.message : {};
+    return { err: { type: err.type, message: structuredMessage } };
 }
 
 export function httpStatus(err: SwapperError): number {

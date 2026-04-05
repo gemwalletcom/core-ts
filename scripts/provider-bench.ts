@@ -3,12 +3,12 @@ import path from "node:path";
 import { performance } from "node:perf_hooks";
 
 import { Chain, Quote, QuoteRequest } from "@gemwallet/types";
+
 import {
     CetusAggregatorProvider,
     MayanProvider,
     OrcaWhirlpoolProvider,
     Protocol,
-    RelayProvider,
     StonfiProvider,
 } from "../packages/swapper/src";
 
@@ -20,7 +20,6 @@ const PROVIDER_FACTORY = {
     orca: () => new OrcaWhirlpoolProvider(SOLANA_RPC),
     cetus: () => new CetusAggregatorProvider(SUI_RPC),
     mayan: () => new MayanProvider(SOLANA_RPC, SUI_RPC),
-    relay: () => new RelayProvider(),
     stonfi_v2: () => new StonfiProvider(TON_RPC),
 } satisfies Record<string, () => Protocol>;
 
@@ -70,13 +69,9 @@ function parseArgs(argv: string[]): CliOptions {
     const includeQuoteData = !args.includes("--skip-quote-data");
     const requestPath = getValue("--request");
 
-    const providerId = SUPPORTED_PROVIDERS.find(
-        (value) => value === rawProvider,
-    );
+    const providerId = SUPPORTED_PROVIDERS.find((value) => value === rawProvider);
     if (!providerId) {
-        throw new Error(
-            `Unsupported provider "${rawProvider}". Supported: ${SUPPORTED_PROVIDERS.join(", ")}`,
-        );
+        throw new Error(`Unsupported provider "${rawProvider}". Supported: ${SUPPORTED_PROVIDERS.join(", ")}`);
     }
 
     return {

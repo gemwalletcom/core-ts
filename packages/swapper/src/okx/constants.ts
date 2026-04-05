@@ -19,6 +19,7 @@ export const CHAIN_INDEX: Record<string, string> = {
     [Chain.Mantle]: "5000",
     [Chain.Celo]: "42220",
     [Chain.Sonic]: "146",
+    [Chain.SeiEvm]: "1329",
     [Chain.Abstract]: "2741",
     [Chain.Berachain]: "80094",
     [Chain.Unichain]: "130",

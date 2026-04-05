@@ -30,6 +30,7 @@ export enum Chain {
 	Celestia = "celestia",
 	Injective = "injective",
 	Sei = "sei",
+	SeiEvm = "seievm",
 	Manta = "manta",
 	Blast = "blast",
 	Noble = "noble",
@@ -53,5 +54,6 @@ export enum Chain {
 	HyperCore = "hypercore",
 	Monad = "monad",
 	XLayer = "xlayer",
+	Stable = "stable",
 }
 

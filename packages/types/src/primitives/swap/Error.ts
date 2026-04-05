@@ -6,8 +6,11 @@ export type SwapperError =
 	| { type: "not_supported_chain", message?: undefined }
 	| { type: "not_supported_asset", message?: undefined }
 	| { type: "no_available_provider", message?: undefined }
-	| { type: "input_amount_error", min_amount: string | null }
+	| { type: "input_amount_error", message: {
+	min_amount?: string;
+}}
 	| { type: "invalid_route", message?: undefined }
 	| { type: "compute_quote_error", message: string }
 	| { type: "transaction_error", message: string }
 	| { type: "no_quote_available", message?: undefined };
+

@@ -12,7 +12,7 @@ export function toMayanError(error: unknown, decimals: number): Error {
         if (minAmount !== undefined) {
             return new SwapperException({
                 type: "input_amount_error",
-                min_amount: minAmount,
+                message: minAmount === null ? {} : { min_amount: minAmount },
             });
         }
         return new Error(message);

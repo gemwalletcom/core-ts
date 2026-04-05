@@ -44,6 +44,7 @@ export const ORCA_QUOTE_REQUEST_TEMPLATE: QuoteRequest = {
     from_value: "1",
     referral_bps: 0,
     slippage_bps: 100,
+    use_max_amount: false,
 };
 
 export const STONFI_QUOTE_REQUEST_TEMPLATE: QuoteRequest = {
@@ -54,6 +55,7 @@ export const STONFI_QUOTE_REQUEST_TEMPLATE: QuoteRequest = {
     from_value: "1000000000",
     referral_bps: 0,
     slippage_bps: 100,
+    use_max_amount: false,
 };
 
 export const OKX_SOLANA_USDC_REQUEST_TEMPLATE: QuoteRequest = {
@@ -72,6 +74,7 @@ export const OKX_SOLANA_USDC_REQUEST_TEMPLATE: QuoteRequest = {
     from_value: "1000000",
     referral_bps: 50,
     slippage_bps: 100,
+    use_max_amount: false,
 };
 
 export const APTOS_USDC_REQUEST_TEMPLATE: QuoteRequest = {
@@ -90,6 +93,7 @@ export const APTOS_USDC_REQUEST_TEMPLATE: QuoteRequest = {
     from_value: "1000000000",
     referral_bps: 10,
     slippage_bps: 100,
+    use_max_amount: false,
 };
 
 export const OKX_XLAYER_USD0_REQUEST_TEMPLATE: QuoteRequest = {
@@ -108,6 +112,7 @@ export const OKX_XLAYER_USD0_REQUEST_TEMPLATE: QuoteRequest = {
     from_value: "1000000000000000000",
     referral_bps: 50,
     slippage_bps: 100,
+    use_max_amount: false,
 };
 
 export function createOkxEvmQuoteRequest(overrides: Partial<QuoteRequest> = {}): QuoteRequest {

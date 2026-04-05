@@ -11,11 +11,12 @@ REQUIRED_FILES = [
     Path("SwapProvider.ts"),
     Path("swap/Approval.ts"),
     Path("swap/Mod.ts"),
+    Path("swap/QuoteAsset.ts"),
 ]
 
 IMPORT_PATCHES = {
     Path("swap/Approval.ts"): 'import { SwapProvider } from "../SwapProvider";\n\n',
-    Path("swap/Mod.ts"): 'import { QuoteAsset } from "./Approval";\n\n',
+    Path("swap/Mod.ts"): 'import { QuoteAsset } from "./QuoteAsset";\n\n',
 }
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
