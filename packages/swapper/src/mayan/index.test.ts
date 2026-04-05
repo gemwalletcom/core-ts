@@ -7,16 +7,16 @@ describe("toMayanError", () => {
 
         expect((result as SwapperException).swapperError).toEqual({
             type: "input_amount_error",
-            min_amount: "19620000",
+            message: { min_amount: "19620000" },
         });
     });
 
-    it('converts "Amount too small" without min to input_amount_error with null', () => {
+    it('converts "Amount too small" without min to input_amount_error without min_amount', () => {
         const result = toMayanError({ message: "Amount too small" }, 9);
 
         expect((result as SwapperException).swapperError).toEqual({
             type: "input_amount_error",
-            min_amount: null,
+            message: {},
         });
     });
 

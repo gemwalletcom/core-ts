@@ -11,12 +11,6 @@ export interface ApprovalData {
 	isUnlimited: boolean;
 }
 
-export interface QuoteAsset {
-	id: string;
-	symbol: string;
-	decimals: number;
-}
-
 export interface SwapProviderData {
 	provider: SwapProvider;
 	name: string;
@@ -58,6 +52,5 @@ export enum SwapStatus {
 	Pending = "pending",
 	Completed = "completed",
 	Failed = "failed",
-	Refunded = "refunded",
 }
 

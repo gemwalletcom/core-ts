@@ -4,7 +4,7 @@ import { errorResponse, httpStatus } from "./error";
 
 describe("httpStatus", () => {
     it.each([
-        [400, { type: "input_amount_error", min_amount: "100" }],
+        [400, { type: "input_amount_error", message: { min_amount: "100" } }],
         [404, { type: "no_quote_available" }],
         [500, { type: "compute_quote_error", message: "error" }],
     ] as const)("returns %i for %s", (expected, err) => {
@@ -14,7 +14,7 @@ describe("httpStatus", () => {
 
 describe("errorResponse", () => {
     it("wraps input_amount_error fields in message object", () => {
-        const result = errorResponse({ type: "input_amount_error", min_amount: "19620000" }, null, true);
+        const result = errorResponse({ type: "input_amount_error", message: { min_amount: "19620000" } }, null, true);
         expect(result).toEqual({ err: { type: "input_amount_error", message: { min_amount: "19620000" } } });
     });
 
