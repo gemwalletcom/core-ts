@@ -15,9 +15,9 @@
         "test": "jest --passWithNoTests"
     },
     "dependencies": {
-        "@cetusprotocol/aggregator-sdk": "1.4.6",
+        "@cetusprotocol/aggregator-sdk": "1.5.0",
         "@gemwallet/types": "workspace:*",
-        "@mayanfinance/swap-sdk": "13.2.0",
+        "@mayanfinance/swap-sdk": "13.3.0",
         "@mysten/sui": "2.11.0",
         "@orca-so/whirlpools": "7.0.1",
         "@orca-so/whirlpools-client": "6.2.0",
@@ -27,7 +27,7 @@
         "@solana/kit": "5.5.1",
         "@solana/spl-token": "0.4.14",
         "@solana/web3.js": "1.98.4",
-        "@ston-fi/api": "0.31.0",
+        "@ston-fi/api": "0.32.0",
         "@ston-fi/sdk": "2.7.0",
         "@ton/core": "0.63.1",
         "@ton/ton": "16.2.2",
