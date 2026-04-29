@@ -4,20 +4,13 @@ import { performance } from "node:perf_hooks";
 
 import { Chain, Quote, QuoteRequest } from "@gemwallet/types";
 
-import {
-    CetusAggregatorProvider,
-    MayanProvider,
-    OrcaWhirlpoolProvider,
-    Protocol,
-    StonfiProvider,
-} from "../packages/swapper/src";
+import { CetusAggregatorProvider, MayanProvider, Protocol, StonfiProvider } from "../packages/swapper/src";
 
 const SOLANA_RPC = process.env.SOLANA_URL || "https://solana-rpc.publicnode.com";
 const SUI_RPC = process.env.SUI_URL || "https://fullnode.mainnet.sui.io";
 const TON_RPC = process.env.TON_URL || "https://toncenter.com";
 
 const PROVIDER_FACTORY = {
-    orca: () => new OrcaWhirlpoolProvider(SOLANA_RPC),
     cetus: () => new CetusAggregatorProvider(SUI_RPC),
     mayan: () => new MayanProvider(SOLANA_RPC, SUI_RPC),
     stonfi_v2: () => new StonfiProvider(TON_RPC),
@@ -25,20 +18,22 @@ const PROVIDER_FACTORY = {
 
 type ProviderId = keyof typeof PROVIDER_FACTORY;
 const SUPPORTED_PROVIDERS = Object.keys(PROVIDER_FACTORY) as ProviderId[];
+const STONFI_BENCH_WALLET_ADDRESS = "EQCD39VS5jcptHL8vMjEXrzGaRcCVYto7HUn4bpAOg8xqB2N";
 
 const DEFAULT_REQUESTS: Partial<Record<ProviderId, QuoteRequest>> = {
-    orca: {
-        from_address: "A21o4asMbFHYadqXdLusT9Bvx9xaC5YV9gcaidjqtdXC",
-        to_address: "A21o4asMbFHYadqXdLusT9Bvx9xaC5YV9gcaidjqtdXC",
-        from_asset: { id: Chain.Solana, symbol: "SOL", decimals: 9 },
+    stonfi_v2: {
+        from_address: STONFI_BENCH_WALLET_ADDRESS,
+        to_address: STONFI_BENCH_WALLET_ADDRESS,
+        from_asset: { id: Chain.Ton, symbol: "TON", decimals: 9 },
         to_asset: {
-            id: `${Chain.Solana}_EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`,
-            symbol: "USDC",
+            id: `${Chain.Ton}_EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs`,
+            symbol: "USDT",
             decimals: 6,
         },
-        from_value: "100000000",
+        from_value: "1000000000",
         referral_bps: 0,
         slippage_bps: 100,
+        use_max_amount: false,
     },
 };
 
@@ -64,7 +59,7 @@ function parseArgs(argv: string[]): CliOptions {
         return undefined;
     };
 
-    const rawProvider = getValue("--provider") ?? "orca";
+    const rawProvider = getValue("--provider") ?? "stonfi_v2";
     const iterations = Number(getValue("--iterations") ?? "2");
     const includeQuoteData = !args.includes("--skip-quote-data");
     const requestPath = getValue("--request");
@@ -100,8 +95,15 @@ async function time<T>(label: string, fn: () => Promise<T>): Promise<T> {
     const start = performance.now();
     const result = await fn();
     const duration = performance.now() - start;
-    console.log(`${label}: ${duration.toFixed(0)} ms`);
+    process.stdout.write(`${label}: ${duration.toFixed(0)} ms\n`);
     return result;
+}
+
+function formatError(error: unknown): string {
+    if (error instanceof Error) {
+        return error.stack ?? error.message;
+    }
+    return String(error);
 }
 
 async function main() {
@@ -120,6 +122,6 @@ async function main() {
 }
 
 main().catch((error) => {
-    console.error("Benchmark failed:", error);
+    process.stderr.write(`Benchmark failed: ${formatError(error)}\n`);
     process.exit(1);
 });

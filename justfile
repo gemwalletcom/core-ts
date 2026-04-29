@@ -33,7 +33,7 @@ test-integration:
 
 check: lint format-check build test
 
-bench PROVIDER="orca" ITERATIONS="2":
+bench PROVIDER="stonfi_v2" ITERATIONS="2":
     pnpm exec ts-node -P packages/swapper/tsconfig.json scripts/provider-bench.ts --provider {{PROVIDER}} --iterations {{ITERATIONS}}
 
 clean:

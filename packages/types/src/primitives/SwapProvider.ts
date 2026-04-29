@@ -21,7 +21,5 @@ export enum SwapProvider {
 	CetusAggregator = "cetus_aggregator",
 	Relay = "relay",
 	Hyperliquid = "hyperliquid",
-	Orca = "orca",
 	Squid = "squid",
 }
-
