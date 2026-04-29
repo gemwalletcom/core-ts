@@ -34,7 +34,7 @@
 - Use shared quote fixtures from `packages/swapper/src/testkit/mock.ts`; for provider-specific scenarios, extend via overrides instead of adding new provider-local `testkit.ts` files.
 
 ## Architecture Overview
-- Providers implemented today: `stonfi_v2`, `mayan`, `cetus`, `orca`, `panora`, `okx`.
+- Providers implemented today: `stonfi_v2`, `mayan`, `cetus`, `panora`, `okx`.
 - API endpoints: `GET /` (providers, version), `POST /:providerId/quote`, `POST /:providerId/quote_data`.
 - Keep provider interface consistent for quotes and transaction building.
 - OKX Solana provider notes: [`packages/swapper/src/okx/README.md`](packages/swapper/src/okx/README.md).

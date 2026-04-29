@@ -20,6 +20,9 @@ import {
 } from "./constants";
 import type { QuoteData, SwapParams, TransactionData } from "./models";
 
+const OKX_GAS_LIMIT_MULTIPLIER = 1.5;
+const OKX_GAS_LIMIT_MULTIPLIER_SCALE = 10;
+
 function bpsToPercent(bps: number): string {
     return (bps / 100).toString();
 }
@@ -120,6 +123,15 @@ function minOutputValue(route: QuoteData, slippageBps: number): string {
     }
     const bps = slippageBps > 0 ? slippageBps : 100;
     return BigIntMath.applySlippage(route.toTokenAmount, bps);
+}
+
+function applyOkxGasLimitMultiplier(gas: string | undefined): string | undefined {
+    if (!gas) {
+        return undefined;
+    }
+    const multiplier = BigInt(Math.round(OKX_GAS_LIMIT_MULTIPLIER * OKX_GAS_LIMIT_MULTIPLIER_SCALE));
+    const scale = BigInt(OKX_GAS_LIMIT_MULTIPLIER_SCALE);
+    return ((BigInt(gas) * multiplier + scale - BigInt(1)) / scale).toString();
 }
 
 function parseApproveContract(signatureData: string): string | undefined {
@@ -273,7 +285,7 @@ export class OkxProvider implements Protocol {
             value: tx.value || "0",
             data: tx.data,
             dataType: SwapQuoteDataType.Contract,
-            gasLimit: approval ? tx.gas || evmGasLimit(fromAsset.chain) : undefined,
+            gasLimit: approval ? (applyOkxGasLimitMultiplier(tx.gas) ?? evmGasLimit(fromAsset.chain)) : undefined,
             approval,
         };
     }

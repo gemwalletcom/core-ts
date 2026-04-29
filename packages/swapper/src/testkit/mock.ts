@@ -36,17 +36,6 @@ export const USDT_TON_ASSET = {
     decimals: 6,
 };
 
-export const ORCA_QUOTE_REQUEST_TEMPLATE: QuoteRequest = {
-    from_address: "A1testfromAddress1111111111111111111111111",
-    to_address: "A1testtoAddress11111111111111111111111111",
-    from_asset: SOL_ASSET,
-    to_asset: USDC_SOL_ASSET,
-    from_value: "1",
-    referral_bps: 0,
-    slippage_bps: 100,
-    use_max_amount: false,
-};
-
 export const STONFI_QUOTE_REQUEST_TEMPLATE: QuoteRequest = {
     from_address: TON_TEST_WALLET_ADDRESS,
     to_address: TON_TEST_DESTINATION_ADDRESS,
@@ -148,17 +137,6 @@ export function buildQuoteFixture(
         route_data: {},
         ...quoteOverrides,
     };
-}
-
-export function createOrcaQuoteRequest(overrides: Partial<QuoteRequest> = {}): QuoteRequest {
-    return createQuoteRequest(ORCA_QUOTE_REQUEST_TEMPLATE, overrides);
-}
-
-export function buildOrcaQuoteFixture(
-    requestOverrides: Partial<QuoteRequest> = {},
-    quoteOverrides: Partial<Omit<Quote, "quote">> = {},
-): Quote {
-    return buildQuoteFixture(ORCA_QUOTE_REQUEST_TEMPLATE, requestOverrides, quoteOverrides, 0);
 }
 
 export function createStonfiQuoteRequest(overrides: Partial<QuoteRequest> = {}): QuoteRequest {

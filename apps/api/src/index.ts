@@ -5,7 +5,6 @@ import {
     Protocol,
     MayanProvider,
     CetusAggregatorProvider,
-    OrcaWhirlpoolProvider,
     PanoraProvider,
     OkxProvider,
     SwapperException,
@@ -38,7 +37,6 @@ const providers: Record<string, Protocol> = {
     stonfi_v2: new StonfiProvider(process.env.TON_URL || "https://toncenter.com"),
     mayan: new MayanProvider(solanaRpc, process.env.SUI_URL || "https://fullnode.mainnet.sui.io"),
     cetus: new CetusAggregatorProvider(process.env.SUI_URL || "https://fullnode.mainnet.sui.io"),
-    orca: new OrcaWhirlpoolProvider(solanaRpc),
     panora: new PanoraProvider(),
     okx: new OkxProvider(solanaRpc),
 };
