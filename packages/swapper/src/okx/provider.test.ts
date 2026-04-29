@@ -264,13 +264,35 @@ describe("OkxProvider", () => {
 
                 expect(result.data).toBe("0xswapCalldata");
                 expect(result.value).toBe("0");
-                expect(result.gasLimit).toBe(DEFAULT_EVM_GAS_LIMIT);
+                expect(result.gasLimit).toBe("250000");
                 expect(result.approval).toMatchObject({
                     token: XLAYER_USD0_ADDRESS,
                     spender: MOCK_APPROVE_ADDRESS,
                     value: "1000000000000000000",
                     isUnlimited: true,
                 });
+            });
+
+            it("uses default EVM gas limit for approval when OKX gas is missing", async () => {
+                const { provider, getSwapData } = createProvider();
+                getSwapData.mockResolvedValue(
+                    mockEvmSwapResponse({
+                        data: "0xswapCalldata",
+                        gas: "",
+                        signatureData: [
+                            JSON.stringify({
+                                approveContract: MOCK_APPROVE_ADDRESS,
+                            }),
+                        ],
+                    }),
+                );
+
+                jest.spyOn(allowance, "approvalRequired").mockResolvedValueOnce(true);
+
+                const result = await provider.get_quote_data(mockEvmTokenQuote());
+
+                expect(result.approval).toBeDefined();
+                expect(result.gasLimit).toBe(DEFAULT_EVM_GAS_LIMIT);
             });
 
             it("skips approval when on-chain allowance is sufficient", async () => {

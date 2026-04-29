@@ -273,7 +273,7 @@ export class OkxProvider implements Protocol {
             value: tx.value || "0",
             data: tx.data,
             dataType: SwapQuoteDataType.Contract,
-            gasLimit: approval ? evmGasLimit(fromAsset.chain) : undefined,
+            gasLimit: approval ? tx.gas || evmGasLimit(fromAsset.chain) : undefined,
             approval,
         };
     }
