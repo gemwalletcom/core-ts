@@ -264,7 +264,7 @@ describe("OkxProvider", () => {
 
                 expect(result.data).toBe("0xswapCalldata");
                 expect(result.value).toBe("0");
-                expect(result.gasLimit).toBe("250000");
+                expect(result.gasLimit).toBe("375000");
                 expect(result.approval).toMatchObject({
                     token: XLAYER_USD0_ADDRESS,
                     spender: MOCK_APPROVE_ADDRESS,
