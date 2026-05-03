@@ -1,5 +1,16 @@
+const MAX_DECIMALS = 32;
+
+function decimalScale(decimals: number): bigint {
+    if (!Number.isInteger(decimals) || decimals < 0 || decimals > MAX_DECIMALS) {
+        throw new Error(`Decimals must be an integer between 0 and ${MAX_DECIMALS}`);
+    }
+
+    return BigInt(10) ** BigInt(decimals);
+}
+
 export class BigIntMath {
     static parseDecimals(value: string | number, toDecimals: number): bigint {
+        const scale = decimalScale(toDecimals);
         const stringValue = value.toString();
         const decimalParts = stringValue.split(".");
 
@@ -13,14 +24,15 @@ export class BigIntMath {
 
             const decimalDiff = actualDecimals - toDecimals;
             if (decimalDiff > 0) {
-                return BigInt(fullInteger) / BigInt(10 ** decimalDiff);
+                const truncated = fullInteger.slice(0, -decimalDiff);
+                return truncated === "" || truncated === "-" ? BigInt(0) : BigInt(truncated);
             } else if (decimalDiff < 0) {
-                return BigInt(fullInteger) * BigInt(10 ** Math.abs(decimalDiff));
+                return BigInt(fullInteger) * decimalScale(Math.abs(decimalDiff));
             }
             return BigInt(fullInteger);
         }
 
-        return BigInt(decimalParts[0]) * BigInt(10 ** toDecimals);
+        return BigInt(decimalParts[0]) * scale;
     }
 
     static max(a: bigint, b: bigint): bigint {
@@ -36,19 +48,23 @@ export class BigIntMath {
     }
 
     static formatDecimals(value: string | bigint, decimals: number): string {
+        const divisor = decimalScale(decimals);
         const raw = typeof value === "string" ? BigInt(value) : value;
-        if (decimals <= 0) {
+        if (decimals === 0) {
             return raw.toString();
         }
 
-        const divisor = BigInt(10) ** BigInt(decimals);
         const whole = raw / divisor;
         const fraction = raw % divisor;
         if (fraction === BigInt(0)) {
             return whole.toString();
         }
 
-        const fractionStr = fraction.toString().padStart(decimals, "0").replace(/0+$/, "");
+        let fractionStr = fraction.toString().padStart(decimals, "0");
+        while (fractionStr.endsWith("0")) {
+            fractionStr = fractionStr.slice(0, -1);
+        }
+
         return `${whole.toString()}.${fractionStr}`;
     }
 

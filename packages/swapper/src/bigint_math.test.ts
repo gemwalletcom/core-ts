@@ -43,6 +43,30 @@ describe("BigIntMath.parseDecimals", () => {
         const result = BigIntMath.parseDecimals(input, decimals);
         expect(result.toString()).toEqual(expected);
     });
+
+    it("rejects unsafe decimal precision", () => {
+        expect(() => BigIntMath.parseDecimals("1", 33)).toThrow("Decimals must be an integer between 0 and 32");
+    });
+
+    it("truncates excess fractional digits without rejecting the input", () => {
+        const result = BigIntMath.parseDecimals(`0.${"0".repeat(40)}1`, 6);
+
+        expect(result.toString()).toBe("0");
+    });
+});
+
+describe("BigIntMath.formatDecimals", () => {
+    it.each([
+        { value: "1000000000", decimals: 9, expected: "1" },
+        { value: "1000000010", decimals: 9, expected: "1.00000001" },
+        { value: "1", decimals: 0, expected: "1" },
+    ])("formats $value with $decimals decimals to $expected", ({ value, decimals, expected }) => {
+        expect(BigIntMath.formatDecimals(value, decimals)).toBe(expected);
+    });
+
+    it("rejects unsafe decimal precision", () => {
+        expect(() => BigIntMath.formatDecimals("1", 33)).toThrow("Decimals must be an integer between 0 and 32");
+    });
 });
 
 describe("BigIntMath.parseString", () => {
